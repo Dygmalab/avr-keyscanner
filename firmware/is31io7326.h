@@ -16,10 +16,13 @@ typedef union {
 
 
 #define TWI_CMD_NONE 0x00
+#define TWI_CMD_PINS 0x01
 #define TWI_CMD_CFG  0x08
 
 // Configuration register
 extern uint8_t issi_config;
+
+extern uint8_t pins_enabled;
 
 /* ACI: Auto Clear INT
  * 00: Auto clear INT disabled

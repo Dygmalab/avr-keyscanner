@@ -4,6 +4,7 @@
 #include "twi-slave.h"
 
 uint8_t issi_config = 0x10;
+uint8_t pins_enabled = 0xff;
 
 void issi_init(void)
 {
@@ -28,6 +29,15 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 	            // GET configuration
 	            issi_twi_command = TWI_CMD_CFG;
 	        }
+        } else if (buf[0] == TWI_CMD_PINS) {
+            if (bufsiz > 1) {
+                // SET the pins we should look at
+                pins_enabled = buf[1];
+            } else {
+                // GET the pins we should look at
+                issi_twi_command = TWI_CMD_PINS;
+            }
+
         }
     }
 }
@@ -50,6 +60,13 @@ void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 *bufsiz = 1;
             }
         }
+        else if (issi_twi_command == TWI_CMD_PINS) {
+            // Configuration Register
+            buf[0] = pins_enabled;
+            *bufsiz = 1;
+            // reset the twi command on the wire
+            issi_twi_command = TWI_CMD_NONE;
+        }  
         else if (issi_twi_command == TWI_CMD_CFG) {
             // Configuration Register
             buf[0] = issi_config;
