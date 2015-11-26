@@ -14,6 +14,10 @@ typedef union {
     uint8_t val;
 } key_t;
 
+
+#define TWI_CMD_NONE 0x00
+#define TWI_CMD_CFG  0x08
+
 // Configuration register
 extern uint8_t issi_config;
 
