@@ -82,7 +82,6 @@ void keyscanner_main(void)
                 }
             }
 
-            SET_INT(0);
         });
     }
 }

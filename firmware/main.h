@@ -18,16 +18,6 @@
 #define HIGH(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #define LOW(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 
-#define SET_INT(val) do { \
-    if (val) { \
-        SET_INPUT(DDR_INT, PIN_NO_INT); \
-        HIGH(PORT_INT, PIN_NO_INT); \
-    } else { \
-        LOW(PORT_INT, PIN_NO_INT); \
-        SET_OUTPUT(DDR_INT, PIN_NO_INT); \
-    } \
-} while(0)
-
 #define DISABLE_INTERRUPTS(code) do{ \
     cli(); \
     { \

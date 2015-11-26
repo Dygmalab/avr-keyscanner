@@ -7,7 +7,6 @@ uint8_t issi_config = 0x10;
 
 void issi_init(void)
 {
-    SET_INT(1);
 
     TWI_Rx_Data_Callback = issi_twi_data_received;
     TWI_Tx_Data_Callback = issi_twi_data_requested;
@@ -24,7 +23,6 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         if (buf[0] == 0x08 && bufsiz > 1) {
             // SET configuration
             issi_config = buf[1];
-            SET_INT(1);
         } else {
             // GET configuration
             issi_twi_command = buf[0];
@@ -47,7 +45,6 @@ void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 key.val = ringbuf_pop();
                 if (ringbuf_empty()) {
                     key.dataNumber = 0;
-                    SET_INT(1);
                 } else {
                     key.dataNumber = 1;
                 }
