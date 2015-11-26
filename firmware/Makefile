@@ -33,10 +33,12 @@ OBJECTS    = main.o twi-slave.o ringbuf.o is31io7326.o keyscanner.o
 # the fuse bit calculator at http://www.engbedded.com/fusecalc/
 FUSES      = -U lfuse:w:0xee:m -U hfuse:w:0xdd:m -U efuse:w:0x01:m
 
+AVRDUDE_PATH = /usr/local/bin/avrdude
+GCC_PATH = avr-gcc
 # Tune the lines below only if you know what you are doing:
 
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -Wall -Wextra -Werror -pedantic -Os -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK)
+AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE)
+COMPILE = $(GCC_PATH) -Wall -Wextra -Werror -pedantic -Os -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK)
 
 # symbolic targets:
 all:	main.hex
