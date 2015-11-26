@@ -16,27 +16,25 @@ void issi_init(void)
     sei();
 }
 
-static uint8_t issi_twi_command = 0;
+static uint8_t issi_twi_command = 0x00;
 
 void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     if (__builtin_expect(bufsiz != 0, 1)) {
-        if (buf[0] == 0x08 && bufsiz > 1) {
-            // SET configuration
-            issi_config = buf[1];
-        } else {
-            // GET configuration
-            issi_twi_command = buf[0];
+        if (buf[0] == 0x08) {
+            if (bufsiz > 1) {
+	            // SET configuration
+	            issi_config = buf[1];
+	        } else {
+	            // GET configuration
+	            issi_twi_command = buf[0];
+	        }
         }
     }
 }
 
 void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
     if (__builtin_expect(*bufsiz != 0, 1)) {
-        if (issi_twi_command == 0x08) {
-            // Configuration Register
-            buf[0] = issi_config;
-            *bufsiz = 1;
-        } else if (issi_twi_command == 0x10) {
+        if (issi_twi_command == 0x00) {
             // Key Status Register
             if (ringbuf_empty()) {
                 *bufsiz = 0;
@@ -52,5 +50,11 @@ void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 *bufsiz = 1;
             }
         }
+        else if (issi_twi_command == 0x08) {
+            // Configuration Register
+            buf[0] = issi_config;
+            *bufsiz = 1;
+            issi_twi_command = 0x00; 
+        } 
     }
 }
