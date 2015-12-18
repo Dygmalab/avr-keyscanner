@@ -60,7 +60,7 @@ flash:	all
 	$(AVRDUDE) -U flash:w:main.hex:i
 
 fuse:
-	$(AVRDUDE) $(FUSES)
+	$(AVRDUDE) -B 100 $(FUSES)
 
 # Xcode uses the Makefile targets "", "clean" and "install"
 install: flash fuse
