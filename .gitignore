@@ -33,3 +33,6 @@
 
 # Datasheets
 doc/*.pdf
+
+# Local settings for make
+Makefile.local
