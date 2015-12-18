@@ -17,17 +17,17 @@ void issi_init(void)
     sei();
 }
 
-static uint8_t issi_twi_command = 0x00;
+static uint8_t issi_twi_command = TWI_CMD_NONE;
 
 void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
-    if (bufsiz <= 2) {
-        if (buf[0] == 0x08) {
+    if (__builtin_expect(bufsiz <=2, 0)) {
+        if (buf[0] == TWI_CMD_CFG) {
             if (bufsiz > 1) {
 	            // SET configuration
 	            issi_config = buf[1];
 	        } else {
 	            // GET configuration
-	            issi_twi_command = buf[0];
+	            issi_twi_command = TWI_CMD_CFG;
 	        }
         }
     }
@@ -38,7 +38,7 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 
 void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
     if (__builtin_expect(*bufsiz != 0, 1)) {
-        if (issi_twi_command == 0x00) {
+        if (issi_twi_command == TWI_CMD_NONE) {
             // Key Status Register
             if (ringbuf_empty()) {
                 *bufsiz = 0;
@@ -54,11 +54,12 @@ void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 *bufsiz = 1;
             }
         }
-        else if (issi_twi_command == 0x08) {
+        else if (issi_twi_command == TWI_CMD_CFG) {
             // Configuration Register
             buf[0] = issi_config;
             *bufsiz = 1;
-            issi_twi_command = 0x00; 
-        } 
+            // reset the twi command on the wire
+            issi_twi_command = TWI_CMD_NONE;
+        }  
     }
 }

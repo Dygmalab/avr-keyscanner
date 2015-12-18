@@ -40,9 +40,10 @@ void keyscanner_main(void)
      *     Guarantee wake on TWI / any PORT_OD pin FALLING
      *     Sleep
      */
-    for (uint8_t pp = 0; pp < 8; ++pp) {
-        uint8_t pp_bitmask = _BV(pp);
 
+    // For each enabled row...
+    for (uint8_t pp = 1; pp < 5; ++pp) {
+        uint8_t pp_bitmask = _BV(pp);
 
 	/* HACK: exclude SPI pins from the DDR/PORT mask */
         DDR_PP = (0x00 ^ pp_bitmask) | ( _BV(5)|_BV(3)|_BV(2));
