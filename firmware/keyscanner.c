@@ -44,8 +44,9 @@ void keyscanner_main(void)
         uint8_t pp_bitmask = _BV(pp);
 
 
-        DDR_PP = 0x00 ^ pp_bitmask;
-        PORT_PP = 0xFF ^ pp_bitmask;
+	/* HACK: exclude SPI pins from the DDR/PORT mask */
+        DDR_PP = (0x00 ^ pp_bitmask) | ( _BV(5)|_BV(3)|_BV(2));
+        PORT_PP = (0xFF ^ pp_bitmask) & ~(_BV(5)|_BV(3)|_BV(2));
 
 
         uint8_t od_bits = PIN_OD;

@@ -2,6 +2,7 @@
 #include "main.h"
 #include "ringbuf.h"
 #include "twi-slave.h"
+#include "led-spiout.h"
 
 uint8_t issi_config = 0x10;
 
@@ -19,7 +20,7 @@ void issi_init(void)
 static uint8_t issi_twi_command = 0x00;
 
 void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
-    if (__builtin_expect(bufsiz != 0, 1)) {
+    if (bufsiz <= 2) {
         if (buf[0] == 0x08) {
             if (bufsiz > 1) {
 	            // SET configuration
@@ -29,6 +30,9 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 	            issi_twi_command = buf[0];
 	        }
         }
+    }
+    else if (bufsiz == LED_BUFSZ) {
+      led_update_buffer(buf);
     }
 }
 

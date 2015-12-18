@@ -9,6 +9,7 @@
  *
  * -------------------------------------------------------------------------------------------------
  */
+#include "led-spiout.h"
 
 #pragma once
 
@@ -16,7 +17,7 @@
   TWI Status/Control register definitions
 ****************************************************************************/
 
-#define TWI_BUFFER_SIZE 2      // Reserves memory for the drivers transceiver buffer.
+#define TWI_BUFFER_SIZE LED_BUFSZ      // Reserves memory for the drivers transceiver buffer
 
 /****************************************************************************
   Callback definitions
