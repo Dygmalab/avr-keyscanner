@@ -3,7 +3,7 @@
 
 /* Number of LEDs in the chain.
    Max is ~8 (maybe less) on ATTiny48, 32 on ATTiny88. */
-#define NUM_LEDS 3
+#define NUM_LEDS 32
 
 #define LED_BUFSZ (4*NUM_LEDS)
 
