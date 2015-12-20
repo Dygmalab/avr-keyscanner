@@ -21,7 +21,7 @@
 -include Makefile.local
 
 # See avr-help for all possible devices
-DEVICE     ?= attiny48
+DEVICE     ?= attiny88
 
 # 8Mhz
 CLOCK      ?= 8000000
