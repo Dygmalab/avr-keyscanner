@@ -44,12 +44,12 @@ void led_init()
   DDRB = _BV(5)|_BV(3)|_BV(2);
   PORTB &= ~(_BV(5)|_BV(3)|_BV(2));
 
-  /* Enable SPI master, MSB first, fOSC/16 speed (500kHz)
+  /* Enable SPI master, MSB first, fOSC/4 speed (2MHz)
 
      NB 500kHz into 32 LEDs = ~460Hz updates. Can probably slow the
      clock down further in order to reduce the SPI interrupt overhead.
    */
-  SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPR0)|_BV(SPIE);
+  SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE);
 
   /* Start transmitting the first byte of the start frame */
   led_phase = START_FRAME;
