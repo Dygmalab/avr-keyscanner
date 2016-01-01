@@ -31,8 +31,17 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 	        }
         }
     }
-    else if (bufsiz == LED_BUFSZ) {
-      led_update_buffer(buf);
+    else if (buf[0] & TWI_CMD_MASK_LED_BANK_0) {
+      led_update_bank(buf,0);
+    }
+    else if (buf[0] & TWI_CMD_MASK_LED_BANK_1) {
+      led_update_bank(buf,1);
+    }
+    else if (buf[0] & TWI_CMD_MASK_LED_BANK_2) {
+      led_update_bank(buf,2);
+    }
+    else if (buf[0] & TWI_CMD_MASK_LED_BANK_3) {
+      led_update_bank(buf,3);
     }
 }
 

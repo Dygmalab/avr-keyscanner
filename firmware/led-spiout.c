@@ -3,6 +3,8 @@
 #include <util/delay.h>
 #include "main.h"
 #include "led-spiout.h"
+#include "is31io7326.h"
+
 
 /* SPI LED driver to send data to APA102 LEDs
  *
@@ -17,24 +19,35 @@
  * shouldn't matter.
  */
 
-static volatile uint8_t led_buffer[LED_BUFSZ];
+
+typedef union {
+  uint8_t bank[4][LED_BANK_SIZE];
+  uint8_t whole[LED_BUFSZ];
+} led_buffer_t;
+
+
+static volatile led_buffer_t led_buffer;
+
 static volatile enum {
   START_FRAME,
   DATA,
   END_FRAME
 } led_phase;
+
 static volatile uint16_t index; /* next byte to transmit */
 
 /* Update the transmit buffer with LED_BUFSZ bytes of new data */
-void led_update_buffer(const uint8_t *buf)
+void led_update_bank(uint8_t *buf, const uint8_t bank)
 {
   /* Double-buffering here is wasteful, but there isn't enough RAM on
      ATTiny48 to single buffer 32 LEDs and have everything else work
      unmodified. However there's enough RAM on ATTiny88 to double
      buffer 32 LEDs! And double buffering is simpler, less likely to
      flicker. */
+
+  buf[0] = buf[0] | TWI_CMD_LED_BANK_FIXUP; // Turn the bits we're using to signal LED commands back into LED data
   DISABLE_INTERRUPTS({
-      memcpy((uint8_t *)led_buffer, buf, LED_BUFSZ);
+      memcpy((uint8_t *)led_buffer.bank[bank], buf, LED_BANK_SIZE);
   });
 }
 
@@ -71,7 +84,7 @@ ISR(SPI_STC_vect)
       }
       break;
   case DATA:
-    SPDR = led_buffer[index];
+    SPDR = led_buffer.whole[index];
     if(next_index == LED_BUFSZ) {
       led_phase = END_FRAME;
       next_index = 0;
