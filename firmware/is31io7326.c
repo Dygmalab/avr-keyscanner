@@ -31,17 +31,9 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 	        }
         }
     }
-    else if ((buf[0] & TWI_CMD_MASK_LED_BANK_3) == TWI_CMD_MASK_LED_BANK_3) {
-      led_update_bank(buf,3);
-    }
-    else if ((buf[0] & TWI_CMD_MASK_LED_BANK_2) == TWI_CMD_MASK_LED_BANK_2) {
-      led_update_bank(buf,2);
-    }
-    else if ((buf[0] & TWI_CMD_MASK_LED_BANK_1) == TWI_CMD_MASK_LED_BANK_1) {
-      led_update_bank(buf,1);
-    }
-    else if ((buf[0] & TWI_CMD_MASK_LED_BANK_0) == TWI_CMD_MASK_LED_BANK_0) {
-      led_update_bank(buf,0);
+        // if the upper four bits of the byte say this is an LED cmd
+    else if ((buf[0] & 0xf0) == TWI_CMD_LED_BASE)  { 
+      led_update_bank(&buf[1], buf[0] & 0x0f); // the lowest four bits are the bank #
     }
 }
 
