@@ -31,17 +31,17 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 	        }
         }
     }
-    else if (buf[0] & TWI_CMD_MASK_LED_BANK_0) {
-      led_update_bank(buf,0);
+    else if ((buf[0] & TWI_CMD_MASK_LED_BANK_3) == TWI_CMD_MASK_LED_BANK_3) {
+      led_update_bank(buf,3);
     }
-    else if (buf[0] & TWI_CMD_MASK_LED_BANK_1) {
-      led_update_bank(buf,1);
-    }
-    else if (buf[0] & TWI_CMD_MASK_LED_BANK_2) {
+    else if ((buf[0] & TWI_CMD_MASK_LED_BANK_2) == TWI_CMD_MASK_LED_BANK_2) {
       led_update_bank(buf,2);
     }
-    else if (buf[0] & TWI_CMD_MASK_LED_BANK_3) {
-      led_update_bank(buf,3);
+    else if ((buf[0] & TWI_CMD_MASK_LED_BANK_1) == TWI_CMD_MASK_LED_BANK_1) {
+      led_update_bank(buf,1);
+    }
+    else if ((buf[0] & TWI_CMD_MASK_LED_BANK_0) == TWI_CMD_MASK_LED_BANK_0) {
+      led_update_bank(buf,0);
     }
 }
 
