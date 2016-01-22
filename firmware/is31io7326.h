@@ -16,7 +16,10 @@ typedef union {
 
 
 #define TWI_CMD_NONE 0x00
-#define TWI_CMD_CFG  0x08
+#define TWI_CMD_CFG 0x01
+#define TWI_CMD_LED_BASE 0x80
+
+
 
 // Configuration register
 extern uint8_t issi_config;

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#if defined (__AVR_ATtiny48__)
+#if defined (__AVR_ATtiny48__) || defined (__AVR_ATtiny88__)
 # include "config/attiny48.h"
 #else
 # error No port configuration found for hardware

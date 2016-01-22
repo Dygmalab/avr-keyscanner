@@ -1,5 +1,6 @@
 #include "is31io7326.h"
 #include "keyscanner.h"
+#include "led-spiout.h"
 
 static inline void setup(void)
 {
@@ -10,6 +11,7 @@ static inline void setup(void)
 int main(void)
 {
     setup();
+    led_init();
     while(1){
         keyscanner_main();
     }

@@ -2,6 +2,7 @@
 #include "main.h"
 #include "ringbuf.h"
 #include "twi-slave.h"
+#include "led-spiout.h"
 
 uint8_t issi_config = 0x10;
 
@@ -19,7 +20,7 @@ void issi_init(void)
 static uint8_t issi_twi_command = TWI_CMD_NONE;
 
 void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
-    if (__builtin_expect(bufsiz != 0, 1)) {
+    if (__builtin_expect(bufsiz <=2, 0)) {
         if (buf[0] == TWI_CMD_CFG) {
             if (bufsiz > 1) {
 	            // SET configuration
@@ -29,6 +30,10 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 	            issi_twi_command = TWI_CMD_CFG;
 	        }
         }
+    }
+        // if the upper four bits of the byte say this is an LED cmd
+    else if ((buf[0] & 0xf0) == TWI_CMD_LED_BASE)  { 
+      led_update_bank(&buf[1], buf[0] & 0x0f); // the lowest four bits are the bank #
     }
 }
 

@@ -16,25 +16,29 @@
 #                   default_serial = "usb";
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
 
+# To override any of these for your local setup, create a file Makefile.local
+# (ignored by git)
+-include Makefile.local
+
 # See avr-help for all possible devices
-DEVICE     = attiny48
+DEVICE     ?= attiny88
 
 # 8Mhz
-CLOCK      = 8000000
+CLOCK      ?= 8000000
 
-# Uncomment one of these (or create your own) if you haven't yet set up ~/.avrduderc with a default programmer.
+# Add something like this to Makefile.local if you haven't yet set up ~/.avrduderc with a default programmer.
 # PROGRAMMER = -c usbtiny -P usb
 # PROGRAMMER = -c dragon_isp -P usb
 
 # Add more objects for each .c file here
-OBJECTS    = main.o twi-slave.o ringbuf.o is31io7326.o keyscanner.o
+OBJECTS    = main.o twi-slave.o ringbuf.o is31io7326.o keyscanner.o led-spiout.o
 
 # For computing fuse byte values for other devices and options see
 # the fuse bit calculator at http://www.engbedded.com/fusecalc/
 FUSES      = -U lfuse:w:0xee:m -U hfuse:w:0xdd:m -U efuse:w:0x01:m
 
-AVRDUDE_PATH = /usr/local/bin/avrdude
-GCC_PATH = avr-gcc
+AVRDUDE_PATH ?= avrdude
+GCC_PATH ?= avr-gcc
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE)
@@ -60,7 +64,7 @@ flash:	all
 	$(AVRDUDE) -U flash:w:main.hex:i
 
 fuse:
-	$(AVRDUDE) $(FUSES)
+	$(AVRDUDE) -B 100 $(FUSES)
 
 # Xcode uses the Makefile targets "", "clean" and "install"
 install: flash fuse
