@@ -2,7 +2,7 @@ language: cpp
 before_install:
  - wget http://www.atmel.com/images/avr8-gnu-toolchain-3.5.0.1662-linux.any.x86_64.tar.gz -O avr8.tar.gz
  - tar -zxf avr8.tar.gz
- - export PATH="$PATH:$TRAVIS_BUILD_DIR/avr8-gnu-toolchain-linux_x86/bin"
+ - export PATH="$PATH:$TRAVIS_BUILD_DIR/avr8-gnu-toolchain-linux_x86_64/bin"
 script:
 - cd firmware
 - make
