@@ -7,6 +7,11 @@ script:
 - cd firmware
 - make
 notifications:
+  irc:
+    channels:
+      - "chat.freenode.net#keyboardio"
+    use_notice: true
+    skip_join: true
   email:
     on_success: change
     on_failure: change
