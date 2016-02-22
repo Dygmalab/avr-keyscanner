@@ -14,6 +14,9 @@
 #define DDR_ROWS DDRC
 #define PIN_ROWS PINC
 
+#define ROW_PINMASK  (_BV(0)|_BV(1)|_BV(2)|_BV(3))
+
+
 // COLS: Scanning port (cols) 
 #define PORT_COLS PORTD
 #define DDR_COLS DDRD

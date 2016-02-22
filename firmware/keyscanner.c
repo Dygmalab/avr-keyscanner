@@ -13,9 +13,12 @@ debounce_t db[] = {
 
 void keyscanner_init(void)
 {
-    DDR_ROWS = 0x00;
-    PORT_ROWS = 0xFF;
 
+    // Write to rows - we only use some of the pins in the row port
+    DDR_ROWS |= ROW_PINMASK;
+    PORT_ROWS |= ROW_PINMASK;
+
+    // Read from cols -- We use all 8 bits of cols
     DDR_COLS = 0x00;
     PORT_COLS = 0xFF;
 }
@@ -31,12 +34,10 @@ static inline uint8_t popCount(uint8_t val) {
 void keyscanner_main(void)
 {
     // For each enabled row...
+    // TODO: this should really draw from the ROW_PINMASK
     for (uint8_t row = 0; row < 4; ++row) {
-        uint8_t row_bitmask = _BV(pp);
-
-	/* HACK: exclude SPI pins from the DDR/PORT mask */
-        DDR_ROWS = (0x00 ^ row_bitmask) | ( _BV(5)|_BV(3)|_BV(2));
-        PORT_ROWS = (0xFF ^ row_bitmask) & ~(_BV(5)|_BV(3)|_BV(2));
+        // Reset all of our row pins, then unset the one we want to read as low
+        PORT_ROWS = (PORT_ROWS | ROW_PINMASK ) & ~_BV(row);
 
 
         uint8_t col_bits = PIN_COLS;
