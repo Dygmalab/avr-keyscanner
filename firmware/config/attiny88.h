@@ -7,25 +7,17 @@
  *     PORTB: used by ISP
  *     PORTC: used by TWI/I²C
  *
- * For complete compatibility with IS31IO7326, the OD port should be expected to
- * be populated with external pull-up resistors, making it unsuitable for ISP.
  */
 
-// PP: Scanning port (N/C when all keys are up)
-#define PORT_PP PORTB
-#define DDR_PP DDRB
-#define PIN_PP PINB
+// ROWS: Signal port (rows) 
+#define PORT_ROWS PORTC
+#define DDR_ROWS DDRC
+#define PIN_ROWS PINC
 
-// OD: Signal port (expect pins to be pulled up to Vᴄᴄ by 4.7KΩ)
-#define PORT_OD PORTD
-#define DDR_OD DDRD
-#define PIN_OD PIND
-
-// INT: Interrupt pin
-#define PIN_NO_INT 7
-#define PORT_INT PORTC
-#define DDR_INT DDRC
-#define PIN_INT PINC
+// COLS: Scanning port (cols) 
+#define PORT_COLS PORTD
+#define DDR_COLS DDRD
+#define PIN_COLS PIND
 
 // AD01: lower two bits of device address
-#define AD01() (PINC & 0x03)
+#define AD01() ((PINB & _BV(0)) |( PINB & _BV(1)))
