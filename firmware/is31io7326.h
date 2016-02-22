@@ -9,7 +9,7 @@ typedef union {
         uint8_t row:2,
                 col:3,
                 keyState:1,
-                dataNumber:1;
+                keyEventsWaiting:1,
     };
     uint8_t val;
 } key_t;

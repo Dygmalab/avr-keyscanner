@@ -47,9 +47,9 @@ void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 key_t key;
                 key.val = ringbuf_pop();
                 if (ringbuf_empty()) {
-                    key.dataNumber = 0;
+                    key.keyEventsWaiting = 0;
                 } else {
-                    key.dataNumber = 1;
+                    key.keyEventsWaiting = 1;
                 }
                 buf[0] = key.val;
                 *bufsiz = 1;
