@@ -46,12 +46,15 @@ void keyscanner_main(void)
          *  * Multiple COLS pins are pulled low AND
          *  * Multiple ROWS pins are pulled low
          */
+        /* 
         uint8_t nRows = popCount(~PIN_ROWS);
         uint8_t nCols = popCount(~col_bits);
         // Most of the time the keyboard will not be a rollover state
         if (__builtin_expect(nRows > 1 && nCols > 1, 0)) {
             continue;
         }
+        */
+
 
         // Debounce key state
         uint8_t changes = debounce(col_bits, db + row);
