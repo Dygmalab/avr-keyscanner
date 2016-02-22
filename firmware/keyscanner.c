@@ -72,6 +72,7 @@ void keyscanner_main(void)
 
         DISABLE_INTERRUPTS({
             key_t key;
+            key.eventReported = 1;
             key.keyEventsWaiting = 0; // Set by I²C code (ringbuf.count != 0)
             key.row = row;
 
