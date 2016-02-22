@@ -30,13 +30,6 @@ static inline uint8_t popCount(uint8_t val) {
 
 void keyscanner_main(void)
 {
-    /* TODO: low power mode:
-     *   When all keys reported up:
-     *     DDR_PP = 0x11; PORT_PP = 0x00;
-     *     Guarantee wake on TWI / any PORT_OD pin FALLING
-     *     Sleep
-     */
-
     // For each enabled row...
     for (uint8_t row = 0; row < 4; ++row) {
         uint8_t row_bitmask = _BV(pp);
