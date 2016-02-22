@@ -6,8 +6,8 @@
 
 typedef union {
     struct {
-        uint8_t pp:3,
-                od:3,
+        uint8_t row:2,
+                col:3,
                 keyState:1,
                 dataNumber:1;
     };

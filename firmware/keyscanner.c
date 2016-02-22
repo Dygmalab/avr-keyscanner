@@ -17,11 +17,11 @@ debounce_t db[] = {
 
 void keyscanner_init(void)
 {
-    DDR_PP = 0x00;
-    PORT_PP = 0xFF;
+    DDR_ROWS = 0x00;
+    PORT_ROWS = 0xFF;
 
-    DDR_OD = 0x00;
-    PORT_OD = 0xFF;
+    DDR_COLS = 0x00;
+    PORT_COLS = 0xFF;
 }
 
 static inline uint8_t popCount(uint8_t val) {
@@ -42,29 +42,29 @@ void keyscanner_main(void)
      */
 
     // For each enabled row...
-    for (uint8_t pp = 1; pp < 5; ++pp) {
-        uint8_t pp_bitmask = _BV(pp);
+    for (uint8_t row = 0; row < 4; ++row) {
+        uint8_t row_bitmask = _BV(pp);
 
 	/* HACK: exclude SPI pins from the DDR/PORT mask */
-        DDR_PP = (0x00 ^ pp_bitmask) | ( _BV(5)|_BV(3)|_BV(2));
-        PORT_PP = (0xFF ^ pp_bitmask) & ~(_BV(5)|_BV(3)|_BV(2));
+        DDR_ROWS = (0x00 ^ row_bitmask) | ( _BV(5)|_BV(3)|_BV(2));
+        PORT_ROWS = (0xFF ^ row_bitmask) & ~(_BV(5)|_BV(3)|_BV(2));
 
 
-        uint8_t od_bits = PIN_OD;
+        uint8_t col_bits = PIN_COLS;
         /*
          * Rollover conditions exist if:
-         *  * Multiple OD pins are pulled low AND
-         *  * Multiple PP pins are pulled low
+         *  * Multiple COLS pins are pulled low AND
+         *  * Multiple ROWS pins are pulled low
          */
-        uint8_t nPp = popCount(~PIN_PP);
-        uint8_t nOd = popCount(~od_bits);
+        uint8_t nRows = popCount(~PIN_ROWS);
+        uint8_t nCols = popCount(~col_bits);
         // Most of the time the keyboard will not be a rollover state
-        if (__builtin_expect(nPp > 1 && nOd > 1, 0)) {
+        if (__builtin_expect(nRows > 1 && nCols > 1, 0)) {
             continue;
         }
 
         // Debounce key state
-        uint8_t changes = debounce(od_bits, db + pp);
+        uint8_t changes = debounce(col_bits, db + row);
         // Most of the time there will be no new key events
         if (__builtin_expect(changes == 0, 1)) {
             continue;
@@ -73,13 +73,13 @@ void keyscanner_main(void)
         DISABLE_INTERRUPTS({
             key_t key;
             key.dataNumber = 0; // Set by I²C code (ringbuf.count != 0)
-            key.pp = pp;
+            key.row = row;
 
-            for (int8_t od = 0; od < 8; od++) {
+            for (int8_t col = 0; col < 8; col++) {
                 // Fewer than half the keys are expected to be down for each scanline
-                if (__builtin_expect(bit_is_set(changes, od), 0)) {
-                    key.keyState = bit_is_clear(db[pp].state, od);
-                    key.od = od;
+                if (__builtin_expect(bit_is_set(changes, col), 0)) {
+                    key.keyState = bit_is_clear(db[row].state, col);
+                    key.col = col;
                     ringbuf_append(key.val);
                 }
             }

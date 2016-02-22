@@ -12,14 +12,14 @@
  */
 
 // PP: Scanning port (N/C when all keys are up)
-#define PORT_PP PORTB
-#define DDR_PP DDRB
-#define PIN_PP PINB
+#define PORT_ROWS PORTB
+#define DDR_ROWS DDRB
+#define PIN_ROWS PINB
 
 // OD: Signal port (expect pins to be pulled up to Vᴄᴄ by 4.7KΩ)
-#define PORT_OD PORTD
-#define DDR_OD DDRD
-#define PIN_OD PIND
+#define PORT_COLS PORTD
+#define DDR_COLS DDRD
+#define PIN_COLS PIND
 
 // INT: Interrupt pin
 #define PIN_NO_INT 7
