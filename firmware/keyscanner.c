@@ -21,6 +21,11 @@ void keyscanner_init(void)
     // Read from cols -- We use all 8 bits of cols
     DDR_COLS = 0x00;
     PORT_COLS = 0xFF;
+
+    // Assert comm_en so we can use the interhand transcievers
+             DDRC ^= _BV(7);
+             PORTC |= _BV(7);
+
 }
 
 static inline uint8_t popCount(uint8_t val) {
