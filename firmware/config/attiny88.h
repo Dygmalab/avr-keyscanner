@@ -23,8 +23,7 @@
 #define DDR_COLS DDRD
 #define PIN_COLS PIND
 
-#define COL_PINMASK (_BV(0)|_BV(1)|_BV(2)|_BV(3)|_BV(4)|_BV(5)|_BV(6)|_BV(7))
-
+#define COL_PINMASK  0xFF
 #define COL_COUNT 8
 
 // AD01: lower two bits of device address

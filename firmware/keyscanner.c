@@ -8,19 +8,23 @@ debounce_t db[] = {
     {0x00, 0x00, 0xFF},
     {0x00, 0x00, 0xFF},
     {0x00, 0x00, 0xFF},
+    {0x00, 0x00, 0xFF},
+    {0x00, 0x00, 0xFF},
+    {0x00, 0x00, 0xFF},
+    {0x00, 0x00, 0xFF},
     {0x00, 0x00, 0xFF}
 };
 
 void keyscanner_init(void)
 {
 
-    // Write to rows - we only use some of the pins in the row port
-    DDR_ROWS |= ROW_PINMASK;
-    PORT_ROWS |= ROW_PINMASK;
+    // Write to cols - we only use some of the pins in the row port
+    DDR_COLS = 0xff;
+    PORT_COLS = 0xff;
 
-    // Read from cols -- We use all 8 bits of cols
-    DDR_COLS = 0x00;
-    PORT_COLS = 0xFF;
+    // Read from rows -- We use all 8 bits of cols
+    DDR_ROWS  = 0x00;
+    PORT_ROWS |= ROW_PINMASK;
 
     // Assert comm_en so we can use the interhand transcievers
              DDRC ^= _BV(7);
@@ -40,45 +44,28 @@ void keyscanner_main(void)
 {
     // For each enabled row...
     // TODO: this should really draw from the ROW_PINMASK
-    for (uint8_t row = 0; row < ROW_COUNT; ++row) {
+    for (uint8_t col = 0; col < COL_COUNT; ++col) {
         // Reset all of our row pins, then unset the one we want to read as low
-        PORT_ROWS = (PORT_ROWS | ROW_PINMASK ) & ~_BV(row);
-
-
-        uint8_t col_bits = PIN_COLS;
-        /*
-         * Rollover conditions exist if:
-         *  * Multiple COLS pins are pulled low AND
-         *  * Multiple ROWS pins are pulled low
-         */
-        /* 
-        uint8_t nRows = popCount(~PIN_ROWS);
-        uint8_t nCols = popCount(~col_bits);
-        // Most of the time the keyboard will not be a rollover state
-        if (__builtin_expect(nRows > 1 && nCols > 1, 0)) {
-            continue;
-        }
-        */
-
-
+        PORT_COLS = (PORT_COLS | COL_PINMASK ) & ~_BV(col);
+        uint8_t row_bits = PIN_ROWS;
         // Debounce key state
-        uint8_t changes = debounce(col_bits, db + row);
+        uint8_t changes = debounce(row_bits, db + col);
         // Most of the time there will be no new key events
         if (__builtin_expect(changes == 0, 1)) {
-            continue;
+     //       continue;
         }
 
         DISABLE_INTERRUPTS({
             key_t key;
             key.eventReported = 1;
             key.keyEventsWaiting = 0; // Set by I²C code (ringbuf.count != 0)
-            key.row = row;
+            key.col = 8-col;
 
-            for (int8_t col = 0; col < COL_COUNT; col++) {
+            for (int8_t row = 0; row < 4; row++) {
                 // Fewer than half the keys are expected to be down for each scanline
-                if (__builtin_expect(bit_is_set(changes, col), 0)) {
-                    key.keyState = bit_is_clear(db[row].state, col);
-                    key.col = col;
+                if (__builtin_expect(bit_is_set(changes, row), 0)) {
+                    key.keyState = bit_is_clear(db[col].state, row);
+                    key.row = row;
                     ringbuf_append(key.val);
                 }
             }
