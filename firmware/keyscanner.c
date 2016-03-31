@@ -40,7 +40,7 @@ void keyscanner_main(void)
 {
     // For each enabled row...
     // TODO: this should really draw from the ROW_PINMASK
-    for (uint8_t row = 0; row < 4; ++row) {
+    for (uint8_t row = 0; row < ROW_COUNT; ++row) {
         // Reset all of our row pins, then unset the one we want to read as low
         PORT_ROWS = (PORT_ROWS | ROW_PINMASK ) & ~_BV(row);
 
@@ -74,7 +74,7 @@ void keyscanner_main(void)
             key.keyEventsWaiting = 0; // Set by I²C code (ringbuf.count != 0)
             key.row = row;
 
-            for (int8_t col = 0; col < 8; col++) {
+            for (int8_t col = 0; col < COL_COUNT; col++) {
                 // Fewer than half the keys are expected to be down for each scanline
                 if (__builtin_expect(bit_is_set(changes, col), 0)) {
                     key.keyState = bit_is_clear(db[row].state, col);
