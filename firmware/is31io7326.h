@@ -13,7 +13,7 @@ typedef union {
                 eventReported:1;
     };
     uint8_t val;
-} key_t;
+} state_t;
 
 
 #define TWI_CMD_NONE 0x00

@@ -56,17 +56,17 @@ void keyscanner_main(void)
         }
 
         DISABLE_INTERRUPTS({
-            key_t key;
-            key.eventReported = 1;
-            key.keyEventsWaiting = 0; // Set by I²C code (ringbuf.count != 0)
-            key.col = 8-col;
+            state_t keystate;
+            keystate.eventReported = 1;
+            keystate.keyEventsWaiting = 0; // Set by I²C code (ringbuf.count != 0)
+            keystate.col = 8-col;
 
             for (int8_t row = 0; row < 4; row++) {
                 // Fewer than half the keys are expected to be down for each scanline
                 if (__builtin_expect(bit_is_set(changes, row), 0)) {
-                    key.keyState = bit_is_clear(db[col].state, row);
-                    key.row = row;
-                    ringbuf_append(key.val);
+                    keystate.keyState = bit_is_clear(db[col].state, row);
+                    keystate.row = row;
+                    ringbuf_append(keystate.val);
                 }
             }
 

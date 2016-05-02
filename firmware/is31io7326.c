@@ -40,18 +40,18 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
     if (__builtin_expect(*bufsiz != 0, 1)) {
         if (issi_twi_command == TWI_CMD_NONE) {
-            // Key Status Register
+            // Keyscanner Status Register
             if (ringbuf_empty()) {
                 *bufsiz = 0;
             } else {
-                key_t key;
-                key.val = ringbuf_pop();
+                state_t keystate;
+                keystate.val = ringbuf_pop();
                 if (ringbuf_empty()) {
-                    key.keyEventsWaiting = 0;
+                    keystate.keyEventsWaiting = 0;
                 } else {
-                    key.keyEventsWaiting = 1;
+                    keystate.keyEventsWaiting = 1;
                 }
-                buf[0] = key.val;
+                buf[0] = keystate.val;
                 *bufsiz = 1;
             }
         }
