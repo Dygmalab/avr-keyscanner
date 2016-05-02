@@ -27,8 +27,10 @@ void keyscanner_init(void)
     PORT_ROWS |= ROW_PINMASK;
 
     // Assert comm_en so we can use the interhand transcievers
-             DDRC ^= _BV(7);
-             PORTC |= _BV(7);
+    // (Until comm_en on the i2c transcievers is pulled high, 
+    //  they're disabled)
+    DDRC ^= _BV(7);
+    PORTC |= _BV(7);
 
 }
 
