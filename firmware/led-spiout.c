@@ -3,7 +3,7 @@
 #include <util/delay.h>
 #include "main.h"
 #include "led-spiout.h"
-#include "is31io7326.h"
+#include "wire-protocol.h"
 
 
 /* SPI LED driver to send data to APA102 LEDs

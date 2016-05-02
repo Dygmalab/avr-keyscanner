@@ -1,4 +1,4 @@
-#include "is31io7326.h"
+#include "wire-protocol.h"
 #include "main.h"
 #include "ringbuf.h"
 #include "twi-slave.h"

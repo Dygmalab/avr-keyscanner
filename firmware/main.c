@@ -1,4 +1,4 @@
-#include "is31io7326.h"
+#include "wire-protocol.h"
 #include "keyscanner.h"
 #include "led-spiout.h"
 
