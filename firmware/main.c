@@ -6,12 +6,12 @@ static inline void setup(void)
 {
     keyscanner_init();
     issi_init();
+    led_init();
 }
 
 int main(void)
 {
     setup();
-    led_init();
     while(1){
         keyscanner_main();
     }
