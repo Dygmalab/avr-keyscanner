@@ -50,6 +50,7 @@ void keyscanner_main(void)
         // Reset all of our row pins, then unset the one we want to read as low
         PORT_COLS = (PORT_COLS | COL_PINMASK ) & ~_BV(col);
         uint8_t row_bits = PIN_ROWS;
+        row_bits &= (_BV(0) | _BV(1)| _BV(2) | _BV(3));
         // Debounce key state
         uint8_t changes = debounce(row_bits, db + col);
         // Most of the time there will be no new key events
