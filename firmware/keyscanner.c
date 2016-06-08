@@ -55,8 +55,9 @@ void keyscanner_main(void)
         uint8_t changes = debounce(row_bits, db + col);
         // Most of the time there will be no new key events
         if (__builtin_expect(changes == 0, 1)) {
-     //       continue;
+            continue;
         }
+                
 
         DISABLE_INTERRUPTS({
             state_t keystate;
