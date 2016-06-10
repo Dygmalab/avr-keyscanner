@@ -44,6 +44,12 @@ static inline uint8_t popCount(uint8_t val) {
 
 void keyscanner_main(void)
 {
+
+    uint8_t key_state[8];
+
+   // uint32_t key_state = 0x00;
+    uint8_t changes = 0;
+
     // For each enabled row...
     // TODO: this should really draw from the ROW_PINMASK
     for (uint8_t col = 0; col < COL_COUNT; ++col) {
@@ -52,28 +58,21 @@ void keyscanner_main(void)
         uint8_t row_bits = PIN_ROWS;
         row_bits &= (_BV(0) | _BV(1)| _BV(2) | _BV(3));
         // Debounce key state
-        uint8_t changes = debounce(row_bits, db + col);
-        // Most of the time there will be no new key events
+        changes += debounce(row_bits, db + col);
+        key_state[col] = 0x0f ^ row_bits;
+    }
+        
+    
+    // Most of the time there will be no new key events
         if (__builtin_expect(changes == 0, 1)) {
-            continue;
+          return;
         }
-                
+
 
         DISABLE_INTERRUPTS({
-            state_t keystate;
-            keystate.eventReported = 1;
-            keystate.keyEventsWaiting = 0; // Set by I²C code (ringbuf.count != 0)
-            keystate.col = 8-col;
-
-            for (int8_t row = 0; row < 4; row++) {
-                // Fewer than half the keys are expected to be down for each scanline
-                if (__builtin_expect(bit_is_set(changes, row), 0)) {
-                    keystate.keyState = bit_is_clear(db[col].state, row);
-                    keystate.row = row;
-                    ringbuf_append(keystate.val);
-                }
+            for(uint8_t i=0; i<8;i+=2) {
+                uint8_t keys = (key_state[i] << 4) | key_state[i+1];
+                ringbuf_append(keys);
             }
-
         });
-    }
 }

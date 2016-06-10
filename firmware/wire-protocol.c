@@ -1,9 +1,9 @@
 #include "wire-protocol.h"
+#include <string.h>
 #include "main.h"
 #include "ringbuf.h"
 #include "twi-slave.h"
 #include "led-spiout.h"
-
 uint8_t issi_config = 0x10;
 
 void issi_init(void)
@@ -37,22 +37,27 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     }
 }
 
+uint8_t key_substate;
+
 void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
     if (__builtin_expect(*bufsiz != 0, 1)) {
         if (issi_twi_command == TWI_CMD_NONE) {
             // Keyscanner Status Register
-            if (ringbuf_empty()) {
-                *bufsiz = 0;
+            if (ringbuf_empty()) { 
+                // Nothing in the ring buffer is the same thing as all keys released
+                // Really, we _should_ be able to return a single byte here, but 
+                // Jesse is too clueless to figure out how to get I2C to signal
+                // a 'short' response
+                buf[0]=0x00;
+                buf[1]=0x00;
+                buf[2]=0x00;
+                buf[3]=0x00;
+                *bufsiz=4;
             } else {
-                state_t keystate;
-                keystate.val = ringbuf_pop();
-                if (ringbuf_empty()) {
-                    keystate.keyEventsWaiting = 0;
-                } else {
-                    keystate.keyEventsWaiting = 1;
+                for (uint8_t i = 0; i<4;i++ ) {
+                   buf[i] = ringbuf_pop();
                 }
-                buf[0] = keystate.val;
-                *bufsiz = 1;
+                *bufsiz=4;
             }
         }
         else if (issi_twi_command == TWI_CMD_CFG) {
@@ -61,6 +66,9 @@ void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             *bufsiz = 1;
             // reset the twi command on the wire
             issi_twi_command = TWI_CMD_NONE;
-        }  
+        } else {
+            buf[0] = 0x01;
+            *bufsiz = 1;
+        }
     }
 }

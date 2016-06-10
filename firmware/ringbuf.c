@@ -13,9 +13,13 @@ void ringbuf_append(uint8_t value)
     }
 }
 
+uint8_t ringbuf_size(void) {
+    return _ring.count;
+}
+
 bool ringbuf_empty(void)
 {
-    return _ring.count == 0;
+    return _ring.count ==0;
 }
 
 uint8_t ringbuf_pop(void)
