@@ -70,9 +70,9 @@ void keyscanner_main(void)
 
 
         DISABLE_INTERRUPTS({
-            for(uint8_t i=0; i<8;i+=2) {
-                uint8_t keys = (key_state[i] << 4) | key_state[i+1];
-                ringbuf_append(keys);
-            }
+            ringbuf_append( key_state[0] | (key_state[7] << 4));
+            ringbuf_append( key_state[6] | (key_state[5] << 4));
+            ringbuf_append( key_state[4] | (key_state[3] << 4));
+            ringbuf_append( key_state[2] | (key_state[1] << 4));
         });
 }
