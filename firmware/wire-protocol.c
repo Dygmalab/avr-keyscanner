@@ -48,16 +48,15 @@ void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 // Really, we _should_ be able to return a single byte here, but 
                 // Jesse is too clueless to figure out how to get I2C to signal
                 // a 'short' response
-                buf[0]=0x00;
-                buf[1]=0x00;
-                buf[2]=0x00;
-                buf[3]=0x00;
-                *bufsiz=4;
+                buf[0]=TWI_REPLY_NONE;
+                *bufsiz=1;
             } else {
-                for (uint8_t i = 0; i<4;i++ ) {
+                buf[0]=TWI_REPLY_KEYDATA;
+                for (uint8_t i = 1; i<5;i++ ) {
+                
                    buf[i] = ringbuf_pop();
                 }
-                *bufsiz=4;
+                *bufsiz=5;
             }
         }
         else if (issi_twi_command == TWI_CMD_CFG) {
