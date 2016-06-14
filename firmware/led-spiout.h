@@ -4,7 +4,7 @@
 /* Number of LEDs in the chain.
    Max is ~8 (maybe less) on ATTiny48, 32 on ATTiny88. */
 #define NUM_LEDS 32
-#define NUM_LEDS_PER_BANK 4
+#define NUM_LEDS_PER_BANK 8
 #define NUM_LED_BANKS NUM_LEDS/NUM_LEDS_PER_BANK
 #define LED_DATA_SIZE 3
 #define LED_BUFSZ (LED_DATA_SIZE *NUM_LEDS)
