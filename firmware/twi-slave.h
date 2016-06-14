@@ -18,8 +18,8 @@
 ****************************************************************************/
 
 #define TWI_BUFFER_SIZE 32      // Reserves memory for the drivers transceiver buffer
-                                // 32 is the same as arduino's TX buffer for
-                                // TWI
+// 32 is the same as arduino's TX buffer for
+// TWI
 
 /****************************************************************************
   Callback definitions

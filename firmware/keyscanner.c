@@ -15,8 +15,7 @@ debounce_t db[] = {
     {0x00, 0x00, 0xFF}
 };
 
-void keyscanner_init(void)
-{
+void keyscanner_init(void) {
 
     // Write to cols - we only use some of the pins in the row port
     DDR_COLS = 0xff;
@@ -27,7 +26,7 @@ void keyscanner_init(void)
     PORT_ROWS |= ROW_PINMASK;
 
     // Assert comm_en so we can use the interhand transcievers
-    // (Until comm_en on the i2c transcievers is pulled high, 
+    // (Until comm_en on the i2c transcievers is pulled high,
     //  they're disabled)
     DDRC ^= _BV(7);
     PORTC |= _BV(7);
@@ -42,12 +41,11 @@ static inline uint8_t popCount(uint8_t val) {
     return count;
 }
 
-void keyscanner_main(void)
-{
+void keyscanner_main(void) {
 
     uint8_t key_state[8];
 
-   // uint32_t key_state = 0x00;
+    // uint32_t key_state = 0x00;
     uint8_t changes = 0;
 
     // For each enabled row...
@@ -61,18 +59,18 @@ void keyscanner_main(void)
         changes += debounce(row_bits, db + col);
         key_state[col] = 0x0f ^ row_bits;
     }
-        
-    
+
+
     // Most of the time there will be no new key events
-        if (__builtin_expect(changes == 0, 1)) {
-          return;
-        }
+    if (__builtin_expect(changes == 0, 1)) {
+        return;
+    }
 
 
-        DISABLE_INTERRUPTS({
-            ringbuf_append( key_state[0] | (key_state[7] << 4));
-            ringbuf_append( key_state[6] | (key_state[5] << 4));
-            ringbuf_append( key_state[4] | (key_state[3] << 4));
-            ringbuf_append( key_state[2] | (key_state[1] << 4));
-        });
+    DISABLE_INTERRUPTS({
+        ringbuf_append( key_state[0] | (key_state[7] << 4));
+        ringbuf_append( key_state[6] | (key_state[5] << 4));
+        ringbuf_append( key_state[4] | (key_state[3] << 4));
+        ringbuf_append( key_state[2] | (key_state[1] << 4));
+    });
 }

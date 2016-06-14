@@ -9,7 +9,7 @@
  *
  */
 
-// ROWS: Signal port (rows) 
+// ROWS: Signal port (rows)
 #define PORT_ROWS PORTC
 #define DDR_ROWS DDRC
 #define PIN_ROWS PINC
@@ -18,7 +18,7 @@
 
 #define ROW_COUNT 4
 
-// COLS: Scanning port (cols) 
+// COLS: Scanning port (cols)
 #define PORT_COLS PORTD
 #define DDR_COLS DDRD
 #define PIN_COLS PIND
