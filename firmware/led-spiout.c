@@ -51,6 +51,16 @@ void led_update_bank(uint8_t *buf, const uint8_t bank) {
 }
 
 
+/* Turn off the LEDs.
+ * TODO: A future implementation would stop sending updates to the LEDs
+ *       after setting them to black
+ */
+
+void led_disable() {
+    DISABLE_INTERRUPTS({
+        memset(&led_buffer.whole, 0x00, sizeof(led_buffer.whole));
+    });
+}
 
 void led_init() {
     /* Set MOSI, SCK, SS all to outputs */

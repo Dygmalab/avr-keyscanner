@@ -16,3 +16,5 @@ void led_init(void);
 /* Call this when you have new preformatted data for the LEDs */
 void led_update_bank(uint8_t *buf, const uint8_t bank);
 
+/* Call to turn the LEDs off */
+void led_disable(void);
