@@ -28,6 +28,8 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
                 // GET configuration
                 issi_twi_command = TWI_CMD_CFG;
             }
+        } else if (buf[0] == TWI_CMD_LED_DISABLE) {
+            led_disable();
         }
     }
     // if the upper four bits of the byte say this is an LED cmd
