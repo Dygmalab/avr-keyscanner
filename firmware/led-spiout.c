@@ -63,6 +63,10 @@ void led_disable() {
 }
 
 void led_init() {
+
+    // Make sure all our LEDs start off dark
+    led_disable();
+
     /* Set MOSI, SCK, SS all to outputs */
     DDRB = _BV(5)|_BV(3)|_BV(2);
     PORTB &= ~(_BV(5)|_BV(3)|_BV(2));
@@ -78,7 +82,6 @@ void led_init() {
     /* Start transmitting the first byte of the start frame */
     led_phase = START_FRAME;
     SPDR = 0x0;
-    _delay_ms(10);
     index = 1;
     subpixel = 0;
 }
