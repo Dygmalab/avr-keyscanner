@@ -71,13 +71,13 @@ void led_init() {
     DDRB = _BV(5)|_BV(3)|_BV(2);
     PORTB &= ~(_BV(5)|_BV(3)|_BV(2));
 
-    /* Enable SPI master, MSB first, fOSC/64 speed
-     * (128KHz)
+    /* Enable SPI master, MSB first, fOSC/16 speed
+     * (512KHz)
 
-      Measured at 12Hz of rainbow LED updates
+      Measured at about 300 Hz of LED updates
 
      */
-    SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPR1);
+    SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPR0);
 
     /* Start transmitting the first byte of the start frame */
     led_phase = START_FRAME;
