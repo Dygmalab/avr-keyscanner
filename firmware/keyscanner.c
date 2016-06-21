@@ -61,6 +61,7 @@ void keyscanner_main(void) {
     }
 
 
+    _delay_ms(1);
     // Most of the time there will be no new key events
     if (__builtin_expect(changes == 0, 1)) {
         return;
