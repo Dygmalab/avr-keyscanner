@@ -43,7 +43,6 @@ static inline uint8_t popCount(uint8_t val) {
 
 void keyscanner_main(void) {
 
-    uint8_t key_state[8];
 
     // uint32_t key_state = 0x00;
     uint8_t changes = 0;
@@ -56,8 +55,7 @@ void keyscanner_main(void) {
         uint8_t row_bits = PIN_ROWS;
         row_bits &= (_BV(0) | _BV(1)| _BV(2) | _BV(3));
         // Debounce key state
-        changes += debounce(row_bits, db + col);
-        key_state[col] = 0x0f ^ row_bits;
+        changes += debounce((row_bits ^ 0x0f) , db + col);
     }
 
 
@@ -69,9 +67,9 @@ void keyscanner_main(void) {
 
 
     DISABLE_INTERRUPTS({
-        ringbuf_append( key_state[0] | (key_state[7] << 4));
-        ringbuf_append( key_state[6] | (key_state[5] << 4));
-        ringbuf_append( key_state[4] | (key_state[3] << 4));
-        ringbuf_append( key_state[2] | (key_state[1] << 4));
+        ringbuf_append( db[0].state | (db[7].state << 4));
+        ringbuf_append( db[6].state | (db[5].state << 4));
+        ringbuf_append( db[4].state | (db[3].state << 4));
+        ringbuf_append( db[2].state | (db[1].state << 4));
     });
 }
