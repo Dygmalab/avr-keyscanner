@@ -17,18 +17,18 @@ debounce_t db[] = {
 
 void keyscanner_init(void) {
 
-    // Write to cols - we only use some of the pins in the row port
-    DDR_COLS = 0xff;
-    PORT_COLS = 0xff;
+    // Write to rows - we only use some of the pins in the row port
+    DDR_ROWS = 0xff;
+    PORT_ROWS = ROW_PINMASK;
 
-    // Read from rows -- We use all 8 bits of cols
-    DDR_ROWS  = 0x00;
-    PORT_ROWS |= ROW_PINMASK;
+    // Read from cols -- We use all 8 bits of cols
+    DDR_COLS  = 0x00;
+    PORT_COLS = 0xff;
 
     // Assert comm_en so we can use the interhand transcievers
     // (Until comm_en on the i2c transcievers is pulled high,
     //  they're disabled)
-    DDRC ^= _BV(7);
+ //    DDRC ^= _BV(7);
     PORTC |= _BV(7);
 
 }
@@ -49,13 +49,12 @@ void keyscanner_main(void) {
 
     // For each enabled row...
     // TODO: this should really draw from the ROW_PINMASK
-    for (uint8_t col = 0; col < COL_COUNT; ++col) {
+    for (uint8_t row = 0; row < ROW_COUNT; ++row) {
         // Reset all of our row pins, then unset the one we want to read as low
-        PORT_COLS = (PORT_COLS | COL_PINMASK ) & ~_BV(col);
-        uint8_t row_bits = PIN_ROWS;
-        row_bits &= (_BV(0) | _BV(1)| _BV(2) | _BV(3));
+        PORT_ROWS = (PORT_ROWS | ROW_PINMASK ) & ~_BV(row);
+        uint8_t col_bits = PIN_COLS;
         // Debounce key state
-        changes += debounce((row_bits ^ 0x0f) , db + col);
+        changes += debounce((col_bits) , db + row);
     }
 
 
@@ -67,9 +66,9 @@ void keyscanner_main(void) {
 
 
     DISABLE_INTERRUPTS({
-        ringbuf_append( db[0].state | (db[7].state << 4));
-        ringbuf_append( db[6].state | (db[5].state << 4));
-        ringbuf_append( db[4].state | (db[3].state << 4));
-        ringbuf_append( db[2].state | (db[1].state << 4));
+        ringbuf_append( db[1].state ^ 0xff);
+        ringbuf_append( db[2].state ^ 0xff );
+        ringbuf_append( db[3].state^ 0xff );
+        ringbuf_append( db[0].state ^ 0xff );
     });
 }
