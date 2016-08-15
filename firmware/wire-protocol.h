@@ -62,7 +62,7 @@ extern uint8_t issi_config;
 #define ISSI_CONFIG_LT(CFG)  ((CFG) & 0x03)
 
 // I²C driver functions
-void issi_twi_data_received( uint8_t *buf, uint8_t bufsiz);
-void issi_twi_data_requested( uint8_t *buf, uint8_t *bufsiz);
+void twi_data_received( uint8_t *buf, uint8_t bufsiz);
+void twi_data_requested( uint8_t *buf, uint8_t *bufsiz);
 
-void issi_init(void);
+void twi_init(void);

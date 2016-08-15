@@ -6,10 +6,10 @@
 #include "led-spiout.h"
 uint8_t issi_config = 0x10;
 
-void issi_init(void) {
+void twi_init(void) {
 
-    TWI_Rx_Data_Callback = issi_twi_data_received;
-    TWI_Tx_Data_Callback = issi_twi_data_requested;
+    TWI_Rx_Data_Callback = twi_data_received;
+    TWI_Tx_Data_Callback = twi_data_requested;
 
     // TODO: set TWI_Tx_Data_Callback and TWI_Rx_Data_Callback
     TWI_Slave_Initialise(TWI_BASE_ADDRESS | AD01());
@@ -18,7 +18,7 @@ void issi_init(void) {
 
 static uint8_t issi_twi_command = TWI_CMD_NONE;
 
-void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
+void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     if (__builtin_expect(bufsiz <=2, 0)) {
         if (buf[0] == TWI_CMD_CFG) {
             if (bufsiz > 1) {
@@ -40,7 +40,7 @@ void issi_twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 
 uint8_t key_substate;
 
-void issi_twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
+void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
     if (__builtin_expect(*bufsiz != 0, 1)) {
         if (issi_twi_command == TWI_CMD_NONE) {
             // Keyscanner Status Register
