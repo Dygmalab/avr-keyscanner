@@ -4,7 +4,7 @@
 #include "ringbuf.h"
 #include "twi-slave.h"
 #include "led-spiout.h"
-uint8_t issi_config = 0x10;
+uint8_t device_config = 0x10;
 
 void twi_init(void) {
 
@@ -23,7 +23,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         if (buf[0] == TWI_CMD_CFG) {
             if (bufsiz > 1) {
                 // SET configuration
-                issi_config = buf[1];
+                device_config = buf[1];
             } else {
                 // GET configuration
                 twi_command = TWI_CMD_CFG;
@@ -61,7 +61,7 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             }
         } else if (twi_command == TWI_CMD_CFG) {
             // Configuration Register
-            buf[0] = issi_config;
+            buf[0] = device_config;
             *bufsiz = 1;
             // reset the twi command on the wire
             twi_command = TWI_CMD_NONE;

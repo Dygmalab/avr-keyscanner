@@ -25,7 +25,7 @@ typedef union {
 #define TWI_REPLY_KEYDATA 0x01
 
 // Configuration register
-extern uint8_t issi_config;
+extern uint8_t device_config;
 
 
 /* ACI: Auto Clear INT
