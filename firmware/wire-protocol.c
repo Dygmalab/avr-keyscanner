@@ -59,6 +59,9 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 }
                 *bufsiz=5;
             }
+        } else if (twi_command == TWI_CMD_VERSION) {
+            buf[0] = DEVICE_VERSION;
+            *bufsiz = 1;
         } else if (twi_command == TWI_CMD_CFG) {
             // Configuration Register
             buf[0] = device_config;

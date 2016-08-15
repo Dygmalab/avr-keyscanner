@@ -20,6 +20,8 @@ typedef union {
 #define TWI_CMD_CFG 0x01
 #define TWI_CMD_LED_DISABLE 0x02
 #define TWI_CMD_LED_BASE 0x80
+#define TWI_CMD_VERSION 0x03
+
 
 #define TWI_REPLY_NONE 0x00
 #define TWI_REPLY_KEYDATA 0x01
