@@ -4,7 +4,7 @@
 
 static inline void setup(void) {
     keyscanner_init();
-    issi_init();
+    twi_init();
     led_init();
 }
 
