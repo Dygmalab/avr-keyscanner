@@ -16,7 +16,7 @@ void twi_init(void) {
     sei();
 }
 
-static uint8_t issi_twi_command = TWI_CMD_NONE;
+static uint8_t twi_command = TWI_CMD_NONE;
 
 void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     if (__builtin_expect(bufsiz <=2, 0)) {
@@ -26,7 +26,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
                 issi_config = buf[1];
             } else {
                 // GET configuration
-                issi_twi_command = TWI_CMD_CFG;
+                twi_command = TWI_CMD_CFG;
             }
         } else if (buf[0] == TWI_CMD_LED_DISABLE) {
             led_disable();
@@ -42,7 +42,7 @@ uint8_t key_substate;
 
 void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
     if (__builtin_expect(*bufsiz != 0, 1)) {
-        if (issi_twi_command == TWI_CMD_NONE) {
+        if (twi_command == TWI_CMD_NONE) {
             // Keyscanner Status Register
             if (ringbuf_empty()) {
                 // Nothing in the ring buffer is the same thing as all keys released
@@ -59,12 +59,12 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 }
                 *bufsiz=5;
             }
-        } else if (issi_twi_command == TWI_CMD_CFG) {
+        } else if (twi_command == TWI_CMD_CFG) {
             // Configuration Register
             buf[0] = issi_config;
             *bufsiz = 1;
             // reset the twi command on the wire
-            issi_twi_command = TWI_CMD_NONE;
+            twi_command = TWI_CMD_NONE;
         } else {
             buf[0] = 0x01;
             *bufsiz = 1;
