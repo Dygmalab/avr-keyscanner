@@ -29,6 +29,9 @@ void keyscanner_init(void) {
     // (Until comm_en on the i2c transcievers is pulled high,
     //  they're disabled)
 //    DDRC ^= _BV(7);
+    // PC7 is on the same port as the four row pins.
+    // We refer to it here as PORTC because 
+    // we're not using it as part of the keyscanner
     PORTC |= _BV(7);
 
 }
