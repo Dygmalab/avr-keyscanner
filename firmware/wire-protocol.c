@@ -28,6 +28,9 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
                 // GET configuration
                 twi_command = TWI_CMD_CFG;
             }
+        } else if (buf[0] == TWI_CMD_VERSION) {
+                twi_command = TWI_CMD_VERSION;
+            
         } else if (buf[0] == TWI_CMD_LED_DISABLE) {
             led_disable();
         }
@@ -62,6 +65,7 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
         } else if (twi_command == TWI_CMD_VERSION) {
             buf[0] = DEVICE_VERSION;
             *bufsiz = 1;
+            twi_command = TWI_CMD_NONE;
         } else if (twi_command == TWI_CMD_CFG) {
             // Configuration Register
             buf[0] = device_config;
