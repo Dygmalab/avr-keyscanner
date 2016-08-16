@@ -42,9 +42,6 @@ static inline uint8_t popCount(uint8_t val) {
 }
 
 void keyscanner_main(void) {
-
-
-    // uint32_t key_state = 0x00;
     uint8_t changes = 0;
 
     // For each enabled row...
