@@ -8,7 +8,7 @@
 
 /* SPI LED driver to send data to APA102 LEDs
  *
- * Preformatted data is sent to the micro nd then
+ * Preformatted data is sent to the micro and then
  * passed invia led_update_buffer(). The device
  * continuously outputs SPI data, refilling the SPI
  * output buffer from the SPI transfer complete interrupt.
