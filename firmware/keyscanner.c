@@ -48,9 +48,9 @@ void keyscanner_main(void) {
     uint8_t changes = 0;
 
     // For each enabled row...
-    // TODO: this should really draw from the ROW_PINMASK
     for (uint8_t row = 0; row < ROW_COUNT; ++row) {
-        // Reset all of our row pins, then unset the one we want to read as low
+        // Reset all of our row pins, then 
+        // set the one we want to read as low
         PORT_ROWS = (PORT_ROWS | ROW_PINMASK ) & ~_BV(row);
         uint8_t col_bits = PIN_COLS;
         // Debounce key state
@@ -64,11 +64,11 @@ void keyscanner_main(void) {
         return;
     }
 
-
+    // Snapshot the keystate to add to the ring buffer
     DISABLE_INTERRUPTS({
-        ringbuf_append( db[1].state ^ 0xff);
+        ringbuf_append( db[1].state ^ 0xff );
         ringbuf_append( db[2].state ^ 0xff );
-        ringbuf_append( db[3].state^ 0xff );
+        ringbuf_append( db[3].state ^ 0xff );
         ringbuf_append( db[0].state ^ 0xff );
     });
 }
