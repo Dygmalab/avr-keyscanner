@@ -33,8 +33,8 @@ static volatile enum {
     END_FRAME
 } led_phase;
 
-static volatile uint16_t index; /* next byte to transmit */
-static volatile uint16_t subpixel = 0;
+static volatile uint8_t index; /* next byte to transmit */
+static volatile uint8_t subpixel = 0;
 
 
 /* Update the transmit buffer with LED_BUFSZ bytes of new data */
