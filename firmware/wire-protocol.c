@@ -29,8 +29,8 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
                 twi_command = TWI_CMD_CFG;
             }
         } else if (buf[0] == TWI_CMD_VERSION) {
-                twi_command = TWI_CMD_VERSION;
-            
+            twi_command = TWI_CMD_VERSION;
+
         } else if (buf[0] == TWI_CMD_LED_DISABLE) {
             led_disable();
         }
