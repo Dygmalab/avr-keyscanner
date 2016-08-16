@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define DEVICE_VERSION 1
-
 #if defined (__AVR_ATtiny48__) || defined (__AVR_ATtiny88__)
 # include "config/attiny88.h"
 #else

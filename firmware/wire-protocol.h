@@ -15,6 +15,7 @@ typedef union {
     uint8_t val;
 } state_t;
 
+#define DEVICE_VERSION 2
 
 #define TWI_CMD_NONE 0x00
 #define TWI_CMD_CFG 0x01
