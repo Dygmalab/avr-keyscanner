@@ -45,7 +45,7 @@ static inline uint8_t popCount(uint8_t val) {
 }
 
 void keyscanner_main(void) {
-    uint8_t changes = 0;
+    uint8_t debounced_changes = 0;
 
     // For each enabled row...
     for (uint8_t row = 0; row < ROW_COUNT; ++row) {
@@ -53,13 +53,13 @@ void keyscanner_main(void) {
         // set the one we want to read as low
         PORT_ROWS = (PORT_ROWS | ROW_PINMASK ) & ~_BV(row);
         // Debounce key state
-        changes += debounce((PIN_COLS) , db + row);
+        debounced_changes += debounce((PIN_COLS) , db + row);
     }
 
 
     _delay_ms(1);
     // Most of the time there will be no new key events
-    if (__builtin_expect(changes == 0, 1)) {
+    if (__builtin_expect(debounced_changes == 0, 1)) {
         return;
     }
 
