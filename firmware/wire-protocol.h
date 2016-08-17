@@ -21,6 +21,14 @@ typedef union {
 #define TWI_CMD_CFG 0x01
 #define TWI_CMD_LED_DISABLE 0x02
 #define TWI_CMD_VERSION 0x03
+#define TWI_CMD_DEBOUNCE_DELAY 0x04
+#define TWI_CMD_LED_SET_ALL_TO 0x05
+#define TWI_CMD_LED_SET_ONE_TO 0x06
+#define TWI_CMD_COLS_USE_PULLUPS 0x07
+
+
+
+
 #define TWI_CMD_LED_BASE 0x80
 
 
