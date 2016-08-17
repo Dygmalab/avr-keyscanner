@@ -20,7 +20,8 @@ static uint8_t twi_command = TWI_CMD_NONE;
 
 void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     if (__builtin_expect(bufsiz <=2, 0)) {
-        if (buf[0] == TWI_CMD_CFG) {
+        switch (buf[0]) {
+        case TWI_CMD_CFG:
             if (bufsiz > 1) {
                 // SET configuration
                 device_config = buf[1];
@@ -28,11 +29,13 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
                 // GET configuration
                 twi_command = TWI_CMD_CFG;
             }
-        } else if (buf[0] == TWI_CMD_VERSION) {
+            break;
+        case TWI_CMD_VERSION:
             twi_command = TWI_CMD_VERSION;
-
-        } else if (buf[0] == TWI_CMD_LED_DISABLE) {
+            break;
+        case TWI_CMD_LED_DISABLE:
             led_disable();
+            break;
         }
     }
     // if the upper four bits of the byte say this is an LED cmd
@@ -45,7 +48,8 @@ uint8_t key_substate;
 
 void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
     if (__builtin_expect(*bufsiz != 0, 1)) {
-        if (twi_command == TWI_CMD_NONE) {
+        switch (twi_command) {
+        case TWI_CMD_NONE:
             // Keyscanner Status Register
             if (ringbuf_empty()) {
                 // Nothing in the ring buffer is the same thing as all keys released
@@ -57,24 +61,27 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             } else {
                 buf[0]=TWI_REPLY_KEYDATA;
                 for (uint8_t i = 1; i<5; i++ ) {
-
                     buf[i] = ringbuf_pop();
                 }
                 *bufsiz=5;
             }
-        } else if (twi_command == TWI_CMD_VERSION) {
+            break;
+        case TWI_CMD_VERSION:
             buf[0] = DEVICE_VERSION;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
-        } else if (twi_command == TWI_CMD_CFG) {
+            break;
+        case TWI_CMD_CFG:
             // Configuration Register
             buf[0] = device_config;
             *bufsiz = 1;
             // reset the twi command on the wire
             twi_command = TWI_CMD_NONE;
-        } else {
+            break;
+        default:
             buf[0] = 0x01;
             *bufsiz = 1;
+            break;
         }
     }
 }
