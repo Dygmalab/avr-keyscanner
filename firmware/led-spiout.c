@@ -110,9 +110,10 @@ ISR(SPI_STC_vect) {
         if(index == LED_BUFSZ) {
             led_phase = END_FRAME;
             index = 0;
-            subpixel=0;
+            subpixel = 0;
         }
         break;
+
     case END_FRAME:
         SPDR = 0x00;
         if(index == 3) { /* NB: increase this number if ever >64 LEDs */

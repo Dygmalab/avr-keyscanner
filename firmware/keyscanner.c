@@ -30,7 +30,7 @@ void keyscanner_init(void) {
     //  they're disabled)
 //    DDRC ^= _BV(7);
     // PC7 is on the same port as the four row pins.
-    // We refer to it here as PORTC because 
+    // We refer to it here as PORTC because
     // we're not using it as part of the keyscanner
     PORTC |= _BV(7);
 
@@ -49,7 +49,7 @@ void keyscanner_main(void) {
 
     // For each enabled row...
     for (uint8_t row = 0; row < ROW_COUNT; ++row) {
-        // Reset all of our row pins, then 
+        // Reset all of our row pins, then
         // set the one we want to read as low
         PORT_ROWS = (PORT_ROWS | ROW_PINMASK ) & ~_BV(row);
         // Debounce key state
