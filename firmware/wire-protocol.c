@@ -60,9 +60,10 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 *bufsiz=1;
             } else {
                 buf[0]=TWI_REPLY_KEYDATA;
-                for (uint8_t i = 1; i<5; i++ ) {
-                    buf[i] = ringbuf_pop();
-                }
+                buf[1] = ringbuf_pop();
+                buf[2] = ringbuf_pop();
+                buf[3] = ringbuf_pop();
+                buf[4] = ringbuf_pop();
                 *bufsiz=5;
             }
             break;
