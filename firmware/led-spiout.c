@@ -98,7 +98,7 @@ ISR(SPI_STC_vect) {
         }
         break;
     case DATA:
-        if (subpixel++ ==  0) {
+        if (++subpixel ==  1) {
             SPDR = 0xff;
         } else {
             SPDR = led_buffer.whole[index++];
