@@ -41,8 +41,16 @@ AVRDUDE_PATH ?= avrdude
 GCC_PATH ?= avr-gcc
 # Tune the lines below only if you know what you are doing:
 
+# Optimize for many things (including perf)
+OPTIMIZATION = -O3
+
+# Optimize, but focus on keeping code size small
+#OPTIMIZATION = -Os
+
+
+
 AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE)
-COMPILE = $(GCC_PATH) -Wall -Wextra -Werror -pedantic -Os -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK)
+COMPILE = $(GCC_PATH) -Wall -Wextra -Werror -pedantic $(OPTIMIZATION) -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK)
 
 # symbolic targets:
 all:	main.hex
