@@ -50,6 +50,21 @@ void led_update_bank(uint8_t *buf, const uint8_t bank) {
     });
 }
 
+void led_set_one_to(uint8_t led, uint8_t *buf){
+    DISABLE_INTERRUPTS({
+        memcpy((uint8_t *)led_buffer.each[led], buf, LED_DATA_SIZE);
+    });
+
+}
+
+void led_set_all_to( uint8_t *buf){
+    DISABLE_INTERRUPTS({
+        for(int8_t led=31;led>=0;led--) {
+            memcpy((uint8_t *)led_buffer.each[led], buf, LED_DATA_SIZE);
+        }
+    });
+
+}
 
 /* Turn off the LEDs.
  * TODO: A future implementation would stop sending updates to the LEDs

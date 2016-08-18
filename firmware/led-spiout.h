@@ -16,5 +16,12 @@ void led_init(void);
 /* Call this when you have new preformatted data for the LEDs */
 void led_update_bank(uint8_t *buf, const uint8_t bank);
 
+/* Call this when you want to set only a single LED */
+void led_set_one_to(uint8_t led, uint8_t * led_data);
+
+/* Call this when you want to set every LED to the same value */
+void led_set_all_to(uint8_t * led_data);
+
+
 /* Call to turn the LEDs off */
 void led_disable(void);
