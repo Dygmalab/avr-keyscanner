@@ -96,7 +96,7 @@ ISR(SPI_STC_vect) {
         }
         break;
     case DATA:
-        if (++subpixel ==  1) {
+        if (++subpixel == 1) {
             SPDR = 0xff;
         } else {
             SPDR = led_buffer.whole[index++];
@@ -105,7 +105,7 @@ ISR(SPI_STC_vect) {
             }
         }
 
-        if(index == LED_BUFSZ) {
+        if (index == LED_BUFSZ) {
             led_phase = END_FRAME;
             index = 0;
             subpixel = 0;
