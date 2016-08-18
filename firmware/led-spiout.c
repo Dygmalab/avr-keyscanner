@@ -90,11 +90,9 @@ ISR(SPI_STC_vect) {
     switch(led_phase) {
     case START_FRAME:
         SPDR = 0;
-        if(index == 3 ) {
+        if(++index == 8) {
             led_phase = DATA;
             index = 0;
-        } else {
-            index++;
         }
         break;
     case DATA:
@@ -115,12 +113,10 @@ ISR(SPI_STC_vect) {
         break;
 
     case END_FRAME:
-        SPDR = 0x00;
-        if(index == 3) { /* NB: increase this number if ever >64 LEDs */
+        SPDR = 0xff;
+        if(++index == 8) { /* NB: increase this number if ever >64 LEDs */
             led_phase = START_FRAME;
             index = 0;
-        } else {
-            index++;
         }
         break;
     }
