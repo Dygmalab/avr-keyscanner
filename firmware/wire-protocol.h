@@ -37,9 +37,8 @@ typedef union {
 
 // Configuration register
 extern uint8_t device_config;
+extern double debounce_delay;
 
-// avr doubles are 32 bits.
-double debounce_delay_us = 750; // Default to a minimum of 750us between reads
 
 // I²C driver functions
 void twi_data_received( uint8_t *buf, uint8_t bufsiz);

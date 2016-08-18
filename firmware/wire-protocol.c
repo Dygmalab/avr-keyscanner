@@ -4,7 +4,10 @@
 #include "ringbuf.h"
 #include "twi-slave.h"
 #include "led-spiout.h"
+
 uint8_t device_config = 0x10;
+// avr doubles are 32 bits.
+double debounce_delay = 1500; // Default to a minimum of 750us between reads
 
 void twi_init(void) {
 
@@ -33,7 +36,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         case TWI_CMD_DEBOUNCE_DELAY: 
             if (bufsiz == 2 ) {
                 // SET the delay
-                debounce_delay_us = buf[1] * 20;
+                debounce_delay = buf[1] * 40;
             } else {
                 // GET configuration
                 twi_command = TWI_CMD_DEBOUNCE_DELAY;
@@ -84,7 +87,7 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_DEBOUNCE_DELAY:
-            buf[0] = debounce_delay_us/20;
+            buf[0] = debounce_delay/40;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
