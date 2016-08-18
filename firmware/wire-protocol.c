@@ -30,6 +30,17 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
                 twi_command = TWI_CMD_CFG;
             }
             break;
+        case TWI_CMD_DEBOUNCE_DELAY: 
+            if (bufsiz == 2 ) {
+                // SET the delay
+                debounce_delay_us = buf[1] * 20;
+            } else {
+                // GET configuration
+                twi_command = TWI_CMD_DEBOUNCE_DELAY;
+            }
+            break;
+
+
         case TWI_CMD_VERSION:
             twi_command = TWI_CMD_VERSION;
             break;
@@ -69,6 +80,11 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             break;
         case TWI_CMD_VERSION:
             buf[0] = DEVICE_VERSION;
+            *bufsiz = 1;
+            twi_command = TWI_CMD_NONE;
+            break;
+        case TWI_CMD_DEBOUNCE_DELAY:
+            buf[0] = debounce_delay_us/20;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;

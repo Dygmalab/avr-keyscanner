@@ -52,8 +52,10 @@ void keyscanner_main(void) {
         debounced_changes += debounce((PIN_COLS) , db + row);
     }
 
+            // _delay_us is nice, in that if we overflow the us max of 768, it
+            // just calls through to _delay_ms for us
+            _delay_us(debounce_delay_us);
 
-    _delay_ms(1);
     // Most of the time there will be no new key events
     if (__builtin_expect(debounced_changes == 0, 1)) {
         return;
