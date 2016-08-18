@@ -49,7 +49,15 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
             twi_command = TWI_CMD_DEBOUNCE_DELAY;
         }
         break;
+    case TWI_CMD_LED_SET_ALL_TO:
+        if (bufsiz == 4 ) {
+            led_set_all_to(&buf[1]);
+        }
+        break;
 
+    case TWI_CMD_LED_SET_ONE_TO:
+        if (bufsiz == 5 ) {
+            led_set_one_to(buf[1],&buf[2]);
         }
         break;
 
