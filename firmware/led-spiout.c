@@ -21,6 +21,7 @@
 
 
 typedef union {
+    uint8_t each[NUM_LEDS][LED_DATA_SIZE];
     uint8_t whole[LED_BUFSZ];
     uint8_t bank[NUM_LED_BANKS][LED_BANK_SIZE];
 } led_buffer_t;
