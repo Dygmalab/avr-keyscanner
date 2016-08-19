@@ -1,0 +1,8 @@
+* diode direction
+* debounce delay- 0, 50uS, 100uS, 250uS, 500uS, 1ms, 2ms, 3ms, 4ms, 5ms
+* set all LEDs to $color
+* set LED x to $color  
+* turn off LED updates  
+* later:
+    - optionally send key events instead of keystate
+    - 
