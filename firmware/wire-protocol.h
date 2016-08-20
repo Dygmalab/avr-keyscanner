@@ -25,7 +25,7 @@ typedef union {
 #define TWI_CMD_LED_SET_ALL_TO 0x05
 #define TWI_CMD_LED_SET_ONE_TO 0x06
 #define TWI_CMD_COLS_USE_PULLUPS 0x07
-
+#define TWI_CMD_LED_UPDATE_FREQUENCY 0x08
 
 
 
@@ -38,6 +38,7 @@ typedef union {
 // Configuration register
 extern uint8_t device_config;
 extern double debounce_delay;
+extern uint8_t led_update_frequency;
 
 
 // I²C driver functions

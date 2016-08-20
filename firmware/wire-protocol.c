@@ -49,6 +49,16 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
             twi_command = TWI_CMD_DEBOUNCE_DELAY;
         }
         break;
+
+    case TWI_CMD_LED_UPDATE_FREQUENCY:
+        if (bufsiz == 2 ) {
+            led_update_frequency = buf[1];
+        } else {
+            twi_command = TWI_CMD_LED_UPDATE_FREQUENCY;
+        }
+        break;
+
+
     case TWI_CMD_LED_SET_ALL_TO:
         if (bufsiz == 4 ) {
             led_set_all_to(&buf[1]);
@@ -100,6 +110,11 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             break;
         case TWI_CMD_DEBOUNCE_DELAY:
             buf[0] = debounce_delay/40;
+            *bufsiz = 1;
+            twi_command = TWI_CMD_NONE;
+            break;
+        case TWI_CMD_LED_UPDATE_FREQUENCY:
+            buf[0] = led_update_frequency;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
