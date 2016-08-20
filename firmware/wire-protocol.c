@@ -9,6 +9,8 @@ uint8_t device_config = 0x10;
 // avr doubles are 32 bits.
 double debounce_delay = 1500; // Default to a minimum of 750us between reads
 
+uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
+
 void twi_init(void) {
 
     TWI_Rx_Data_Callback = twi_data_received;
@@ -50,11 +52,12 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         }
         break;
 
-    case TWI_CMD_LED_UPDATE_FREQUENCY:
+    case TWI_CMD_LED_SPI_FREQUENCY:
         if (bufsiz == 2 ) {
-            led_update_frequency = buf[1];
+            led_spi_frequency = buf[1];
+            led_set_spi_frequency(led_spi_frequency);
         } else {
-            twi_command = TWI_CMD_LED_UPDATE_FREQUENCY;
+            twi_command = TWI_CMD_LED_SPI_FREQUENCY;
         }
         break;
 
@@ -113,8 +116,8 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
-        case TWI_CMD_LED_UPDATE_FREQUENCY:
-            buf[0] = led_update_frequency;
+        case TWI_CMD_LED_SPI_FREQUENCY:
+            buf[0] = led_spi_frequency;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;

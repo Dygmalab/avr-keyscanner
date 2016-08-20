@@ -77,6 +77,46 @@ void led_disable() {
     });
 }
 
+
+void led_set_spi_frequency(uint8_t frequency) {
+    /* Enable SPI master, MSB first
+     * fOSC/16 speed (512KHz), the default
+      Measured at about 300 Hz of LED updates
+     */
+    switch(frequency) {
+    // fosc/2
+    case LED_SPI_FREQUENCY_4MHZ:
+        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPI2X);
+        break;
+    // fosc/4
+    case LED_SPI_FREQUENCY_2MHZ:
+        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE);
+        break;
+    // fosc/8
+    case LED_SPI_FREQUENCY_1MHZ:
+        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPI2X) | _BV(SPR0);
+        break;
+    // fosc/32
+    case LED_SPI_FREQUENCY_256KHZ:
+        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPI2X) | _BV(SPR1);
+        break;
+    // fosc/64
+    case LED_SPI_FREQUENCY_128KHZ:
+        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPI2X) | _BV(SPR0) | _BV(SPR1);
+        break;
+    // fosc/128
+    case LED_SPI_FREQUENCY_64KHZ:
+        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPR0) | _BV(SPR1);
+        break;
+    // fosc/16
+    case LED_SPI_FREQUENCY_512KHZ:
+    default:
+        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPR0);
+        break;
+    }
+}
+
+
 void led_init() {
 
     // Make sure all our LEDs start off dark
@@ -86,13 +126,7 @@ void led_init() {
     DDRB = _BV(5)|_BV(3)|_BV(2);
     PORTB &= ~(_BV(5)|_BV(3)|_BV(2));
 
-    /* Enable SPI master, MSB first, fOSC/16 speed
-     * (512KHz)
-
-      Measured at about 300 Hz of LED updates
-
-     */
-    SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPR0);
+    led_set_spi_frequency(led_spi_frequency);
 
     /* Start transmitting the first byte of the start frame */
     led_phase = START_FRAME;
