@@ -27,6 +27,7 @@ typedef union {
 #define TWI_CMD_COLS_USE_PULLUPS 0x07
 #define TWI_CMD_LED_SPI_FREQUENCY 0x08
 
+#define LED_SPI_OFF                 0x00
 #define LED_SPI_FREQUENCY_4MHZ      0x01
 #define LED_SPI_FREQUENCY_2MHZ      0x02
 #define LED_SPI_FREQUENCY_1MHZ      0x03

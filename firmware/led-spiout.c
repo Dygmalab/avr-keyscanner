@@ -84,6 +84,9 @@ void led_set_spi_frequency(uint8_t frequency) {
       Measured at about 300 Hz of LED updates
      */
     switch(frequency) {
+    case LED_SPI_OFF: 
+        SPCR = 0x00;
+        break;
     // fosc/2
     case LED_SPI_FREQUENCY_4MHZ:
         SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPI2X);

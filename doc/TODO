@@ -2,7 +2,6 @@
 
 * Scan with either diode direction
 * turn off LED updates  
-* Change LED update frequency
 * Add a configurable delay between row scans?
 * Keyscan algorithms:
     * Rows as output and cols as input
@@ -25,3 +24,4 @@
 * set all LEDs to $color
 * set LED x to $color  
 * debounce delay- 0, 50uS, 100uS, 250uS, 500uS, 1ms, 2ms, 3ms, 4ms, 5ms
+* Change LED update frequency
