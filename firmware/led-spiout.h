@@ -28,6 +28,5 @@ void led_set_one_to(uint8_t led, uint8_t * led_data);
 /* Call this when you want to set every LED to the same value */
 void led_set_all_to(uint8_t * led_data);
 
-
 /* Call to turn the LEDs off */
 void led_disable(void);

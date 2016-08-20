@@ -42,7 +42,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
             twi_command = TWI_CMD_CFG;
         }
         break;
-    case TWI_CMD_DEBOUNCE_DELAY: 
+    case TWI_CMD_DEBOUNCE_DELAY:
         if (bufsiz == 2 ) {
             // SET the delay
             debounce_delay = buf[1] * 40;

@@ -53,7 +53,7 @@ void keyscanner_main(void) {
     }
 
     // Because the toplevel _delay_us function wants a
-    // compile time constant. 
+    // compile time constant.
     //
     // At 8MHz, a value of 2 gets us 1 microsecond of delay
     _delay_loop_2(debounce_delay);
