@@ -89,32 +89,39 @@ void led_set_spi_frequency(uint8_t frequency) {
         break;
     // fosc/2
     case LED_SPI_FREQUENCY_4MHZ:
-        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPI2X);
+        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE);
+        SPSR |= _BV(SPI2X);
         break;
     // fosc/4
     case LED_SPI_FREQUENCY_2MHZ:
-        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE);
+        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE);
+        SPSR ^= _BV(SPI2X);
         break;
     // fosc/8
     case LED_SPI_FREQUENCY_1MHZ:
-        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPI2X) | _BV(SPR0);
+        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE) | _BV(SPR0);
+        SPSR |= _BV(SPI2X);
         break;
     // fosc/32
     case LED_SPI_FREQUENCY_256KHZ:
-        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPI2X) | _BV(SPR1);
+        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE) | _BV(SPR1);
+        SPSR |= _BV(SPI2X);
         break;
     // fosc/64
     case LED_SPI_FREQUENCY_128KHZ:
-        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPI2X) | _BV(SPR0) | _BV(SPR1);
+        SPCR = _BV(SPE)| _BV(MSTR) | _BV(SPIE) | _BV(SPR0) | _BV(SPR1);
+        SPSR |= _BV(SPI2X);
         break;
     // fosc/128
     case LED_SPI_FREQUENCY_64KHZ:
-        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPR0) | _BV(SPR1);
+        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE) | _BV(SPR0) | _BV(SPR1);
+        SPSR ^= _BV(SPI2X);
         break;
     // fosc/16
     case LED_SPI_FREQUENCY_512KHZ:
     default:
-        SPCR = _BV(SPE)|_BV(MSTR)|_BV(SPIE) | _BV(SPR0);
+        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE) | _BV(SPR0);
+        SPSR ^= _BV(SPI2X);
         break;
     }
 }
