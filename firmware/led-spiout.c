@@ -66,18 +66,6 @@ void led_set_all_to( uint8_t *buf) {
 
 }
 
-/* Turn off the LEDs.
- * TODO: A future implementation would stop sending updates to the LEDs
- *       after setting them to black
- */
-
-void led_disable() {
-    DISABLE_INTERRUPTS({
-        memset(&led_buffer.whole, 0x00, sizeof(led_buffer.whole));
-    });
-}
-
-
 void led_set_spi_frequency(uint8_t frequency) {
     /* Enable SPI master, MSB first
      * fOSC/16 speed (512KHz), the default
@@ -130,7 +118,8 @@ void led_set_spi_frequency(uint8_t frequency) {
 void led_init() {
 
     // Make sure all our LEDs start off dark
-    led_disable();
+    uint8_t off[] = { 0x00,0x00,0x00};
+    led_set_all_to(&off[0]);
 
     /* Set MOSI, SCK, SS all to outputs */
     DDRB = _BV(5)|_BV(3)|_BV(2);
