@@ -47,13 +47,13 @@ void keyscanner_main(void) {
 
     // Most of the time there will be no new key events
     if (__builtin_expect(debounced_changes == 0, 1)) {
-    // Use an internal delay funciton Because the toplevel _delay_us function wants a
-    // compile time constant.
-    //
-    // At 8MHz, a value of 2 gets us 1 microsecond of delay
-    // Only run the debouncing delay when we haven't successfully found
-    // a debounced event
-    _delay_loop_2(debounce_delay);
+        // Use an internal delay funciton Because the toplevel _delay_us function wants a
+        // compile time constant.
+        //
+        // At 8MHz, a value of 2 gets us 1 microsecond of delay
+        // Only run the debouncing delay when we haven't successfully found
+        // a debounced event
+        _delay_loop_2(debounce_delay);
         return;
     }
 
