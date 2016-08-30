@@ -32,14 +32,6 @@ void keyscanner_init(void) {
 
 }
 
-static inline uint8_t popCount(uint8_t val) {
-    uint8_t count;
-    for (count=0; val; count++) {
-        val &= val-1;
-    }
-    return count;
-}
-
 void keyscanner_main(void) {
     uint8_t debounced_changes = 0;
 
