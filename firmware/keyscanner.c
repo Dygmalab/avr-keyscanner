@@ -1,8 +1,10 @@
+#include <avr/interrupt.h>
 #include <util/delay.h>
 #include "debounce.h"
 #include "wire-protocol.h"
 #include "main.h"
 #include "ringbuf.h"
+#include "keyscanner.h"
 
 debounce_t db[] = {
     {0x00, 0x00, 0xFF},
@@ -11,6 +13,9 @@ debounce_t db[] = {
     {0x00, 0x00, 0xFF}
 };
 
+// do_scan gets set any time we should actually do a scan
+volatile uint8_t do_scan = 1;
+
 void keyscanner_init(void) {
 
     // Write to rows - we only use some of the pins in the row port
@@ -18,24 +23,33 @@ void keyscanner_init(void) {
     PORT_ROWS |= ROW_PINMASK;
 
     // Read from cols -- We use all 8 bits of cols
-    DDR_COLS  = 0x00;
     // Turn on the Pullups 
+    DDR_COLS  = 0x00;
     PORT_COLS = 0xFF;
 
     // Assert comm_en so we can use the interhand transcievers
     // (Until comm_en on the i2c transcievers is pulled high,
     //  they're disabled)
-//    DDRC ^= _BV(7);
     // PC7 is on the same port as the four row pins.
     // We refer to it here as PORTC because
     // we're not using it as part of the keyscanner
     HIGH(PORTC,7);
 
+    keyscanner_timer1_init();
+}
+  
+// interrupt service routine (ISR) for timer 1 A compare match
+ISR(TIMER1_COMPA_vect) {
+    do_scan = 1; // Yes! Let's do a scan
 }
 
 void keyscanner_main(void) {
     uint8_t debounced_changes = 0;
     uint8_t pin_data;
+
+    if ( do_scan == 0 ) {
+        return; 
+    }
 
     // For each enabled row...
     for (uint8_t row = 0; row < ROW_COUNT; ++row) {
@@ -59,7 +73,7 @@ void keyscanner_main(void) {
         // At 8MHz, a value of 2 gets us 1 microsecond of delay
         // Only run the debouncing delay when we haven't successfully found
         // a debounced event
-        _delay_loop_2(debounce_delay);
+        do_scan = 0;
         return;
     }
 
@@ -71,3 +85,23 @@ void keyscanner_main(void) {
         ringbuf_append( db[3].state ^ 0xff );
     });
 }
+
+// initialize timer, interrupt and variable
+void keyscanner_timer1_init(void) {
+
+    // set up timer with prescaler = 64 and CTC mode
+    TCCR1B |= (1 << WGM12)|(1 << CS12);
+
+    // initialize counter
+    TCNT1 = 0;
+  
+    // initialize compare value
+    OCR1A = DEBOUNCE_DELAY_DEFAULT;
+  
+    // enable compare interrupt
+    TIMSK1 |= (1 << OCIE1A);
+  
+    // enable global interrupts
+    sei();
+}
+
