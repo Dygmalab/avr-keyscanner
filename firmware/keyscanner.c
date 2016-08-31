@@ -19,7 +19,7 @@ void keyscanner_init(void) {
 
     // Read from cols -- We use all 8 bits of cols
     DDR_COLS  = 0x00;
-    PORT_COLS = 0xff;
+    PORT_COLS = 0xFF;
 
     // Assert comm_en so we can use the interhand transcievers
     // (Until comm_en on the i2c transcievers is pulled high,
@@ -28,7 +28,7 @@ void keyscanner_init(void) {
     // PC7 is on the same port as the four row pins.
     // We refer to it here as PORTC because
     // we're not using it as part of the keyscanner
-    PORTC |= _BV(7);
+    HIGH(PORTC,7);
 
 }
 
