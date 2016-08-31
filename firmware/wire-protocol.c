@@ -5,9 +5,6 @@
 #include "twi-slave.h"
 #include "led-spiout.h"
 
-// avr doubles are 32 bits.
-double debounce_delay = DEBOUNCE_DELAY_DEFAULT;
-
 
 uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
 
@@ -36,7 +33,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     case TWI_CMD_DEBOUNCE_DELAY:
         if (bufsiz == 2 ) {
             // SET the delay
-            debounce_delay = buf[1] * 40;
+            OCR1A = buf[1];
         } else {
             // GET configuration
             twi_command = TWI_CMD_DEBOUNCE_DELAY;
@@ -100,7 +97,7 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_DEBOUNCE_DELAY:
-            buf[0] = debounce_delay/40;
+            buf[0] = OCR1A;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
