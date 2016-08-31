@@ -34,14 +34,16 @@ void keyscanner_init(void) {
 
 void keyscanner_main(void) {
     uint8_t debounced_changes = 0;
+    uint8_t pin_data;
 
     // For each enabled row...
     for (uint8_t row = 0; row < ROW_COUNT; ++row) {
         // Reset all of our row pins, then
         // set the one we want to read as low
         PORT_ROWS = (PORT_ROWS | ROW_PINMASK ) & ~_BV(row);
+        pin_data = PIN_COLS;
         // Debounce key state
-        debounced_changes += debounce((PIN_COLS) , db + row);
+        debounced_changes += debounce((pin_data) , db + row);
     }
 
 
