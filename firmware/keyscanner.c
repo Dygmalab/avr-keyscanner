@@ -14,8 +14,8 @@ debounce_t db[] = {
 void keyscanner_init(void) {
 
     // Write to rows - we only use some of the pins in the row port
-    DDR_ROWS = 0xff;
-    PORT_ROWS = ROW_PINMASK;
+    DDR_ROWS |= ROW_PINMASK;
+    PORT_ROWS |= ROW_PINMASK;
 
     // Read from cols -- We use all 8 bits of cols
     DDR_COLS  = 0x00;
