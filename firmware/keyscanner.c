@@ -65,12 +65,9 @@ void keyscanner_main(void) {
 
     // Snapshot the keystate to add to the ring buffer
     DISABLE_INTERRUPTS({
-        // The fact that we're sticking rows 1,2,3,0 into the ringbuffer
-        // rather than 0,1,2,3 in is due to some bug Jesse hasn't tracked
-        // down yet.
+        ringbuf_append( db[0].state ^ 0xff );
         ringbuf_append( db[1].state ^ 0xff );
         ringbuf_append( db[2].state ^ 0xff );
         ringbuf_append( db[3].state ^ 0xff );
-        ringbuf_append( db[0].state ^ 0xff );
     });
 }
