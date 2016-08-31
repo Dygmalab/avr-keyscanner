@@ -41,12 +41,15 @@ void keyscanner_main(void) {
     for (uint8_t row = 0; row < ROW_COUNT; ++row) {
         // Reset all of our row pins, then
         // set the one we want to read as low
-        PORT_ROWS = (PORT_ROWS | ROW_PINMASK ) & ~_BV(row);
+        LOW(PORT_ROWS, row);
+        /* We need a no-op for synchronization. So says the datasheet
+         * in Section 10.2.5 */
+        asm("nop");
         pin_data = PIN_COLS;
+        HIGH(PORT_ROWS,row);
         // Debounce key state
         debounced_changes += debounce((pin_data) , db + row);
     }
-
 
     // Most of the time there will be no new key events
     if (__builtin_expect(debounced_changes == 0, 1)) {
