@@ -20,8 +20,6 @@ typedef union {
 
 
 
-// Configuration register
-extern uint8_t device_config;
 extern double debounce_delay;
 extern uint8_t led_spi_frequency;
 
