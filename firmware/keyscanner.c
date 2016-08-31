@@ -19,6 +19,7 @@ void keyscanner_init(void) {
 
     // Read from cols -- We use all 8 bits of cols
     DDR_COLS  = 0x00;
+    // Turn on the Pullups 
     PORT_COLS = 0xFF;
 
     // Assert comm_en so we can use the interhand transcievers
