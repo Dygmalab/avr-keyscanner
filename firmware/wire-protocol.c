@@ -7,7 +7,8 @@
 
 uint8_t device_config = 0x10;
 // avr doubles are 32 bits.
-double debounce_delay = 1500; // Default to a minimum of 750us between reads
+double debounce_delay = DEBOUNCE_DELAY_DEFAULT;
+
 
 uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
 

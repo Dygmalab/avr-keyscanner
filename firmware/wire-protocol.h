@@ -25,6 +25,8 @@ extern uint8_t device_config;
 extern double debounce_delay;
 extern uint8_t led_spi_frequency;
 
+// Default to a minimum of 750us between reads
+#define DEBOUNCE_DELAY_DEFAULT 1500
 
 // I²C driver functions
 void twi_data_received( uint8_t *buf, uint8_t bufsiz);
