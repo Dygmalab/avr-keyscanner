@@ -30,13 +30,13 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     }
 
     switch (buf[0]) {
-    case TWI_CMD_DEBOUNCE_DELAY:
+    case TWI_CMD_KEYSCAN_INTERVAL:
         if (bufsiz == 2 ) {
             // SET the delay
             OCR1A = buf[1];
         } else {
             // GET configuration
-            twi_command = TWI_CMD_DEBOUNCE_DELAY;
+            twi_command = TWI_CMD_KEYSCAN_INTERVAL;
         }
         break;
 
@@ -96,7 +96,7 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
-        case TWI_CMD_DEBOUNCE_DELAY:
+        case TWI_CMD_KEYSCAN_INTERVAL:
             buf[0] = OCR1A;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;

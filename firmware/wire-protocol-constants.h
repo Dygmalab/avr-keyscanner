@@ -1,9 +1,8 @@
-
 #pragma once
 
 #define TWI_CMD_NONE 0x00
 #define TWI_CMD_VERSION 0x03
-#define TWI_CMD_DEBOUNCE_DELAY 0x04 // sent in microseconds/20
+#define TWI_CMD_KEYSCAN_INTERVAL 0x04
 #define TWI_CMD_LED_SET_ALL_TO 0x05
 #define TWI_CMD_LED_SET_ONE_TO 0x06
 #define TWI_CMD_COLS_USE_PULLUPS 0x07

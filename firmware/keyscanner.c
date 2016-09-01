@@ -97,7 +97,7 @@ void keyscanner_timer1_init(void) {
     TCNT1 = 0;
 
     // initialize compare value
-    OCR1A = DEBOUNCE_DELAY_DEFAULT;
+    OCR1A = KEYSCAN_INTERVAL_DEFAULT;
 
     // enable compare interrupt
     TIMSK1 |= _BV(OCIE1A);

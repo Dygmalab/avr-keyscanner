@@ -23,7 +23,7 @@ typedef union {
 extern uint8_t led_spi_frequency;
 
 // Default to a minimum of 1.6ms between reads
-#define DEBOUNCE_DELAY_DEFAULT 50
+#define KEYSCAN_INTERVAL_DEFAULT 50
 
 // I²C driver functions
 void twi_data_received( uint8_t *buf, uint8_t bufsiz);
