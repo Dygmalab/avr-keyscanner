@@ -95,8 +95,8 @@ void keyscanner_timer1_init(void) {
     OCR1A = DEBOUNCE_DELAY_DEFAULT;
 
     // enable compare interrupt
-    TIMSK1 |= (1 << OCIE1A);
-  
+    TIMSK1 |= _BV(OCIE1A);
+
     // enable global interrupts
     sei();
 }
