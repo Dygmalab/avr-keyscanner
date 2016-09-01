@@ -66,6 +66,11 @@ void keyscanner_main(void) {
     if (__builtin_expect(debounced_changes == 0, 1)) {
         // Only run the debouncing delay when we haven't successfully found
         // a debounced event
+
+        // XXX TODO make sure this isn't crazy. could this 
+        // cause us to do reads too fast and mis-debounce
+        // some secondary key while we successfully debounce a
+        // first key.
         do_scan = 0;
         return;
     }
