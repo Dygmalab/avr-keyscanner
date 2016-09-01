@@ -44,8 +44,8 @@ void keyscanner_main(void) {
     uint8_t debounced_changes = 0;
     uint8_t pin_data;
 
-    if ( do_scan == 0 ) {
-        return; 
+    if (__builtin_expect(do_scan == 0, 1)) {
+        return;
     }
 
     // For each enabled row...
