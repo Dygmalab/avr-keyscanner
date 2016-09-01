@@ -1,0 +1,27 @@
+# TODO
+
+* Scan with either diode direction
+* Add a configurable delay between row scans?
+* Keyscan algorithms:
+    * Rows as output and cols as input
+        * Columns have internal pull-ups enabled, rows are high by default and pulled low on activation
+        * Columns have internal pull-ups disabled, rows are low by default and pulled high on activation
+    
+    * Rows as input and cols as output
+        * Rows have internal pull-ups enabled. Cols are high by default and pulled low on activation
+        * Rows have internal pull-ups disable. Cols are low by default and pulled high on activation
+
+# later
+
+- optionally send key events instead of keystate
+- add an option to completely halt LED updates?
+- use pin interrupts on cols to notice and react to state changes
+- move keyscan code to running inside an interrupt
+
+# DONE
+
+* set all LEDs to $color
+* turn off LED updates  
+* set LED x to $color  
+* debounce delay- 0, 50uS, 100uS, 250uS, 500uS, 1ms, 2ms, 3ms, 4ms, 5ms
+* Change LED update frequency

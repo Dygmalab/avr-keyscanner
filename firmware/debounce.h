@@ -21,20 +21,19 @@ typedef struct {
  *
  * returns: bits that have changed in the final debounced state
  */
-static inline uint8_t debounce(uint8_t sample, debounce_t *debouncer)
-{
+static inline uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     uint8_t delta, changes;
-    
+
     // Set delta to changes from last stable state
     delta = sample ^ debouncer->state;
-    
+
     // Increment counters and reset any unchanged bits
     debouncer->db1 = ((debouncer->db1) ^ (debouncer->db0)) & delta;
     debouncer->db0  = ~(debouncer->db0) & delta;
-    
+
     // update state & calculate returned change set
     changes = ~(~delta | (debouncer->db0) | (debouncer->db1));
     debouncer->state ^= changes;
-    
+
     return changes;
 }

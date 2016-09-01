@@ -1,18 +1,16 @@
-#include "is31io7326.h"
+#include "wire-protocol.h"
 #include "keyscanner.h"
 #include "led-spiout.h"
 
-static inline void setup(void)
-{
+static inline void setup(void) {
     keyscanner_init();
-    issi_init();
+    twi_init();
+    led_init();
 }
 
-int main(void)
-{
+int main(void) {
     setup();
-    led_init();
-    while(1){
+    while(1) {
         keyscanner_main();
     }
     __builtin_unreachable();

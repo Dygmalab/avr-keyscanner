@@ -31,18 +31,26 @@ CLOCK      ?= 8000000
 # PROGRAMMER = -c dragon_isp -P usb
 
 # Add more objects for each .c file here
-OBJECTS    = main.o twi-slave.o ringbuf.o is31io7326.o keyscanner.o led-spiout.o
+OBJECTS    = main.o twi-slave.o ringbuf.o wire-protocol.o keyscanner.o led-spiout.o
 
 # For computing fuse byte values for other devices and options see
 # the fuse bit calculator at http://www.engbedded.com/fusecalc/
-FUSES      = -U lfuse:w:0xee:m -U hfuse:w:0xdd:m -U efuse:w:0x01:m
+FUSES      = -U lfuse:w:0xee:m -U hfuse:w:0xdd:m -U efuse:w:0xff:m
 
 AVRDUDE_PATH ?= avrdude
 GCC_PATH ?= avr-gcc
 # Tune the lines below only if you know what you are doing:
 
+# Optimize for many things (including perf)
+OPTIMIZATION = -O2
+
+# Optimize, but focus on keeping code size small
+#OPTIMIZATION = -Os
+
+
+
 AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE)
-COMPILE = $(GCC_PATH) -Wall -Wextra -Werror -pedantic -Os -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK)
+COMPILE = $(GCC_PATH) -Wall -Wextra -Werror -pedantic $(OPTIMIZATION) -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK)
 
 # symbolic targets:
 all:	main.hex
@@ -61,7 +69,7 @@ all:	main.hex
 	$(COMPILE) -S $< -o $@
 
 flash:	all
-	$(AVRDUDE) -U flash:w:main.hex:i
+	$(AVRDUDE) -B 2 -U flash:w:main.hex:i
 
 fuse:
 	$(AVRDUDE) -B 100 $(FUSES)
@@ -93,3 +101,7 @@ disasm:	main.elf
 
 cpp:
 	$(COMPILE) -E main.c
+
+astyle:
+	find . -type f -name \*.c |xargs -n 1 astyle --style=google
+	find . -type f -name \*.h |xargs -n 1 astyle --style=google
