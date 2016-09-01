@@ -23,13 +23,14 @@ void keyscanner_init(void) {
     PORT_ROWS |= ROW_PINMASK;
 
     // Read from cols -- We use all 8 bits of cols
-    // Turn on the Pullups 
     DDR_COLS  = 0x00;
+    // Turn on the Pullups
     PORT_COLS = 0xFF;
 
     // Assert comm_en so we can use the interhand transcievers
     // (Until comm_en on the i2c transcievers is pulled high,
     //  they're disabled)
+
     // PC7 is on the same port as the four row pins.
     // We refer to it here as PORTC because
     // we're not using it as part of the keyscanner
@@ -90,14 +91,14 @@ void keyscanner_main(void) {
 void keyscanner_timer1_init(void) {
 
     // set up timer with prescaler = 64 and CTC mode
-    TCCR1B |= (1 << WGM12)|(1 << CS12);
+    TCCR1B |= _BV(WGM12)| _BV( CS10) | _BV( CS11);
 
     // initialize counter
     TCNT1 = 0;
-  
+
     // initialize compare value
     OCR1A = DEBOUNCE_DELAY_DEFAULT;
-  
+
     // enable compare interrupt
     TIMSK1 |= (1 << OCIE1A);
   
