@@ -35,7 +35,7 @@ OBJECTS    = main.o twi-slave.o ringbuf.o wire-protocol.o keyscanner.o led-spiou
 
 # For computing fuse byte values for other devices and options see
 # the fuse bit calculator at http://www.engbedded.com/fusecalc/
-FUSES      = -U lfuse:w:0xee:m -U hfuse:w:0xdd:m -U efuse:w:0x01:m
+FUSES      = -U lfuse:w:0xee:m -U hfuse:w:0xdd:m -U efuse:w:0xff:m
 
 AVRDUDE_PATH ?= avrdude
 GCC_PATH ?= avr-gcc
