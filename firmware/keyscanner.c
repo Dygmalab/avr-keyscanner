@@ -38,11 +38,7 @@ void keyscanner_init(void) {
 
     keyscanner_timer1_init();
 }
-  
-// interrupt service routine (ISR) for timer 1 A compare match
-ISR(TIMER1_COMPA_vect) {
-    do_scan = 1; // Yes! Let's do a scan
-}
+
 
 void keyscanner_main(void) {
     uint8_t debounced_changes = 0;
@@ -106,3 +102,7 @@ void keyscanner_timer1_init(void) {
     sei();
 }
 
+// interrupt service routine (ISR) for timer 1 A compare match
+ISR(TIMER1_COMPA_vect) {
+    do_scan = 1; // Yes! Let's do a scan
+}
