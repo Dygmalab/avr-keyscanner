@@ -85,8 +85,8 @@ void keyscanner_main(void) {
 // initialize timer, interrupt and variable
 void keyscanner_timer1_init(void) {
 
-    // set up timer with prescaler = 64 and CTC mode
-    TCCR1B |= _BV(WGM12)| _BV( CS10) | _BV( CS11);
+    // set up timer with prescaler = 256 and CTC mode
+    TCCR1B |= _BV(WGM12)| _BV( CS12);
 
     // initialize counter
     TCNT1 = 0;
