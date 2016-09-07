@@ -35,6 +35,7 @@ void keyscanner_init(void) {
     // We refer to it here as PORTC because
     // we're not using it as part of the keyscanner
     HIGH(PORTC,7);
+    SET_OUTPUT(DDRC,7);
 
     keyscanner_timer1_init();
 }
