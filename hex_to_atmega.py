@@ -10,6 +10,7 @@ blank = 0xff
 delay_ms = 1
 
 template = '''
+#include <util/crc16.h>
 #include "Arduino.h"
 #include "Wire.h"
 
@@ -74,13 +75,19 @@ void loop() {
     for (uint8_t frame = 0; frame < page_size / frame_size; frame++) {
       Wire.beginTransmission(addr);
       Wire.write(0x2); // continue page
+      uint16_t crc16 = 0xffff;
       for (uint8_t j = frame * frame_size; j < (frame + 1) * frame_size; j++) {
         if (i + j < firmware_length) {
           Wire.write(firmware[i + j]);
+          crc16 = _crc16_update(crc16, firmware[i + j]);
         } else {
           Wire.write(blank);
+          crc16 = _crc16_update(crc16, blank);
         }
       }
+      // write the CRC16, little end first
+      Wire.write(crc16 & 0xff);
+      Wire.write(crc16 >> 8);
       Wire.write(0x00); // dummy end byte
       result = Wire.endTransmission();
       Serial.print("got ");
