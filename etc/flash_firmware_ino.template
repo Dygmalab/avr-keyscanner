@@ -12,30 +12,62 @@ void setup() {
 #define pages %d
 #define firmware_length %d
 #define DELAY %d
+#define ADDRESS 0x58
+
+
+#define ENDTRANS_SUCCESS 0
+#define ENDTRANS_DATA_TOO_LONG 1
+#define ENDTRANS_ADDR_NACK 2
+#define ENDTRANS_DATA_NACK 3
+#define ENDTRANS_ERROR
+
 uint16_t offsets[pages] = {%s};
 byte firmware[firmware_length] = {%s};
 
 byte written = 0;
 
+
+void reset_attiny() {
+    // Hold the left ATTiny in reset, 
+    DDRC |= _BV(6);
+    PORTC &= ~_BV(6);
+    delay(30);
+    DDRC &= ~_BV(6); // Turn the ATTiny back on
+}
+
+void print_result(byte result) {
+    Serial.print("result = ");
+    Serial.print(result);
+    Serial.print("\n");
+
+}
+
+byte run_command(byte address, byte command) {
+
+    Wire.beginTransmission(address);
+    Wire.write(command); // erase user space
+    Wire.write(0x00); // dummy end byte
+    byte result = Wire.endTransmission();
+    print_result(result);
+    return result;
+}
+
 void loop() {
+  byte addr = ADDRESS;
+
+  reset_attiny();
+
   if (written != 0) {
     // we're done
     return;
   }
 
   Serial.print("Communicating\n");
-  byte addr = 0x58;
 
-  byte result = 2;
-  while (result != 3) {
+  byte result = ENDTRANS_ADDR_NACK;
+  while (result != ENDTRANS_DATA_NACK) {
     Serial.print("Erasing\n");
-    Wire.beginTransmission(addr);
-    Wire.write(0x04); // erase user space
-    Wire.write(0x00); // dummy end byte
-    result = Wire.endTransmission();
-    Serial.print("result = ");
-    Serial.print(result);
-    Serial.print("\n");
+    result = run_command(addr, 0x04); // erase
 
     _delay_ms(100);
   }
@@ -50,12 +82,10 @@ void loop() {
     Wire.write(offsets[o] >> 8);
     Wire.write(0x00); // dummy end byte
     result = Wire.endTransmission();
-    Serial.print("result = ");
-    Serial.print(result);
-    Serial.print("\n");
+    print_result(result);
     _delay_ms(DELAY);
     // got something other than NACK. Start over.
-    if (result != 3) {
+    if (result != ENDTRANS_DATA_NACK) {
       return;
     }
 
@@ -85,8 +115,9 @@ void loop() {
       Serial.print(" frame ");
       Serial.print(frame);
       Serial.print("\n");
+
       // got something other than NACK. Start over.
-      if (result != 3) {
+      if (result != ENDTRANS_DATA_NACK) {
         return;
       }
       delay(DELAY);
@@ -96,13 +127,6 @@ void loop() {
   written = 1; // firmware successfully rewritten
 
   Serial.print("resetting\n");
-  Wire.beginTransmission(addr);
-  Wire.write(0x03); // execute app
-  Wire.write(0x00); // dummy end byte
-  result = Wire.endTransmission();
-  Serial.print("result ");
-  Serial.print(result);
-  Serial.print("\n");
-
+  result = run_command(addr, 0x03); // execute app
   Serial.print("done\n");
 }
