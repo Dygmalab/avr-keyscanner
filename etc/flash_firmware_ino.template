@@ -22,7 +22,7 @@ void setup() {
 #define ENDTRANS_ERROR
 
 uint16_t offsets[pages] = {%s};
-byte firmware[firmware_length] = {%s};
+const byte firmware[firmware_length] PROGMEM = {%s};
 
 byte written = 0;
 
@@ -96,8 +96,8 @@ void loop() {
       uint16_t crc16 = 0xffff;
       for (uint8_t j = frame * frame_size; j < (frame + 1) * frame_size; j++) {
         if (i + j < firmware_length) {
-          Wire.write(firmware[i + j]);
-          crc16 = _crc16_update(crc16, firmware[i + j]);
+          Wire.write(pgm_read_byte_near(firmware+i + j));
+          crc16 = _crc16_update(crc16, pgm_read_byte_near(firmware+i + j));
         } else {
           Wire.write(blank);
           crc16 = _crc16_update(crc16, blank);
