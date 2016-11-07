@@ -53,7 +53,7 @@ byte run_command(byte address, byte command) {
 
 
 
-byte read_crc16(byte *version, uint16_t *crc16, uint16_t offset, uint16_t length) {
+byte read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, uint16_t length) {
   byte result = 2;
 
   Wire.beginTransmission(addr);
@@ -90,7 +90,7 @@ byte read_crc16(byte *version, uint16_t *crc16, uint16_t offset, uint16_t length
 }
 
 
-void get_version () {
+void get_version (byte addr) {
 
   byte result = 2;
   while (result != 0) {
@@ -98,7 +98,7 @@ void get_version () {
 
     byte version;
     uint16_t crc16;
-    result = read_crc16(&version, &crc16, 0, firmware_length);
+    result = read_crc16(addr, &version, &crc16, 0, firmware_length);
 
     Serial.print("result ");
     Serial.print(result);
@@ -119,12 +119,12 @@ void get_version () {
 
 
 
-int erase_program() {
+int erase_program(byte addr) {
 
   Serial.print("Erasing\n");
   Wire.beginTransmission(addr);
   Wire.write(0x04); // erase user space
-  result = Wire.endTransmission();
+  byte result = Wire.endTransmission();
   Serial.print("result = ");
   Serial.print(result);
   Serial.print("\n");
@@ -137,8 +137,9 @@ int erase_program() {
 }
 
 
-int write_firmware(void ) {
+int write_firmware(byte addr ) {
 
+  byte result = 3;
   byte o = 0;
 
   for (uint16_t i = 0; i < firmware_length; i += page_size) {
@@ -196,8 +197,8 @@ int write_firmware(void ) {
 }
 
 
-int verify_firmware(void) {
-
+int verify_firmware(byte addr) {
+  byte result = 3;
   // verify firmware
   while (result != 0) {
     Serial.print("Reading CRC16\n");
@@ -205,7 +206,7 @@ int verify_firmware(void) {
     byte version;
     uint16_t crc16;
     // skip the first 4 bytes, are they were probably overwritten by the reset vector preservation
-    result = read_crc16(&version, &crc16, offsets[0] + 4, firmware_length - 4);
+    result = read_crc16(addr, &version, &crc16, offsets[0] + 4, firmware_length - 4);
 
     Serial.print("result ");
     Serial.print(result);
@@ -244,6 +245,8 @@ int verify_firmware(void) {
 
 void loop() {
 
+delay(5000);
+Serial.print("Starting!\n");
 if (written != 0) {
   // we're done
   return;
@@ -255,16 +258,16 @@ if (written != 0) {
   Serial.print("Communicating\n");
 
 
-  get_version();
+  get_version(addr);
 
-  byte erased = erase_program();
+  byte erased = erase_program(addr);
 
   if (erased == -1) { return;}
 
-  byte firmware_written = write_firmware();
+  byte firmware_written = write_firmware(addr);
   if(firmware_written == -1) { return;}
 
-  byte firmware_verified = verify_firmware();
+  byte firmware_verified = verify_firmware(addr);
   if(firmware_verified == -1) {
 	return;
   }
@@ -272,6 +275,7 @@ if (written != 0) {
   written = 1; // firmware successfully rewritten
 
   Serial.print("resetting\n");
-  result = run_command(addr, 0x03); // execute app
+  byte result = run_command(addr, 0x03); // execute app
   Serial.print("done\n");
 }
+
