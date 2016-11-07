@@ -26,7 +26,6 @@ const byte firmware[firmware_length] PROGMEM = {%s};
 
 byte written = 0;
 
-
 void reset_attiny() {
     // Hold the left ATTiny in reset, 
     DDRC |= _BV(6);
@@ -52,25 +51,93 @@ byte run_command(byte address, byte command) {
     return result;
 }
 
-void loop() {
-  byte addr = ADDRESS;
 
-  reset_attiny();
 
-  if (written != 0) {
-    // we're done
-    return;
+byte read_crc16(byte *version, uint16_t *crc16, uint16_t offset, uint16_t length) {
+  byte result = 2;
+
+  Wire.beginTransmission(addr);
+  Wire.write(0x06); // get version and CRC16
+  Wire.write(offset & 0xff); // addr (lo)
+  Wire.write(offset >> 8); // addr (hi)
+  Wire.write(length & 0xff); // len (lo)
+  Wire.write(length >> 8); // len (hi)
+  result = Wire.endTransmission();
+  if (result != 0) {
+      return result;
+  }
+  Wire.requestFrom(addr, (uint8_t) 3);
+  Serial.print("Available bytes: ");
+  Serial.print(Wire.available());
+  Serial.print("\n");
+  if (Wire.available() == 0) {
+  }
+  byte v = Wire.read();
+  *version = v;
+  if (Wire.available() == 0) {
+    return 0xFF;
+  }
+  byte crc16_lo = Wire.read();
+  if (Wire.available() == 0) {
+    return 0xFF;
+  }
+  byte crc16_hi = Wire.read();
+  while (Wire.available()) {
+    byte c = Wire.read();
+  }
+  *crc16 = (crc16_hi << 8) | crc16_lo;
+  return result;
+}
+
+
+void get_version () {
+
+  byte result = 2;
+  while (result != 0) {
+    Serial.print("Reading CRC16\n");
+
+    byte version;
+    uint16_t crc16;
+    result = read_crc16(&version, &crc16, 0, firmware_length);
+
+    Serial.print("result ");
+    Serial.print(result);
+    Serial.print("\n");
+
+    if (result != 0) {
+      _delay_ms(100);
+      continue;
+    }
+    Serial.print("Version: ");
+    Serial.print(version);
+    Serial.print("\n\nExisting CRC16 of 0000-1FFF: ");
+    Serial.print(crc16, HEX);
+    Serial.print("\n");
   }
 
-  Serial.print("Communicating\n");
+}
 
-  byte result = ENDTRANS_ADDR_NACK;
-  while (result != ENDTRANS_DATA_NACK) {
-    Serial.print("Erasing\n");
-    result = run_command(addr, 0x04); // erase
 
-    _delay_ms(100);
+
+int erase_program() {
+
+  Serial.print("Erasing\n");
+  Wire.beginTransmission(addr);
+  Wire.write(0x04); // erase user space
+  result = Wire.endTransmission();
+  Serial.print("result = ");
+  Serial.print(result);
+  Serial.print("\n");
+  if (result != 0) {
+    _delay_ms(1000);
+    return -1;
   }
+  return 0;
+
+}
+
+
+int write_firmware(void ) {
 
   byte o = 0;
 
@@ -80,13 +147,14 @@ void loop() {
     Wire.write(0x1); // write page addr
     Wire.write(offsets[o] & 0xff); // write page addr
     Wire.write(offsets[o] >> 8);
-    Wire.write(0x00); // dummy end byte
     result = Wire.endTransmission();
-    print_result(result);
+    Serial.print("result = ");
+    Serial.print(result);
+    Serial.print("\n");
     _delay_ms(DELAY);
-    // got something other than NACK. Start over.
-    if (result != ENDTRANS_DATA_NACK) {
-      return;
+    // got something other than ACK. Start over.
+    if (result != 0) {
+      return -1;
     }
 
     // transmit each frame separately
@@ -96,8 +164,9 @@ void loop() {
       uint16_t crc16 = 0xffff;
       for (uint8_t j = frame * frame_size; j < (frame + 1) * frame_size; j++) {
         if (i + j < firmware_length) {
-          Wire.write(pgm_read_byte_near(firmware+i + j));
-          crc16 = _crc16_update(crc16, pgm_read_byte_near(firmware+i + j));
+          uint8_t b = pgm_read_byte(&firmware[i + j]);
+          Wire.write(b);
+          crc16 = _crc16_update(crc16, b);
         } else {
           Wire.write(blank);
           crc16 = _crc16_update(crc16, blank);
@@ -115,15 +184,91 @@ void loop() {
       Serial.print(" frame ");
       Serial.print(frame);
       Serial.print("\n");
-
       // got something other than NACK. Start over.
-      if (result != ENDTRANS_DATA_NACK) {
-        return;
+      if (result != 3) {
+        return -1;
       }
       delay(DELAY);
     }
     o++;
   }
+	return 0;
+}
+
+
+int verify_firmware(void) {
+
+  // verify firmware
+  while (result != 0) {
+    Serial.print("Reading CRC16\n");
+
+    byte version;
+    uint16_t crc16;
+    // skip the first 4 bytes, are they were probably overwritten by the reset vector preservation
+    result = read_crc16(&version, &crc16, offsets[0] + 4, firmware_length - 4);
+
+    Serial.print("result ");
+    Serial.print(result);
+    Serial.print("\n");
+
+    if (result != 0) {
+      _delay_ms(100);
+      continue;
+    }
+    Serial.print("Version: ");
+    Serial.print(version);
+    Serial.print("\n\nCRC CRC16 of ");
+    Serial.print(offsets[0] + 4, HEX);
+    Serial.print("-");
+    Serial.print(offsets[0] + firmware_length, HEX);
+    Serial.print(": ");
+    Serial.print(crc16, HEX);
+    Serial.print("\n");
+
+    // calculate our own CRC16
+    uint16_t check_crc16 = 0xffff;
+    for (uint16_t i = 4; i < firmware_length; i++) {
+      check_crc16 = _crc16_update(check_crc16, pgm_read_byte(&firmware[i]));
+    }
+    if (crc16 != check_crc16) {
+      Serial.print("CRC does not match ours: ");
+      Serial.print(check_crc16, HEX);
+      Serial.print("\n");
+      return -1;
+    }
+    Serial.print("CRC check: OK\n");
+  }
+ return 0;
+}
+
+
+void loop() {
+
+if (written != 0) {
+  // we're done
+  return;
+}
+
+  byte addr = ADDRESS;
+  reset_attiny();
+
+  Serial.print("Communicating\n");
+
+
+  get_version();
+
+  byte erased = erase_program();
+
+  if (erased == -1) { return;}
+
+  byte firmware_written = write_firmware();
+  if(firmware_written == -1) { return;}
+
+  byte firmware_verified = verify_firmware();
+  if(firmware_verified == -1) {
+	return;
+  }
+
   written = 1; // firmware successfully rewritten
 
   Serial.print("resetting\n");
