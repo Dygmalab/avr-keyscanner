@@ -1,0 +1,108 @@
+#include <util/crc16.h>
+#include "Arduino.h"
+#include "Wire.h"
+
+void setup() {
+  Wire.begin();
+}
+
+#define page_size %d
+#define frame_size %d
+#define blank 0x%x
+#define pages %d
+#define firmware_length %d
+#define DELAY %d
+uint16_t offsets[pages] = {%s};
+byte firmware[firmware_length] = {%s};
+
+byte written = 0;
+
+void loop() {
+  if (written != 0) {
+    // we're done
+    return;
+  }
+
+  Serial.print("Communicating\n");
+  byte addr = 0x58;
+
+  byte result = 2;
+  while (result != 3) {
+    Serial.print("Erasing\n");
+    Wire.beginTransmission(addr);
+    Wire.write(0x04); // erase user space
+    Wire.write(0x00); // dummy end byte
+    result = Wire.endTransmission();
+    Serial.print("result = ");
+    Serial.print(result);
+    Serial.print("\n");
+
+    _delay_ms(100);
+  }
+
+  byte o = 0;
+
+  for (uint16_t i = 0; i < firmware_length; i += page_size) {
+    Serial.print("Setting addr\n");
+    Wire.beginTransmission(addr);
+    Wire.write(0x1); // write page addr
+    Wire.write(offsets[o] & 0xff); // write page addr
+    Wire.write(offsets[o] >> 8);
+    Wire.write(0x00); // dummy end byte
+    result = Wire.endTransmission();
+    Serial.print("result = ");
+    Serial.print(result);
+    Serial.print("\n");
+    _delay_ms(DELAY);
+    // got something other than NACK. Start over.
+    if (result != 3) {
+      return;
+    }
+
+    // transmit each frame separately
+    for (uint8_t frame = 0; frame < page_size / frame_size; frame++) {
+      Wire.beginTransmission(addr);
+      Wire.write(0x2); // continue page
+      uint16_t crc16 = 0xffff;
+      for (uint8_t j = frame * frame_size; j < (frame + 1) * frame_size; j++) {
+        if (i + j < firmware_length) {
+          Wire.write(firmware[i + j]);
+          crc16 = _crc16_update(crc16, firmware[i + j]);
+        } else {
+          Wire.write(blank);
+          crc16 = _crc16_update(crc16, blank);
+        }
+      }
+      // write the CRC16, little end first
+      Wire.write(crc16 & 0xff);
+      Wire.write(crc16 >> 8);
+      Wire.write(0x00); // dummy end byte
+      result = Wire.endTransmission();
+      Serial.print("got ");
+      Serial.print(result);
+      Serial.print(" for page ");
+      Serial.print(offsets[o]);
+      Serial.print(" frame ");
+      Serial.print(frame);
+      Serial.print("\n");
+      // got something other than NACK. Start over.
+      if (result != 3) {
+        return;
+      }
+      delay(DELAY);
+    }
+    o++;
+  }
+  written = 1; // firmware successfully rewritten
+
+  Serial.print("resetting\n");
+  Wire.beginTransmission(addr);
+  Wire.write(0x03); // execute app
+  Wire.write(0x00); // dummy end byte
+  result = Wire.endTransmission();
+  Serial.print("result ");
+  Serial.print(result);
+  Serial.print("\n");
+
+  Serial.print("done\n");
+}
