@@ -105,7 +105,7 @@ void get_version (byte addr) {
 
     byte result = 2;
     while (result != 0) {
-        Serial.println("Reading CRC16");
+        Serial.print("Reading CRC16...");
 
         byte version;
         uint16_t crc16;
@@ -153,7 +153,7 @@ int write_firmware(byte addr ) {
     for (uint16_t i = 0; i < firmware_length; i += page_size) {
         Serial.print("Page ");
         Serial.print(offsets[o]);
-        Serial.print("Setting address...");
+        Serial.print(" setting address...");
         Wire.beginTransmission(addr);
         Wire.write(0x1); // write page addr
         Wire.write(offsets[o] & 0xff); // write page addr
