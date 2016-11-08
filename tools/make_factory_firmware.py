@@ -7,7 +7,7 @@ from collections import namedtuple
 Line = namedtuple('Line', ['size', 'offset', 'kind', 'data', 'checksum'])
 
 USER_FIRMWARE = 'firmware/main.hex'
-BOOTLOADER_FIRMWARE = 'bootloader.hex'
+BOOTLOADER_FIRMWARE = 'etc/bootloader.hex'
 
 def parse_line(line):
     """Parses an Intel HEX line into a Line tuple"""
