@@ -111,6 +111,6 @@ new_lines = [
     Line(size='\0', offset='\0\0', kind='\x01', data='', checksum='\xFF'),
 ]
 
-with open('attiny88_factory.hex', 'w') as fout:
+with open('out/attiny88_factory.hex', 'w') as fout:
   fout.write(make_hex(user_lines + boot_lines + new_lines))
   fout.write('\n')

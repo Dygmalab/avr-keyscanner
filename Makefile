@@ -32,7 +32,7 @@ PROGRAMMER ?= -c usbtiny
 AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE) -v
 
 flash:	all
-	$(AVRDUDE) -B 2 -U flash:w:attiny88_factory.hex:i
+	$(AVRDUDE) -B 2 -U flash:w:out/attiny88_factory.hex:i
 
 fuse:
 	$(AVRDUDE) -B 100 $(FUSES)
@@ -41,7 +41,7 @@ fuse:
 install: all fuse flash
 
 clean:
-	rm -f attiny88_factory.hex
+	rm -f out/attiny88_factory.hex
 
 all:
 	make -C firmware
