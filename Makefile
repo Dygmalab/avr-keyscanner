@@ -45,7 +45,7 @@ clean:
 
 all:
 	make -C firmware
-	./make_factory_firmware.py
+	./tools/make_factory_firmware.py
 
 flashing-tool:
 	mkdir -p out/flasher

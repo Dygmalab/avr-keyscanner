@@ -38,7 +38,7 @@ def recompute_checksum(line):
 if not os.path.exists(USER_FIRMWARE):
     exit("User firmware %s must be built" % USER_FIRMWARE)
 if not os.path.exists(BOOTLOADER_FIRMWARE):
-    exit("Please copy %s to the current directory" % BOOTLOADER_FIRMWARE)
+    exit("Please copy %s to etc directory" % BOOTLOADER_FIRMWARE)
 
 with open(USER_FIRMWARE) as user_in:
     user_hex = user_in.read()
