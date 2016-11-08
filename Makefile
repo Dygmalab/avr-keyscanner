@@ -47,4 +47,10 @@ all:
 	make -C firmware
 	./make_factory_firmware.py
 
+flashing-tool:
+	mkdir -p out/flasher
+	make -C firmware
+	python2.7 ./tools/hex_to_atmega.py firmware/main.hex > out/flasher/flasher.ino
+
+
 .PHONY: default all clean install flash fuse
