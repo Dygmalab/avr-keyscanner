@@ -3,6 +3,7 @@
 #include "Wire.h"
 
 void setup() {
+    delay_ms(5000);
     Wire.begin();
 }
 
