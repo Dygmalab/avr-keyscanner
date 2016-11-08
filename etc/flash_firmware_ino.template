@@ -12,21 +12,24 @@ void setup() {
 #define pages %d
 #define firmware_length %d
 #define DELAY %d
-#define ADDRESS 0x58
+#define LEFT_ADDRESS 0x58
+#define RIGHT_ADDRESS 0x5b
 
 
 #define ENDTRANS_SUCCESS 0
 #define ENDTRANS_DATA_TOO_LONG 1
 #define ENDTRANS_ADDR_NACK 2
 #define ENDTRANS_DATA_NACK 3
-#define ENDTRANS_ERROR
+#define ENDTRANS_ERROR 4
 
 uint16_t offsets[pages] = {%s};
 const byte firmware[firmware_length] PROGMEM = {%s};
 
-byte written = 0;
+int left_written = 0;
+int right_written = 0;
 
-void reset_attiny() {
+// The LEFT ATTiny has a reset pin directly connected to the ATMega
+void reset_left_attiny() {
     // Hold the left ATTiny in reset,
     DDRC |= _BV(6);
     PORTC &= ~_BV(6);
@@ -34,14 +37,23 @@ void reset_attiny() {
     DDRC &= ~_BV(6); // Turn the ATTiny back on
 }
 
+// The RIGHT ATTiny is on the other side of the wired i2c bus.
+// Our best chance at resetting it is by toggling the current limiter.
+
+void reset_right_attiny() {
+    // Hold the left ATTiny in reset,
+    DDRC |= _BV(7);
+    PORTC &= ~_BV(7);
+    delay(1000);
+    PORTC |= _BV(7); // Turn the ATTiny back on
+}
 void print_result(byte result) {
     Serial.print("result = ");
-    Serial.print(result);
-    Serial.print("\n");
+    Serial.println(result);
 
 }
 
-byte run_command(byte address, byte command) {
+int run_command(byte address, byte command) {
 
     Wire.beginTransmission(address);
     Wire.write(command); // erase user space
@@ -68,8 +80,7 @@ byte read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, uint
     }
     Wire.requestFrom(addr, (uint8_t) 3);
     Serial.print("Available bytes: ");
-    Serial.print(Wire.available());
-    Serial.print("\n");
+    Serial.println(Wire.available());
     if (Wire.available() == 0) {
     }
     byte v = Wire.read();
@@ -94,25 +105,23 @@ void get_version (byte addr) {
 
     byte result = 2;
     while (result != 0) {
-        Serial.print("Reading CRC16\n");
+        Serial.println("Reading CRC16");
 
         byte version;
         uint16_t crc16;
         result = read_crc16(addr, &version, &crc16, 0, firmware_length);
 
         Serial.print("result ");
-        Serial.print(result);
-        Serial.print("\n");
+        Serial.println(result);
 
         if (result != 0) {
             _delay_ms(100);
             continue;
         }
         Serial.print("Version: ");
-        Serial.print(version);
-        Serial.print("\n\nExisting CRC16 of 0000-1FFF: ");
-        Serial.print(crc16, HEX);
-        Serial.print("\n");
+        Serial.println(version);
+        Serial.print("Existing CRC16 of 0000-1FFF: ");
+        Serial.println(crc16, HEX);
     }
 
 }
@@ -121,13 +130,12 @@ void get_version (byte addr) {
 
 int erase_program(byte addr) {
 
-    Serial.print("Erasing\n");
+    Serial.println("Erasing");
     Wire.beginTransmission(addr);
     Wire.write(0x04); // erase user space
     byte result = Wire.endTransmission();
     Serial.print("result = ");
-    Serial.print(result);
-    Serial.print("\n");
+    Serial.println(result);
     if (result != 0) {
         _delay_ms(1000);
         return -1;
@@ -143,22 +151,23 @@ int write_firmware(byte addr ) {
     byte o = 0;
 
     for (uint16_t i = 0; i < firmware_length; i += page_size) {
-        Serial.print("Setting addr\n");
+        Serial.print("Page ");
+        Serial.print(offsets[o]);
+        Serial.print("Setting address...");
         Wire.beginTransmission(addr);
         Wire.write(0x1); // write page addr
         Wire.write(offsets[o] & 0xff); // write page addr
         Wire.write(offsets[o] >> 8);
         result = Wire.endTransmission();
-        Serial.print("result = ");
-        Serial.print(result);
-        Serial.print("\n");
         _delay_ms(DELAY);
         // got something other than ACK. Start over.
         if (result != 0) {
+            Serial.println("Error setting the page address");
             return -1;
         }
 
         // transmit each frame separately
+
         for (uint8_t frame = 0; frame < page_size / frame_size; frame++) {
             Wire.beginTransmission(addr);
             Wire.write(0x2); // continue page
@@ -178,20 +187,19 @@ int write_firmware(byte addr ) {
             Wire.write(crc16 >> 8);
             Wire.write(0x00); // dummy end byte
             result = Wire.endTransmission();
-            Serial.print("got ");
-            Serial.print(result);
-            Serial.print(" for page ");
-            Serial.print(offsets[o]);
-            Serial.print(" frame ");
+            Serial.print(": frame ");
             Serial.print(frame);
-            Serial.print("\n");
+            Serial.print(" = ");
+            Serial.print(result);
             // got something other than NACK. Start over.
             if (result != 3) {
+                Serial.println("Error: Got something other than NACK");
                 return -1;
             }
             delay(DELAY);
         }
         o++;
+        Serial.println("");
     }
     return 0;
 }
@@ -200,31 +208,29 @@ int write_firmware(byte addr ) {
 int verify_firmware(byte addr) {
     byte result = 3;
     // verify firmware
+    Serial.println("## Verifying firmware installation");
     while (result != 0) {
-        Serial.print("Reading CRC16\n");
+        Serial.print("CRC16: ");
 
         byte version;
         uint16_t crc16;
         // skip the first 4 bytes, are they were probably overwritten by the reset vector preservation
         result = read_crc16(addr, &version, &crc16, offsets[0] + 4, firmware_length - 4);
 
-        Serial.print("result ");
-        Serial.print(result);
-        Serial.print("\n");
+        Serial.println(result);
 
         if (result != 0) {
             _delay_ms(100);
             continue;
         }
         Serial.print("Version: ");
-        Serial.print(version);
-        Serial.print("\n\nCRC CRC16 of ");
+        Serial.println(version);
+        Serial.print("CRC CRC16 of ");
         Serial.print(offsets[0] + 4, HEX);
         Serial.print("-");
         Serial.print(offsets[0] + firmware_length, HEX);
         Serial.print(": ");
-        Serial.print(crc16, HEX);
-        Serial.print("\n");
+        Serial.println(crc16, HEX);
 
         // calculate our own CRC16
         uint16_t check_crc16 = 0xffff;
@@ -233,53 +239,80 @@ int verify_firmware(byte addr) {
         }
         if (crc16 != check_crc16) {
             Serial.print("CRC does not match ours: ");
-            Serial.print(check_crc16, HEX);
-            Serial.print("\n");
+            Serial.println(check_crc16, HEX);
             return -1;
         }
-        Serial.print("CRC check: OK\n");
+        Serial.println("CRC check: OK");
     }
     return 0;
 }
 
+byte update_attiny(byte addr) {
+    Serial.println("Communicating");
+
+    get_version(addr);
+
+    int erased = erase_program(addr);
+
+    if (erased == -1) {
+
+        Serial.println("Erase failed.");
+        return 0;
+    }
+
+    int firmware_written = write_firmware(addr);
+    if(firmware_written == -1) {
+        Serial.println("Firmware write failed.");
+        return 0;
+    }
+
+    int firmware_verified = verify_firmware(addr);
+    if(firmware_verified == -1) {
+        Serial.println("Firmware verify failed");
+        return 0;
+    }
+
+    Serial.println("Resetting ATTiny");
+    int result = run_command(addr, 0x03); // execute app
+    Serial.println("Done!");
+
+    return 1;
+}
 
 void loop() {
 
     delay(5000);
-    Serial.print("Starting!\n");
-    if (written != 0) {
+
+
+    if (left_written > 0 && right_written > 0 ) {
+
+        Serial.println ("Both ATTiny MCUs have been flashed");
+        Serial.println("It is now safe to reflash your keyboard with regular firmware");
+        return;
+    }
+
+    Serial.println("Starting!");
+
+    if (left_written > 0) {
+        Serial.println("Already done with the left hand.");
         // we're done
-        return;
+    } else {
+        reset_left_attiny();
+        left_written = update_attiny(LEFT_ADDRESS);
+
     }
 
-    byte addr = ADDRESS;
-    reset_attiny();
-
-    Serial.print("Communicating\n");
-
-
-    get_version(addr);
-
-    byte erased = erase_program(addr);
-
-    if (erased == -1) {
-        return;
+    if (right_written > 0) {
+        Serial.println("Already done with the right hand.");
+        Serial.println(right_written);
+        // we're done
+    } else {
+        reset_right_attiny();
+        right_written = update_attiny(RIGHT_ADDRESS);
     }
 
-    byte firmware_written = write_firmware(addr);
-    if(firmware_written == -1) {
-        return;
-    }
 
-    byte firmware_verified = verify_firmware(addr);
-    if(firmware_verified == -1) {
-        return;
-    }
 
-    written = 1; // firmware successfully rewritten
-
-    Serial.print("resetting\n");
-    byte result = run_command(addr, 0x03); // execute app
-    Serial.print("done\n");
 }
+
 
