@@ -3,7 +3,7 @@
 #include "Wire.h"
 
 void setup() {
-    delay_ms(5000);
+    delay(5000);
     Wire.begin();
 }
 
@@ -13,8 +13,8 @@ void setup() {
 #define pages %d
 #define firmware_length %d
 #define DELAY %d
-#define LEFT_ADDRESS 0x58
-#define RIGHT_ADDRESS 0x5b
+#define LEFT_ADDRESS 0x50
+#define RIGHT_ADDRESS 0x53
 
 
 #define ENDTRANS_SUCCESS 0
