@@ -162,7 +162,10 @@ ISR(SPI_STC_vect) {
         break;
 
     case END_FRAME:
-        SPDR = 0xff;
+	// The pwm reset frame needs to be 32 bits of 0 for SK9822 based LEDS
+	// After that, we need at num_leds/2 more bits of 0 
+	// For up to 64 LEDs, that means 64 bits of 0
+        SPDR = 0x00;
         if(++index == 8) { /* NB: increase this number if ever >64 LEDs */
             led_phase = START_FRAME;
             index = 0;
