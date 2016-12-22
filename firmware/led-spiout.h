@@ -27,3 +27,6 @@ void led_set_one_to(uint8_t led, uint8_t * led_data);
 
 /* Call this when you want to set every LED to the same value */
 void led_set_all_to(uint8_t * led_data);
+
+/* Call this with a value between 0 and 31 to set the LED's global brightness */
+void led_set_global_brightness(uint8_t global_brightness);

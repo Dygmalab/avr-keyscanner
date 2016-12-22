@@ -34,6 +34,8 @@ static volatile enum {
     END_FRAME
 } led_phase;
 
+static volatile uint8_t global_brightness = 0xFF;
+
 static volatile uint8_t index; /* next byte to transmit */
 static volatile uint8_t subpixel = 0;
 
@@ -55,6 +57,13 @@ void led_set_one_to(uint8_t led, uint8_t *buf) {
         memcpy((uint8_t *)led_buffer.each[led], buf, LED_DATA_SIZE);
     });
 
+}
+
+void led_set_global_brightness(uint8_t brightness) {
+	if (brightness > 31) {
+		return;
+	}
+	global_brightness = 0xE0 + brightness;
 }
 
 void led_set_all_to( uint8_t *buf) {
@@ -146,7 +155,7 @@ ISR(SPI_STC_vect) {
         break;
     case DATA:
         if (++subpixel == 1) {
-            SPDR = 0xff;
+            SPDR = global_brightness;
         } else {
             SPDR = led_buffer.whole[index++];
             if(subpixel == 4) {
