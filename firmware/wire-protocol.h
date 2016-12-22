@@ -15,7 +15,7 @@ typedef union {
     uint8_t val;
 } state_t;
 
-#define DEVICE_VERSION 2
+#define DEVICE_VERSION 3
 
 
 
