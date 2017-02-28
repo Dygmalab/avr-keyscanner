@@ -41,11 +41,12 @@ fuse:
 install: all fuse flash
 
 clean:
-	rm -f out/attiny88_factory.hex
+	rm -f out/*
 
 all:
 	make -C firmware
-	mkdir out
+	mkdir -p out
+	cp firmware/main.hex out/attiny88_keyscanner.hex
 	./tools/make_factory_firmware.py
 
 flashing-tool:
