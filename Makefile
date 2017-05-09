@@ -41,7 +41,7 @@ fuse:
 install: all fuse flash
 
 clean:
-	rm -f out/*
+	rm -fr out/*
 
 all:
 	make -C firmware
@@ -49,10 +49,10 @@ all:
 	cp firmware/main.hex out/attiny88_keyscanner.hex
 	./tools/make_factory_firmware.py
 
-flashing-tool:
-	mkdir -p out/flasher
-	make -C firmware
-	python2.7 ./tools/hex_to_atmega.py firmware/main.hex > out/flasher/flasher.ino
+flashing-tool: all
+	mkdir -p out/attiny_flasher
+	cp etc/flasher_Makefile out/attiny_flasher/Makefile
+	python2.7 ./tools/hex_to_atmega.py out/attiny88_keyscanner.hex > out/attiny_flasher/attiny_flasher.ino
 
 
 .PHONY: default all clean install flash fuse
