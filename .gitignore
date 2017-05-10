@@ -34,5 +34,8 @@
 # Datasheets
 doc/*.pdf
 
+# Built files
+out/*
+
 # Local settings for make
 Makefile.local
