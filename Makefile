@@ -43,13 +43,15 @@ install: all fuse flash
 clean:
 	rm -fr out/*
 
-all:
+all: build flashing-tool
+
+build:
 	make -C firmware
 	mkdir -p out
 	cp firmware/main.hex out/attiny88_keyscanner.hex
 	./tools/make_factory_firmware.py
 
-flashing-tool: all
+flashing-tool: build
 	mkdir -p out/attiny_flasher
 	cp etc/flasher_Makefile out/attiny_flasher/Makefile
 	python2.7 ./tools/hex_to_atmega.py out/attiny88_keyscanner.hex > out/attiny_flasher/attiny_flasher.ino
