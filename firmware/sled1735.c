@@ -20,10 +20,11 @@ to test:
 #define CHECK_ID
 #define SETUP
 //#define BREATH
-#define LED_ON
+//#define LED_ON
 #define LED_PWM
 //#define LED_FADE
-#define LOOP_DELAY
+//#define LOOP_DELAY
+#define CONST_CURR
 
 #define SPI_D 1
 
@@ -134,13 +135,23 @@ void setup_spi()
     LOW(PORTB,SS_PIN);
     _delay_ms(SPI_D);
     SPI_MasterTransmit(0x2B); 
-    //reg 0x0F: constant current
     SPI_MasterTransmit(0x0A);
-    // turn off shutdown - not mentioned by datasheet - do we need it?
+    // turn shutdown onto normal mode, (controlled by external pin?)
     SPI_MasterTransmit(0b00000001);
     HIGH(PORTB,SS_PIN);
     _delay_ms(SPI_D);
 
+    #endif
+
+    #ifdef CONST_CURR
+    LOW(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+    SPI_MasterTransmit(0x2B); 
+    //reg 0x0F: constant current
+    SPI_MasterTransmit(0x0F);
+    SPI_MasterTransmit(0b10011001); // set to 25 : 8 + (25-1)*0.5 = 20 mA
+    HIGH(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
     #endif
 
     #ifdef BREATH
@@ -171,11 +182,91 @@ void setup_spi()
 
     #endif
 
+    // turn on pwm to full
+    LOW(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+    // header: write frame 1
+    SPI_MasterTransmit(0x20); 
+    // reg 0x20: pwm, 8 bits per led, 128 bytes for 128 leds
+    SPI_MasterTransmit(0x20); 
+    // do 128 times to get all LEDS
+    for(int i=0; i<128; i++)
+        SPI_MasterTransmit(0xFF); // half bright
+
+    HIGH(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+
+    LOW(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+    // header: write frame 2
+    SPI_MasterTransmit(0x21); 
+    // reg 0x20: pwm, 8 bits per led, 128 bytes for 128 leds
+    SPI_MasterTransmit(0x20); 
+    // do 128 times to get all LEDS
+    for(int i=0; i<128; i++)
+        SPI_MasterTransmit(0x00); // half bright
+
+    HIGH(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+
+    // all leds off
+    LOW(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+
+    // header: write frame 1
+    SPI_MasterTransmit(0x20); 
+    // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
+    SPI_MasterTransmit(0x00); 
+
+    // write 0xFF 16 times to get all 128 LEDs in first frame turned on
+    // auto increment means don't need to change start reg
+    for(int i=0; i<16; i++)
+        SPI_MasterTransmit(0xFF);
+
+    HIGH(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+    LOW(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+    // header: write frame 2
+    SPI_MasterTransmit(0x21); 
+    // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
+    SPI_MasterTransmit(0x00); 
+
+    // write 0xFF 16 times to get all 128 LEDs in first frame turned on
+    // auto increment means don't need to change start reg
+    for(int i=0; i<16; i++)
+        SPI_MasterTransmit(0xFF);
+
+    HIGH(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+
 }
 int j = 0;
 void sled_test()
 {
+/*
+    LOW(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+    SPI_MasterTransmit(0x20); 
+    SPI_MasterTransmit(4); 
+    SPI_MasterTransmit(1<<2);
 
+    HIGH(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+
+    _delay_ms(250);
+
+    LOW(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+    SPI_MasterTransmit(0x20); 
+    SPI_MasterTransmit(4); 
+    SPI_MasterTransmit(0);
+
+    HIGH(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+
+    _delay_ms(250);
+    */
 
     #ifdef LED_ON
     LOW(PORTB,SS_PIN);
