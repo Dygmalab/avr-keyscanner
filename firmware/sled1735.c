@@ -16,17 +16,85 @@ to test:
 #include <avr/delay.h>
 #include "main.h"
 
+#define COLS 8
+#define ROWS 2
+#define LED_DATA_SIZE 3
+#define NUM_LEDS_PER_BANK 2
+
+#define NUM_LEDS COLS * ROWS
+#define NUM_LED_BANKS NUM_LEDS/NUM_LEDS_PER_BANK
+#define LED_BANK_SIZE (LED_DATA_SIZE*NUM_LEDS_PER_BANK)
+
+#define FRAME_SIZE NUM_LEDS * LED_DATA_SIZE
+#define NUM_FRAMES 1
+
+/*
+#define NUM_LEDS 32
+#define NUM_LED_BANKS NUM_LEDS/NUM_LEDS_PER_BANK
+#define LED_DATA_SIZE 3
+#define LED_BUFSZ (LED_DATA_SIZE *NUM_LEDS)
+*/
+
+typedef struct {
+    uint8_t g;
+    uint8_t r;
+    uint8_t b;
+} led_t;
+
+typedef union {
+    uint8_t whole[NUM_LEDS * LED_DATA_SIZE];
+    led_t each[COLS][ROWS];
+    led_t weach[COLS*ROWS];
+    uint8_t bank[NUM_LED_BANKS][LED_DATA_SIZE];
+} led_buffer_t ;
+
+/*
+what I want:
+
+easily address all leds:
+
+     led_buffer.each[x][y].rgb = {0, 255, 5};
+
+easily write them all to SPI:
+    SPDR = led_buffer.bank[0].start_addr
+    SPDR = led_buffer.bank[0].whole[index++];
+
+easily receive values from I2C buf and copy to led_buffer
+    memcpy((uint8_t *)led_buffer.bank[bank], buf, LED_BANK_SIZE);
+    
+*/
+#define LED1 0, 0, 0
+#define LED4 LED1, LED1, LED1, LED1
+#define LED8 LED4, LED4
+#define LED16 LED8, LED8
+
+led_buffer_t led_buffer = { LED16 };
+
+#define XXX 0
+
+#define FRAME_MAP(led) \
+  {                                               \
+    { XXX, XXX, led[0], led[3], led[6], led[9],  led[12], led[15], led[18], led[21], led[24], led[27], led[30], led[33], led[36], led[39], \
+      XXX, XXX, led[1], led[4], led[7], led[10], led[13], led[16], led[19], led[22], led[25], led[28], led[31], led[34], led[37], led[40], \
+      XXX, XXX, led[2], led[5], led[8], led[11], led[14], led[17], led[20], led[23], led[26], led[29], led[32], led[35], led[38], led[41], \
+      }, \
+  }
+
 
 #define CHECK_ID
 #define SETUP
 //#define BREATH
 //#define LED_ON
-#define LED_PWM
+//#define LED_PWM
 //#define LED_FADE
-//#define LOOP_DELAY
+#define LOOP_DELAY
+#define DELAY_TIME 1
 #define CONST_CURR
+#define INIT_PWM 0x00
+//#define BLINK_TEST
+#define MAP_TEST
 
-#define SPI_D 1
+#define SPI_D 0
 
 // sled1735 latches data at clock rising edge, max freq is 2.4MHz
 // attiny clock is 8MHz, so can divide by 4 and run at 2MHz
@@ -163,7 +231,7 @@ void setup_spi()
     // reg 0x08: breath in and out time
     SPI_MasterTransmit(0x08);
     // enable breath, continuous, 1ms extinguish time
-    SPI_MasterTransmit(0b00110011);
+    SPI_MasterTransmit(0b01000100);
 
     HIGH(PORTB,SS_PIN);
     _delay_ms(SPI_D);
@@ -181,7 +249,6 @@ void setup_spi()
     _delay_ms(SPI_D);
 
     #endif
-
     // turn on pwm to full
     LOW(PORTB,SS_PIN);
     _delay_ms(SPI_D);
@@ -191,7 +258,7 @@ void setup_spi()
     SPI_MasterTransmit(0x20); 
     // do 128 times to get all LEDS
     for(int i=0; i<128; i++)
-        SPI_MasterTransmit(0xFF); // half bright
+        SPI_MasterTransmit(INIT_PWM); // half bright
 
     HIGH(PORTB,SS_PIN);
     _delay_ms(SPI_D);
@@ -204,12 +271,12 @@ void setup_spi()
     SPI_MasterTransmit(0x20); 
     // do 128 times to get all LEDS
     for(int i=0; i<128; i++)
-        SPI_MasterTransmit(0x00); // half bright
+        SPI_MasterTransmit(INIT_PWM); // half bright
 
     HIGH(PORTB,SS_PIN);
     _delay_ms(SPI_D);
 
-    // all leds off
+    // all leds on
     LOW(PORTB,SS_PIN);
     _delay_ms(SPI_D);
 
@@ -242,31 +309,74 @@ void setup_spi()
 
 }
 int j = 0;
+int i = 0;
+const int num_leds = 4;
+const int order[] = { 0, 1, 5, 6 ,22, 37, 42, 49, 50, 51 };
+//////////////////////////////////////////////////////////////////////////////////////////////////
 void sled_test()
 {
-/*
-    LOW(PORTB,SS_PIN);
-    _delay_ms(SPI_D);
-    SPI_MasterTransmit(0x20); 
-    SPI_MasterTransmit(4); 
-    SPI_MasterTransmit(1<<2);
+    #ifdef MAP_TEST
+    if(i++ > num_leds ) i = 0;
 
-    HIGH(PORTB,SS_PIN);
-    _delay_ms(SPI_D);
+    led_buffer.weach[order[i]].r ++;
+    led_buffer.weach[order[i]].g = 0x00;
+    led_buffer.weach[order[i]].b = 0x2F;
 
-    _delay_ms(250);
+    // access by frame
+    uint8_t frames[NUM_FRAMES][FRAME_SIZE] = FRAME_MAP( led_buffer.whole );
 
-    LOW(PORTB,SS_PIN);
-    _delay_ms(SPI_D);
-    SPI_MasterTransmit(0x20); 
-    SPI_MasterTransmit(4); 
-    SPI_MasterTransmit(0);
+    for( int f = 0; f < NUM_FRAMES; f++ )
+    {
+        LOW(PORTB,SS_PIN);
+        _delay_ms(SPI_D);
 
-    HIGH(PORTB,SS_PIN);
-    _delay_ms(SPI_D);
+        // header: write frame 1
+        SPI_MasterTransmit(0x20); 
+        // pwm reg
+        SPI_MasterTransmit(0x20);  
 
-    _delay_ms(250);
-    */
+        for(int i = 0; i < FRAME_SIZE; i ++)
+        {
+            SPI_MasterTransmit(frames[f][i]);  
+        }
+        HIGH(PORTB,SS_PIN);
+        _delay_ms(SPI_D);
+    }
+
+    #endif
+
+    #ifdef BLINK_TEST
+    for(uint8_t i = 0; i < 8; i ++)
+    {
+        LOW(PORTB,SS_PIN);
+        _delay_ms(SPI_D);
+
+        // header: write frame 2
+        SPI_MasterTransmit(0x20); 
+        // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
+        SPI_MasterTransmit(0x20 + i); 
+
+        SPI_MasterTransmit(0xFF);
+
+        HIGH(PORTB,SS_PIN);
+        _delay_ms(SPI_D);
+
+        _delay_ms(200);
+        LOW(PORTB,SS_PIN);
+        _delay_ms(SPI_D);
+
+        // header: write frame 2
+        SPI_MasterTransmit(0x20); 
+        // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
+        SPI_MasterTransmit(0x20 + i); 
+
+        SPI_MasterTransmit(0x00);
+
+        HIGH(PORTB,SS_PIN);
+        _delay_ms(200);
+
+    }
+    #endif
 
     #ifdef LED_ON
     LOW(PORTB,SS_PIN);
@@ -302,23 +412,42 @@ void sled_test()
 
     #ifdef LED_PWM
 
-    j += 1;
-    if(j == 3)  
-        j = 0;
-
+    static int amount = 0;
+    for(int i=0; i<64; i++)
+    {
     LOW(PORTB,SS_PIN);
     _delay_ms(SPI_D);
     // header: write frame 1
     SPI_MasterTransmit(0x20); 
     // reg 0x20: pwm, 8 bits per led, 128 bytes for 128 leds
-    SPI_MasterTransmit(0x20); 
+    SPI_MasterTransmit(0x20 + i); 
     // do 128 times to get all LEDS
-    for(int i=0; i<128; i++)
-        SPI_MasterTransmit(i % 3 == j ? 0xFF : 0x00); // half bright
-
+    SPI_MasterTransmit(amount); 
     HIGH(PORTB,SS_PIN);
     _delay_ms(SPI_D);
+    }
+    /*
+    for(int i=0; i<128; i++)
+    {
+    LOW(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+    // header: write frame 2
+    SPI_MasterTransmit(0x21); 
+    // reg 0x20: pwm, 8 bits per led, 128 bytes for 128 leds
+    SPI_MasterTransmit(0x20 + i); 
+    // do 128 times to get all LEDS
+    SPI_MasterTransmit(amount); 
+    HIGH(PORTB,SS_PIN);
+    _delay_ms(SPI_D);
+    }
+    */
 
+    if(amount == 0)
+        amount =  0x0F;
+    else
+        amount = 0x00;
+
+/*
     LOW(PORTB,SS_PIN);
     _delay_ms(SPI_D);
     // header: write frame 2
@@ -331,6 +460,7 @@ void sled_test()
 
     HIGH(PORTB,SS_PIN);
     _delay_ms(SPI_D);
+    */
 
     #endif
 
@@ -373,7 +503,7 @@ void sled_test()
     #endif
 
     #ifdef LOOP_DELAY
-    _delay_ms(500);
+    _delay_ms(DELAY_TIME);
     #endif
 }
 
