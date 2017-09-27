@@ -72,32 +72,30 @@ led_buffer_t led_buffer = { LED16 };
 
 #define XXX 0
 
-#define FRAME_MAP(led) \
-  {                                               \
-    { XXX,     XXX,     led[0],  led[3],  led[6],  led[9],  led[12], led[15], led[18], led[21], led[24], led[27], led[30], led[33], led[36], led[39], \
-      XXX,     XXX,     led[1],  led[4],  led[7],  led[10], led[13], led[16], led[19], led[22], led[25], led[28], led[31], led[34], led[37], led[40], \
-      XXX,     XXX,     led[2],  led[5],  led[8],  led[11], led[14], led[17], led[20], led[23], led[26], led[29], led[32], led[35], led[38], led[41], \
-      \
-      led[42], led[45], led[48], XXX,     XXX,     led[51], led[54], led[57], led[60], led[63], led[66], led[69], led[72], led[75], led[78], led[81], \
-      led[43], led[46], led[49], XXX,     XXX,     led[52], led[55], led[58], led[61], led[64], led[67], led[70], led[73], led[76], led[79], led[82], \
-      led[44], led[47], led[50], XXX,     XXX,     led[53], led[56], led[59], led[62], led[65], led[68], led[71], led[74], led[77], led[80], led[83], \
-      \
-      led[84], led[87], led[90], led[93], led[96], led[99], XXX,     XXX,     led[102],led[105],led[108],led[111],led[114],led[117],led[120],led[123], \
-      led[85], led[88], led[91], led[94], led[97], led[100],XXX,     XXX,     led[103],led[106],led[109],led[112],led[115],led[118],led[121],led[124], \
-     }, { \
-      led[86], led[89], led[92], led[95], led[98], led[101],XXX,     XXX,     led[104],led[107],led[110],led[113],led[116],led[119],led[122],led[125], \
-      \
-      led[126], led[129], led[132], led[135], led[138], led[141], led[144], led[147], led[153], XXX,     XXX,     led[150], led[156], led[159], led[162], led[165], \
-      led[127], led[130], led[133], led[136], led[139], led[142], led[145], led[148], led[154], XXX,     XXX,     led[151], led[157], led[160], led[163], led[166], \
-      led[128], led[131], led[134], led[137], led[140], led[143], led[146], led[149], led[155], XXX,     XXX,     led[152], led[158], led[161], led[164], led[167], \
-      \
-      XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     \
-      XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     \
-      XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     \
-      XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     \
-      }, \
-  }
-  // made a mistake on the pcb and swapped leds l4 and i4, these are starting with 150 and 153, which is why they are reversed above
+#define FRAME_MAP(l)                                                                                                                  \
+  { { XXX,    XXX,    l[0],   l[3],   l[6],   l[9],   l[12],  l[15],  l[18],  l[21],  l[24],  l[27],  l[30],  l[33],  l[36],  l[39],  \
+      XXX,    XXX,    l[1],   l[4],   l[7],   l[10],  l[13],  l[16],  l[19],  l[22],  l[25],  l[28],  l[31],  l[34],  l[37],  l[40],  \
+      XXX,    XXX,    l[2],   l[5],   l[8],   l[11],  l[14],  l[17],  l[20],  l[23],  l[26],  l[29],  l[32],  l[35],  l[38],  l[41],  \
+                                                                                                                                      \
+      l[42],  l[45],  l[48],  XXX,    XXX,    l[51],  l[54],  l[57],  l[60],  l[63],  l[66],  l[69],  l[72],  l[75],  l[78],  l[81],  \
+      l[43],  l[46],  l[49],  XXX,    XXX,    l[52],  l[55],  l[58],  l[61],  l[64],  l[67],  l[70],  l[73],  l[76],  l[79],  l[82],  \
+      l[44],  l[47],  l[50],  XXX,    XXX,    l[53],  l[56],  l[59],  l[62],  l[65],  l[68],  l[71],  l[74],  l[77],  l[80],  l[83],  \
+                                                                                                                                      \
+      l[84],  l[87],  l[90],  l[93],  l[96],  l[99],  XXX,    XXX,    l[102], l[105], l[108], l[111], l[114], l[117], l[120], l[123], \
+      l[85],  l[88],  l[91],  l[94],  l[97],  l[100], XXX,    XXX,    l[103], l[106], l[109], l[112], l[115], l[118], l[121], l[124], \
+    },                                                                                                                                \
+    { l[86],  l[89],  l[92],  l[95],  l[98],  l[101], XXX,    XXX,    l[104], l[107], l[110], l[113], l[116], l[119], l[122], l[125], \
+                                                                                                                                      \
+      l[126], l[129], l[132], l[135], l[138], l[141], l[144], l[147], l[153], XXX,    XXX,    l[150], l[156], l[159], l[162], l[165], \
+      l[127], l[130], l[133], l[136], l[139], l[142], l[145], l[148], l[154], XXX,    XXX,    l[151], l[157], l[160], l[163], l[166], \
+      l[128], l[131], l[134], l[137], l[140], l[143], l[146], l[149], l[155], XXX,    XXX,    l[152], l[158], l[161], l[164], l[167], \
+                                                                                                                                      \
+      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    \
+      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    \
+      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    \
+      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    \
+  } }
+// made a mistake on the pcb and swapped leds l4 and i4, these are starting with 150 and 153, which is why they are reversed above
 
 
 #define CHECK_ID
@@ -236,7 +234,7 @@ void setup_spi()
     SPI_MasterTransmit(0x2B); 
     //reg 0x0F: constant current
     SPI_MasterTransmit(0x0F);
-    SPI_MasterTransmit(0b10011001); // set to 25 : 8 + (25-1)*0.5 = 20 mA
+    SPI_MasterTransmit(0b10000000); // set to 25 : 8 + (25-1)*0.5 = 20 mA
     HIGH(PORTB,SS_PIN);
     _delay_ms(SPI_D);
     #endif
@@ -337,27 +335,9 @@ void sled_test()
 {
     #ifdef MAP_TEST
     j++;
-    if(j % 3 == 0  )
-    {
-        r = 0xFF;
-        g = 0;
-        b = 0;
-    }
-    else if(j %3 == 1)
-    {
-        r = 0;
-        g = 0xFF;
-        b = 0;
-    }
-    else if(j %3 == 2)
-    {
-        r = 0;
-        g = 0;
-        b = 0xFF;
-    }
-    led_buffer.weach[order[0]].r = r;
-    led_buffer.weach[order[0]].g = g;
-    led_buffer.weach[order[0]].b = b;
+    led_buffer.weach[order[0]].r += 15;
+    led_buffer.weach[order[0]].g -= 3;
+    led_buffer.weach[order[0]].b += 7;
 
     // access by frame
     uint8_t frames[NUM_FRAMES][FRAME_SIZE] = FRAME_MAP( led_buffer.whole );
