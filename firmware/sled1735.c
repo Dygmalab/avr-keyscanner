@@ -17,7 +17,7 @@ to test:
 #include "main.h"
 
 #define COLS 8
-#define ROWS 2
+#define ROWS 7
 #define LED_DATA_SIZE 3
 #define NUM_LEDS_PER_BANK 2
 
@@ -25,8 +25,8 @@ to test:
 #define NUM_LED_BANKS NUM_LEDS/NUM_LEDS_PER_BANK
 #define LED_BANK_SIZE (LED_DATA_SIZE*NUM_LEDS_PER_BANK)
 
-#define FRAME_SIZE NUM_LEDS * LED_DATA_SIZE
-#define NUM_FRAMES 1
+#define FRAME_SIZE 128
+#define NUM_FRAMES 2
 
 /*
 #define NUM_LEDS 32
@@ -74,11 +74,30 @@ led_buffer_t led_buffer = { LED16 };
 
 #define FRAME_MAP(led) \
   {                                               \
-    { XXX, XXX, led[0], led[3], led[6], led[9],  led[12], led[15], led[18], led[21], led[24], led[27], led[30], led[33], led[36], led[39], \
-      XXX, XXX, led[1], led[4], led[7], led[10], led[13], led[16], led[19], led[22], led[25], led[28], led[31], led[34], led[37], led[40], \
-      XXX, XXX, led[2], led[5], led[8], led[11], led[14], led[17], led[20], led[23], led[26], led[29], led[32], led[35], led[38], led[41], \
+    { XXX,     XXX,     led[0],  led[3],  led[6],  led[9],  led[12], led[15], led[18], led[21], led[24], led[27], led[30], led[33], led[36], led[39], \
+      XXX,     XXX,     led[1],  led[4],  led[7],  led[10], led[13], led[16], led[19], led[22], led[25], led[28], led[31], led[34], led[37], led[40], \
+      XXX,     XXX,     led[2],  led[5],  led[8],  led[11], led[14], led[17], led[20], led[23], led[26], led[29], led[32], led[35], led[38], led[41], \
+      \
+      led[42], led[45], led[48], XXX,     XXX,     led[51], led[54], led[57], led[60], led[63], led[66], led[69], led[72], led[75], led[78], led[81], \
+      led[43], led[46], led[49], XXX,     XXX,     led[52], led[55], led[58], led[61], led[64], led[67], led[70], led[73], led[76], led[79], led[82], \
+      led[44], led[47], led[50], XXX,     XXX,     led[53], led[56], led[59], led[62], led[65], led[68], led[71], led[74], led[77], led[80], led[83], \
+      \
+      led[84], led[87], led[90], led[93], led[96], led[99], XXX,     XXX,     led[102],led[105],led[108],led[111],led[114],led[117],led[120],led[123], \
+      led[85], led[88], led[91], led[94], led[97], led[100],XXX,     XXX,     led[103],led[106],led[109],led[112],led[115],led[118],led[121],led[124], \
+     }, { \
+      led[86], led[89], led[92], led[95], led[98], led[101],XXX,     XXX,     led[104],led[107],led[110],led[113],led[116],led[119],led[122],led[125], \
+      \
+      led[126], led[129], led[132], led[135], led[138], led[141], led[144], led[147], led[153], XXX,     XXX,     led[150], led[156], led[159], led[162], led[165], \
+      led[127], led[130], led[133], led[136], led[139], led[142], led[145], led[148], led[154], XXX,     XXX,     led[151], led[157], led[160], led[163], led[166], \
+      led[128], led[131], led[134], led[137], led[140], led[143], led[146], led[149], led[155], XXX,     XXX,     led[152], led[158], led[161], led[164], led[167], \
+      \
+      XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     \
+      XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     \
+      XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     \
+      XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     XXX,     \
       }, \
   }
+  // made a mistake on the pcb and swapped leds l4 and i4, these are starting with 150 and 153, which is why they are reversed above
 
 
 #define CHECK_ID
@@ -88,7 +107,7 @@ led_buffer_t led_buffer = { LED16 };
 //#define LED_PWM
 //#define LED_FADE
 #define LOOP_DELAY
-#define DELAY_TIME 1
+#define DELAY_TIME 250
 #define CONST_CURR
 #define INIT_PWM 0x00
 //#define BLINK_TEST
@@ -310,17 +329,35 @@ void setup_spi()
 }
 int j = 0;
 int i = 0;
-const int num_leds = 4;
-const int order[] = { 0, 1, 5, 6 ,22, 37, 42, 49, 50, 51 };
+const int num_leds = 10;
+const int order[] = { 0, 1, 5, 6 ,22, 36, 42, 49, 50, 51 };
+uint8_t r, g, b = 0;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 void sled_test()
 {
     #ifdef MAP_TEST
-    if(i++ > num_leds ) i = 0;
-
-    led_buffer.weach[order[i]].r ++;
-    led_buffer.weach[order[i]].g = 0x00;
-    led_buffer.weach[order[i]].b = 0x2F;
+    j++;
+    if(j % 3 == 0  )
+    {
+        r = 0xFF;
+        g = 0;
+        b = 0;
+    }
+    else if(j %3 == 1)
+    {
+        r = 0;
+        g = 0xFF;
+        b = 0;
+    }
+    else if(j %3 == 2)
+    {
+        r = 0;
+        g = 0;
+        b = 0xFF;
+    }
+    led_buffer.weach[order[0]].r = r;
+    led_buffer.weach[order[0]].g = g;
+    led_buffer.weach[order[0]].b = b;
 
     // access by frame
     uint8_t frames[NUM_FRAMES][FRAME_SIZE] = FRAME_MAP( led_buffer.whole );
@@ -331,7 +368,7 @@ void sled_test()
         _delay_ms(SPI_D);
 
         // header: write frame 1
-        SPI_MasterTransmit(0x20); 
+        SPI_MasterTransmit(0x20 + f); 
         // pwm reg
         SPI_MasterTransmit(0x20);  
 
@@ -342,6 +379,10 @@ void sled_test()
         HIGH(PORTB,SS_PIN);
         _delay_ms(SPI_D);
     }
+
+    // pulse through
+    for(int i = num_leds - 1; i > 0; i --)
+        led_buffer.weach[order[i]] = led_buffer.weach[order[i-1]];
 
     #endif
 
