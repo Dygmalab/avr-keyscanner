@@ -26,7 +26,7 @@ easily receive values from I2C buf and copy to led_buffer
 #define COLS 8
 #define ROWS 7
 #define LED_DATA_SIZE 3
-#define NUM_LEDS_PER_BANK 2
+#define NUM_LEDS_PER_BANK 8
 
 #define NUM_LEDS COLS * ROWS
 #define NUM_LED_BANKS NUM_LEDS/NUM_LEDS_PER_BANK
@@ -45,7 +45,7 @@ typedef union {
     uint8_t whole[NUM_LEDS * LED_DATA_SIZE];
     led_t each[COLS][ROWS];
     led_t weach[COLS*ROWS];
-    uint8_t bank[NUM_LED_BANKS][LED_DATA_SIZE];
+    led_t bank[7][8];
 } led_buffer_t ;
 
 #define LED1 0, 0, 0
@@ -109,6 +109,19 @@ void SPI_MasterTransmit(char cData)
     SPDR = cData;
     /* Wait for transmission complete */
     while(!(SPSR & (1<<SPIF)));
+}
+
+#define R 0
+#define G 50
+#define B 200
+void led_update_bank(uint8_t *buf, const uint8_t bank) {
+
+    memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
+}
+
+void led_set_one_to(uint8_t led, uint8_t *buf) {
+    memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
+
 }
 
 void setup_spi()
@@ -266,8 +279,8 @@ void setup_spi()
 }
 int j = 0;
 int i = 0;
-const int num_leds = 11;
-const int order[] = { 0, 1, 2, 5, 6 ,22, 36, 42, 49, 50, 51 };
+const int num_leds = 22;
+const int order[] = { 0, 1, 2, 3, 4, 5, 6 ,7, 8, 9, 10, 11, 12, 13, 14, 15, 22, 36, 42, 49, 50, 51 };
 uint8_t r, g, b = 0;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 void sled_test()
