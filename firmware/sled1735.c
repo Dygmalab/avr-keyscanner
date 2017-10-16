@@ -13,6 +13,7 @@ to test:
 
 #include <stdint.h>
 #include "sled1735.h"
+#include <string.h>
 #include <avr/delay.h>
 #include "main.h"
 
@@ -67,34 +68,48 @@ easily receive values from I2C buf and copy to led_buffer
 #define LED4 LED1, LED1, LED1, LED1
 #define LED8 LED4, LED4
 #define LED16 LED8, LED8
+#define LED32 LED16, LED16
+#define LED64 LED32, LED32
+#define LED128 LED64, LED64
 
-led_buffer_t led_buffer = { LED16 };
+led_buffer_t led_buffer = { LED32, LED16, LED8 }; // 56 RGBs
 
-#define XXX 0
+#define XXX 0xFF 
 
-#define FRAME_MAP(l)                                                                                                                  \
-  { { XXX,    XXX,    l[0],   l[3],   l[6],   l[9],   l[12],  l[15],  l[18],  l[21],  l[24],  l[27],  l[30],  l[33],  l[36],  l[39],  \
-      XXX,    XXX,    l[1],   l[4],   l[7],   l[10],  l[13],  l[16],  l[19],  l[22],  l[25],  l[28],  l[31],  l[34],  l[37],  l[40],  \
-      XXX,    XXX,    l[2],   l[5],   l[8],   l[11],  l[14],  l[17],  l[20],  l[23],  l[26],  l[29],  l[32],  l[35],  l[38],  l[41],  \
-                                                                                                                                      \
-      l[42],  l[45],  l[48],  XXX,    XXX,    l[51],  l[54],  l[57],  l[60],  l[63],  l[66],  l[69],  l[72],  l[75],  l[78],  l[81],  \
-      l[43],  l[46],  l[49],  XXX,    XXX,    l[52],  l[55],  l[58],  l[61],  l[64],  l[67],  l[70],  l[73],  l[76],  l[79],  l[82],  \
-      l[44],  l[47],  l[50],  XXX,    XXX,    l[53],  l[56],  l[59],  l[62],  l[65],  l[68],  l[71],  l[74],  l[77],  l[80],  l[83],  \
-                                                                                                                                      \
-      l[84],  l[87],  l[90],  l[93],  l[96],  l[99],  XXX,    XXX,    l[102], l[105], l[108], l[111], l[114], l[117], l[120], l[123], \
-      l[85],  l[88],  l[91],  l[94],  l[97],  l[100], XXX,    XXX,    l[103], l[106], l[109], l[112], l[115], l[118], l[121], l[124], \
-    },                                                                                                                                \
-    { l[86],  l[89],  l[92],  l[95],  l[98],  l[101], XXX,    XXX,    l[104], l[107], l[110], l[113], l[116], l[119], l[122], l[125], \
-                                                                                                                                      \
-      l[126], l[129], l[132], l[135], l[138], l[141], l[144], l[147], l[153], XXX,    XXX,    l[150], l[156], l[159], l[162], l[165], \
-      l[127], l[130], l[133], l[136], l[139], l[142], l[145], l[148], l[154], XXX,    XXX,    l[151], l[157], l[160], l[163], l[166], \
-      l[128], l[131], l[134], l[137], l[140], l[143], l[146], l[149], l[155], XXX,    XXX,    l[152], l[158], l[161], l[164], l[167], \
-                                                                                                                                      \
-      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    \
-      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    \
-      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    \
-      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    \
-  } }
+/* option 1:  
+* data comes in RGB, RGB .... RGB blocks of 8 x 3 bytes = 24 bytes
+* store data in sled format, ready for spi out
+* use a LUT to put the data in the right place when it comes in
+
+ option 2
+* store data in natural matrix format
+* spi output uses a LUT to put the data out in the correct order
+
+*/
+
+const uint8_t led_LUT[2][128] = {
+    { XXX,    XXX,    0,   3,   6,   9,   12,  15,  18,  21,  24,  27,  30,  33,  36,  39,  
+      XXX,    XXX,    1,   4,   7,   10,  13,  16,  19,  22,  25,  28,  31,  34,  37,  40, 
+      XXX,    XXX,    2,   5,   8,   11,  14,  17,  20,  23,  26,  29,  32,  35,  38,  41,  
+                                                                                                                                      
+      42,  45,  48,  XXX,    XXX,    51,  54,  57,  60,  63,  66,  69,  72,  75,  78,  81,  
+      43,  46,  49,  XXX,    XXX,    52,  55,  58,  61,  64,  67,  70,  73,  76,  79,  82,  
+      44,  47,  50,  XXX,    XXX,    53,  56,  59,  62,  65,  68,  71,  74,  77,  80,  83,  
+                                                                                                                                      
+      84,  87,  90,  93,  96,  99,  XXX,    XXX,    102, 105, 108, 111, 114, 117, 120, 123, 
+      85,  88,  91,  94,  97,  100, XXX,    XXX,    103, 106, 109, 112, 115, 118, 121, 124, 
+    },                                                                                                                                
+    { 86,  89,  92,  95,  98,  101, XXX,    XXX,    104, 107, 110, 113, 116, 119, 122, 125, 
+
+      126, 129, 132, 135, 138, 141, 144, 147, 153, XXX,    XXX,    150, 156, 159, 162, 165, 
+      127, 130, 133, 136, 139, 142, 145, 148, 154, XXX,    XXX,    151, 157, 160, 163, 166,
+      128, 131, 134, 137, 140, 143, 146, 149, 155, XXX,    XXX,    152, 158, 161, 164, 167,
+                                                                                                                                      
+      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    
+      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    
+      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    
+      XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    XXX,    
+  } };
 // made a mistake on the pcb and swapped leds l4 and i4, these are starting with 150 and 153, which is why they are reversed above
 
 
@@ -109,7 +124,8 @@ led_buffer_t led_buffer = { LED16 };
 #define CONST_CURR
 #define INIT_PWM 0x00
 //#define BLINK_TEST
-#define MAP_TEST
+//#define MAP_TEST
+#define INT_TEST
 
 #define SPI_D 0
 
@@ -324,6 +340,12 @@ void setup_spi()
     HIGH(PORTB,SS_PIN);
     _delay_ms(SPI_D);
 
+    for(int i = 0; i < NUM_LEDS * LED_DATA_SIZE; i ++)
+        led_buffer.whole[i] = 0;
+    #ifdef INT_TEST
+    SPCR |= (1<<SPIE);
+    sei();
+    #endif
 }
 int j = 0;
 int i = 0;
@@ -333,6 +355,35 @@ uint8_t r, g, b = 0;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 void sled_test()
 {
+
+    #ifdef INT_TEST
+    // pulse through
+    for(int i = num_leds - 1; i > 0; i --)
+        led_buffer.weach[order[i]] = led_buffer.weach[order[i-1]];
+
+    j ++;
+    if( j % 3 == 0)
+    {
+        led_buffer.weach[order[0]].r = 255;
+        led_buffer.weach[order[0]].g = 0;
+        led_buffer.weach[order[0]].b = 0;
+    }
+    else if(j %3 == 1)
+    {
+        led_buffer.weach[order[0]].r = 0;
+        led_buffer.weach[order[0]].g = 255;
+        led_buffer.weach[order[0]].b = 0;
+    }
+    else
+    {
+        led_buffer.weach[order[0]].r = 0;
+        led_buffer.weach[order[0]].g = 0;
+        led_buffer.weach[order[0]].b = 255;
+    }
+
+
+    #endif
+
     #ifdef MAP_TEST
     j++;
     led_buffer.weach[order[0]].r += 15;
@@ -340,6 +391,7 @@ void sled_test()
     led_buffer.weach[order[0]].b += 7;
 
     // access by frame
+     
     uint8_t frames[NUM_FRAMES][FRAME_SIZE] = FRAME_MAP( led_buffer.whole );
 
     for( int f = 0; f < NUM_FRAMES; f++ )
@@ -528,3 +580,51 @@ void sled_test()
     #endif
 }
 
+uint8_t volatile led_num = 0;
+uint8_t volatile led_frame = 0;
+static volatile enum { BANK, REG, DATA, END } led_state;
+/* Each time a byte finishes transmitting, queue the next one */
+ISR(SPI_STC_vect) {
+    switch(led_state) {
+    case BANK:
+        LOW(PORTB,SS_PIN);
+        asm("nop");
+//        asm("nop");
+ //       asm("nop");
+        SPDR = 0x20 + led_frame;  // select the correct frame
+        led_state = REG;
+        break;
+    case REG:
+        // pwm reg
+        SPDR = 0x20;  // pwm data starts at 0x20
+        led_state = DATA;
+        break;
+    case DATA:
+    {
+        if(led_LUT[led_frame][led_num] == 0xFF ) // if not a valid led
+            SPDR = 0;
+        else
+            SPDR = led_buffer.whole[led_LUT[led_frame][led_num]];
+        led_num ++;
+        if( led_num == FRAME_SIZE )
+        {
+            led_state = END;
+            led_num = 0;
+            
+            led_frame ++;
+            if(led_frame == NUM_FRAMES)
+                led_frame = 0;
+        }
+        break;
+
+    }
+    case END:
+        SPDR = 0;
+        HIGH(PORTB,SS_PIN);
+        led_state = BANK;
+        break;
+        
+    default:
+    led_state = BANK;
+    }
+}
