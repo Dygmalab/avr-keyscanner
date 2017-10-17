@@ -19,18 +19,21 @@ int main(void) {
     uint8_t led[3] = { 100, 0, 0 };
 //    led_set_one_to(0, led);
 
-    uint8_t bank[24];
     for(int i = 0; i < 24; i ++ )
         bank[i] = 10;
     led_update_bank(bank, 0);
+    uint8_t bank[24];
     for(int i = 0; i < 24; i ++ )
         bank[i] = 150;
-    //led_update_bank(bank, 1);
-
+    led_update_bank(bank, 1);
 */
+//    uint8_t buf[4] = { 0x03, 0x00, 0x00, 0x50 };
+ //   led_set_all_to( &buf[1]);
+
+
 
     while(1) {
-        sled_test();
+//        sled_test();
     }
     __builtin_unreachable();
 }

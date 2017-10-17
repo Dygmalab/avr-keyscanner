@@ -126,9 +126,11 @@ void led_set_one_to(uint8_t led, uint8_t *buf) {
 
 void led_set_all_to( uint8_t *buf) {
     for(uint8_t led=0; led <NUM_LEDS; led++) {
-        memcpy((uint8_t *)led_buffer.whole[led], buf, LED_DATA_SIZE);
+        memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
         }
 }
+
+//        memcpy((uint8_t *)led_buffer.each[led], buf, LED_DATA_SIZE);
 
 void setup_spi()
 {

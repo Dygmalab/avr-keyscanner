@@ -71,7 +71,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         break;
 
     case TWI_CMD_VERSION:
-        twi_command = TWI_CMD_VERSION;
+        twi_command = 0x10;
         break;
         /*
     case TWI_CMD_LED_GLOBAL_BRIGHTNESS:
