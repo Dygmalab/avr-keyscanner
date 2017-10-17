@@ -5,6 +5,7 @@
 
 static inline void setup(void) {
     setup_spi(); // setup sled 1735 driver chip
+    twi_init();
 
     //DDRA = (1<<TEST_P);
     //LOW(PORTA,TEST_P);
@@ -14,6 +15,7 @@ static inline void setup(void) {
 #define B 200
 int main(void) {
     setup();
+    /*
     uint8_t led[3] = { 100, 0, 0 };
 //    led_set_one_to(0, led);
 
@@ -23,10 +25,12 @@ int main(void) {
     led_update_bank(bank, 0);
     for(int i = 0; i < 24; i ++ )
         bank[i] = 150;
-    led_update_bank(bank, 1);
+    //led_update_bank(bank, 1);
+
+*/
 
     while(1) {
-//        sled_test();
+        sled_test();
     }
     __builtin_unreachable();
 }

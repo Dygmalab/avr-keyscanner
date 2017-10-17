@@ -32,7 +32,7 @@ PROGRAMMER = -c dragon_isp
 #PROGRAMMER = -c stk500v2 -P /dev/ttyACM0
 
 # Add more objects for each .c file here
-OBJECTS    = main.o sled1735.o 
+OBJECTS    = main.o sled1735.o wire-protocol.o twi-slave.o ringbuf.o
 
 # For computing fuse byte values for other devices and options see
 # the fuse bit calculator at http://www.engbedded.com/fusecalc/
@@ -48,7 +48,7 @@ OPTIMIZATION = -O2
 #DEBUG = -ggdb
 
 # Optimize, but focus on keeping code size small
-#OPTIMIZATION = -Os
+OPTIMIZATION = -Os
 
 AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE)
 COMPILE = $(GCC_PATH) -Wall -Wextra $(OPTIMIZATION) $(DEBUG) -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK)

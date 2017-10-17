@@ -100,7 +100,8 @@ void SPI_MasterInit(void)
     // sled1735 latches data at clock rising edge, max freq is 2.4MHz
     // attiny clock is 8MHz, so can divide by 4 and run at 2MHz
     /* Enable SPI, Master, set clock rate fck/16 */
-    SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0);
+    SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0)|(1<<SPR1);
+    SPSR ^= _BV(SPI2X);
 }
 
 void SPI_MasterTransmit(char cData)
@@ -121,7 +122,12 @@ void led_update_bank(uint8_t *buf, const uint8_t bank) {
 
 void led_set_one_to(uint8_t led, uint8_t *buf) {
     memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
+}
 
+void led_set_all_to( uint8_t *buf) {
+    for(uint8_t led=0; led <NUM_LEDS; led++) {
+        memcpy((uint8_t *)led_buffer.whole[led], buf, LED_DATA_SIZE);
+        }
 }
 
 void setup_spi()
@@ -533,10 +539,10 @@ ISR(SPI_STC_vect) {
         break;
     case DATA:
     {
-        if(led_LUT[led_frame][led_num] == 0xFF ) // if not a valid led
-            SPDR = 0;
-        else
-            SPDR = led_buffer.whole[led_LUT[led_frame][led_num]];
+//        if(led_LUT[led_frame][led_num] == 0xFF ) // if not a valid led
+ //           SPDR = 0;
+  //      else
+            SPDR = led_buffer.whole[pgm_read_byte_near(&led_LUT[led_frame][led_num])];
         led_num ++;
         if( led_num == FRAME_SIZE )
         {

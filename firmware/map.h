@@ -2,7 +2,8 @@
 #define XXX 0xFF 
 // farnell leds are different rgb order to chinese, which is why most triplets have first 2 rows reversed
 // made a mistake on the pcb and swapped leds l4 and i4, these are starting with 150 and 153, which is why they are reversed above
-const uint8_t led_LUT[2][128] = {
+#include <avr/pgmspace.h>
+PROGMEM const uint8_t led_LUT[2][128] = {
     { XXX,    XXX,    0,   3,   7,   10,  13,  15,  18,  22,  25,  28,  31,  34,  37,  40,  
       XXX,    XXX,    1,   4,   6,   9,   12,  16,  19,  21,  24,  27,  30,  33,  36,  39, 
       XXX,    XXX,    2,   5,   8,   11,  14,  17,  20,  23,  26,  29,  32,  35,  38,  41,  
