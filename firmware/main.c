@@ -28,7 +28,8 @@ int main(void) {
     led_update_bank(bank, 1);
 */
 //    uint8_t buf[4] = { 0x03, 0x00, 0x00, 0x50 };
- //   led_set_all_to( &buf[1]);
+    uint8_t off[3] = { 0, 0, 0 };
+    led_set_all_to( off );
 
 
 
