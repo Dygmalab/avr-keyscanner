@@ -117,6 +117,7 @@ void SPI_MasterTransmit(char cData)
 #define B 200
 void led_update_bank(uint8_t *buf, const uint8_t bank) {
 
+    if(bank < 2)
     memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
 }
 
