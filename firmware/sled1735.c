@@ -62,21 +62,21 @@ led_buffer_t led_buffer = { LED32, LED16, LED8 }; // 56 RGBs
 
 #define CHECK_ID
 #define SETUP
-//#define BREATH
+#define BREATH
 //#define LED_ON
 //#define LED_PWM
 //#define LED_FADE
 #define LOOP_DELAY
 #define DELAY_TIME 200
 #define CONST_CURR
-#define INIT_PWM 0x00
+#define INIT_PWM 0xFF
 //#define BLINK_TEST
 //#define MAP_TEST
 //#define INT_TEST
 
 
 #define SHUTDOWN_PIN 6 //shutdown when low
-#define SS_PIN 7
+#define SS_PIN 2
 #define DDR_SPI DDRB
 #define DD_MOSI 3
 #define DD_SCK 5
