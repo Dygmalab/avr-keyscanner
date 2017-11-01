@@ -14,6 +14,7 @@ static inline void setup(void) {
 #define B 200
 int main(void) {
     setup();
+    /*
     uint8_t led[3] = { 100, 0, 0 };
 //    led_set_one_to(0, led);
 
@@ -24,6 +25,7 @@ int main(void) {
     for(int i = 0; i < 24; i ++ )
         bank[i] = 150;
     led_update_bank(bank, 1);
+    */
 
     while(1) {
 //        sled_test();
