@@ -72,7 +72,7 @@ led_buffer_t led_buffer = { LED32, LED16, LED8 }; // 56 RGBs
 #define INIT_PWM 0x00
 //#define BLINK_TEST
 //#define MAP_TEST
-#define INT_TEST
+//#define INT_TEST
 
 
 #define SHUTDOWN_PIN 6 //shutdown when low
@@ -207,7 +207,7 @@ void setup_spi()
     SPI_MasterTransmit(0x2B); 
     //reg 0x0F: constant current
     SPI_MasterTransmit(0x0F);
-    SPI_MasterTransmit(0b10000000); // set to 25 : 8 + (25-1)*0.5 = 20 mA
+    SPI_MasterTransmit(0b10111111); // set to 25 : 8 + (25-1)*0.5 = 20 mA
     HIGH(PORTB,SS_PIN);
     
     #endif
@@ -270,6 +270,37 @@ void setup_spi()
         SPI_MasterTransmit(0xFF);
 
     HIGH(PORTB,SS_PIN);
+   
+
+    #ifdef INIT_PWM
+    LOW(PORTB,SS_PIN);
+    
+    // header: write frame 2
+    SPI_MasterTransmit(0x20); 
+    // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
+    SPI_MasterTransmit(0x20); 
+
+    // write 0xFF 16 times to get all 128 LEDs in first frame turned on
+    // auto increment means don't need to change start reg
+    for(int i=0; i<128; i++)
+        SPI_MasterTransmit(INIT_PWM);
+
+    HIGH(PORTB,SS_PIN);
+
+    LOW(PORTB,SS_PIN);
+    
+    // header: write frame 2
+    SPI_MasterTransmit(0x21); 
+    // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
+    SPI_MasterTransmit(0x20); 
+
+    // write 0xFF 16 times to get all 128 LEDs in first frame turned on
+    // auto increment means don't need to change start reg
+    for(int i=0; i<128; i++)
+        SPI_MasterTransmit(INIT_PWM);
+
+    HIGH(PORTB,SS_PIN);
+    #endif
     
 
     #ifdef INT_TEST
