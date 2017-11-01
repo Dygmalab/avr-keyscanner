@@ -66,8 +66,8 @@ led_buffer_t led_buffer = { LED32, LED16, LED8 }; // 56 RGBs
 //#define LED_ON
 //#define LED_PWM
 //#define LED_FADE
-#define LOOP_DELAY
-#define DELAY_TIME 200
+//#define LOOP_DELAY
+//#define DELAY_TIME 200
 #define CONST_CURR
 #define INIT_PWM 0x00
 //#define BLINK_TEST
