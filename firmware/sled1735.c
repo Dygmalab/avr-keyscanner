@@ -19,17 +19,27 @@ easily receive values from I2C buf and copy to led_buffer
 #include <stdint.h>
 #include "sled1735.h"
 #include <string.h>
-#include <avr/delay.h>
+#include <util/delay.h>
 #include "main.h"
 #include "map.h"
 
+#define LED_DATA_SIZE 3
+#define NUM_LEDS_PER_BANK 8
+
+/* defs for the 8x7 test board
 #define COLS 8
 #define ROWS 7
 #define LED_DATA_SIZE 3
 #define NUM_LEDS_PER_BANK 8
-
 #define NUM_LEDS COLS * ROWS
-#define NUM_LED_BANKS NUM_LEDS/NUM_LEDS_PER_BANK
+*/
+
+#define KEYS 30
+#define LP_KEYS 2
+#define PALM 14
+#define UNDERGLOW 13
+#define NUM_LEDS 61 // add 2 because palm is missing 2 TODO
+#define NUM_LED_BANKS 8
 #define LED_BANK_SIZE (LED_DATA_SIZE*NUM_LEDS_PER_BANK)
 
 #define FRAME_SIZE 128
@@ -43,9 +53,8 @@ typedef struct {
 
 typedef union {
     uint8_t whole[NUM_LEDS * LED_DATA_SIZE];
-    led_t each[COLS][ROWS];
-    led_t weach[COLS*ROWS];
-    led_t bank[7][8];
+    led_t weach[NUM_LEDS];
+//    led_t bank[7][8];
 } led_buffer_t ;
 
 #define LED1 0, 0, 0
@@ -56,7 +65,7 @@ typedef union {
 #define LED64 LED32, LED32
 #define LED128 LED64, LED64
 
-led_buffer_t led_buffer = { LED32, LED16, LED8 }; // 56 RGBs
+led_buffer_t led_buffer = { LED64 }; // 59 RGBs
 
 
 
@@ -76,7 +85,7 @@ led_buffer_t led_buffer = { LED32, LED16, LED8 }; // 56 RGBs
 
 
 #define SHUTDOWN_PIN 6 //shutdown when low
-#define SS_PIN 7
+#define SS_PIN 2
 #define DDR_SPI DDRB
 #define DD_MOSI 3
 #define DD_SCK 5
@@ -117,11 +126,12 @@ void SPI_MasterTransmit(char cData)
 #define B 200
 void led_update_bank(uint8_t *buf, const uint8_t bank) {
 
-    if(bank < 2)
-    memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
+//    if(bank < 2)
+    //memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
 }
 
 void led_set_one_to(uint8_t led, uint8_t *buf) {
+    //overflow possible here
     memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
 }
 
@@ -295,15 +305,10 @@ uint8_t r, g, b = 0;
 void sled_test()
 {
 
-    #ifdef INT_TEST
+    #ifdef INT_TEST_PULSE
     // pulse through
     for(int i = num_leds - 1; i > 0; i --)
         led_buffer.weach[order[i]] = led_buffer.weach[order[i-1]];
-/*
-    led_buffer.weach[order[0]].r += 5;
-    led_buffer.weach[order[0]].g -= 3;
-    led_buffer.weach[order[0]].b += 7;
-    */
     j ++;
     if( j % 3 == 0)
     {
@@ -323,7 +328,6 @@ void sled_test()
         led_buffer.weach[order[0]].g = 0;
         led_buffer.weach[order[0]].b = 255;
     }
-
 
     #endif
 
