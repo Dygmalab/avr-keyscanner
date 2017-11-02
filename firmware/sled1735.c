@@ -529,6 +529,7 @@ void sled_test()
 
 uint8_t volatile led_num = 0;
 uint8_t volatile led_frame = 0;
+uint8_t volatile led_pos = 0;
 static volatile enum { BANK, REG, DATA, END } led_state;
 /* Each time a byte finishes transmitting, queue the next one */
 ISR(SPI_STC_vect) {
@@ -546,10 +547,11 @@ ISR(SPI_STC_vect) {
         break;
     case DATA:
     {
-//        if(led_LUT[led_frame][led_num] == 0xFF ) // if not a valid led
- //           SPDR = 0;
-  //      else
-            SPDR = led_buffer.whole[pgm_read_byte_near(&led_LUT[led_frame][led_num])];
+        led_pos = pgm_read_byte_near(&led_LUT[led_frame][led_num]);
+        if(led_pos == 0xFF) // if not a valid led
+            SPDR = 0;
+        else
+            SPDR = led_buffer.whole[led_pos];
         led_num ++;
         if( led_num == FRAME_SIZE )
         {
