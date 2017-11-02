@@ -38,7 +38,7 @@ easily receive values from I2C buf and copy to led_buffer
 #define LP_KEYS 2
 #define PALM 14
 #define UNDERGLOW 13
-#define NUM_LEDS 61 // add 2 because palm is missing 2 TODO
+#define NUM_LEDS 60 
 #define NUM_LED_BANKS 8
 #define LED_BANK_SIZE (LED_DATA_SIZE*NUM_LEDS_PER_BANK)
 
