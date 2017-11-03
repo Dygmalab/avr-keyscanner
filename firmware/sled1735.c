@@ -19,17 +19,27 @@ easily receive values from I2C buf and copy to led_buffer
 #include <stdint.h>
 #include "sled1735.h"
 #include <string.h>
-#include <avr/delay.h>
+#include <util/delay.h>
 #include "main.h"
 #include "map.h"
 
+#define LED_DATA_SIZE 3
+#define NUM_LEDS_PER_BANK 8
+
+/* defs for the 8x7 test board
 #define COLS 8
 #define ROWS 7
 #define LED_DATA_SIZE 3
 #define NUM_LEDS_PER_BANK 8
-
 #define NUM_LEDS COLS * ROWS
-#define NUM_LED_BANKS NUM_LEDS/NUM_LEDS_PER_BANK
+*/
+
+#define KEYS 30
+#define LP_KEYS 2
+#define PALM 14
+#define UNDERGLOW 13
+#define NUM_LEDS 60 
+#define NUM_LED_BANKS 8
 #define LED_BANK_SIZE (LED_DATA_SIZE*NUM_LEDS_PER_BANK)
 
 #define FRAME_SIZE 128
@@ -43,9 +53,8 @@ typedef struct {
 
 typedef union {
     uint8_t whole[NUM_LEDS * LED_DATA_SIZE];
-    led_t each[COLS][ROWS];
-    led_t weach[COLS*ROWS];
-    led_t bank[7][8];
+    led_t weach[NUM_LEDS];
+//    led_t bank[7][8];
 } led_buffer_t ;
 
 #define LED1 0, 0, 0
@@ -56,7 +65,7 @@ typedef union {
 #define LED64 LED32, LED32
 #define LED128 LED64, LED64
 
-led_buffer_t led_buffer = { LED32, LED16, LED8 }; // 56 RGBs
+led_buffer_t led_buffer = { LED64 }; // 59 RGBs
 
 
 
@@ -66,8 +75,8 @@ led_buffer_t led_buffer = { LED32, LED16, LED8 }; // 56 RGBs
 //#define LED_ON
 //#define LED_PWM
 //#define LED_FADE
-#define LOOP_DELAY
-#define DELAY_TIME 200
+//#define LOOP_DELAY
+//#define DELAY_TIME 200
 #define CONST_CURR
 #define INIT_PWM 0xFF
 //#define BLINK_TEST
@@ -100,7 +109,8 @@ void SPI_MasterInit(void)
     // sled1735 latches data at clock rising edge, max freq is 2.4MHz
     // attiny clock is 8MHz, so can divide by 4 and run at 2MHz
     /* Enable SPI, Master, set clock rate fck/16 */
-    SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0);
+    SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0)|(1<<SPR1);
+    SPSR ^= _BV(SPI2X);
 }
 
 void SPI_MasterTransmit(char cData)
@@ -116,13 +126,22 @@ void SPI_MasterTransmit(char cData)
 #define B 200
 void led_update_bank(uint8_t *buf, const uint8_t bank) {
 
-    memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
+//    if(bank < 2)
+    //memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
 }
 
 void led_set_one_to(uint8_t led, uint8_t *buf) {
+    //overflow possible here
     memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
-
 }
+
+void led_set_all_to( uint8_t *buf) {
+    for(uint8_t led=0; led <NUM_LEDS; led++) {
+        memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
+        }
+}
+
+//        memcpy((uint8_t *)led_buffer.each[led], buf, LED_DATA_SIZE);
 
 void setup_spi()
 {
@@ -317,15 +336,10 @@ uint8_t r, g, b = 0;
 void sled_test()
 {
 
-    #ifdef INT_TEST
+    #ifdef INT_TEST_PULSE
     // pulse through
     for(int i = num_leds - 1; i > 0; i --)
         led_buffer.weach[order[i]] = led_buffer.weach[order[i-1]];
-/*
-    led_buffer.weach[order[0]].r += 5;
-    led_buffer.weach[order[0]].g -= 3;
-    led_buffer.weach[order[0]].b += 7;
-    */
     j ++;
     if( j % 3 == 0)
     {
@@ -345,7 +359,6 @@ void sled_test()
         led_buffer.weach[order[0]].g = 0;
         led_buffer.weach[order[0]].b = 255;
     }
-
 
     #endif
 
@@ -547,6 +560,7 @@ void sled_test()
 
 uint8_t volatile led_num = 0;
 uint8_t volatile led_frame = 0;
+uint8_t volatile led_pos = 0;
 static volatile enum { BANK, REG, DATA, END } led_state;
 /* Each time a byte finishes transmitting, queue the next one */
 ISR(SPI_STC_vect) {
@@ -564,10 +578,11 @@ ISR(SPI_STC_vect) {
         break;
     case DATA:
     {
-        if(led_LUT[led_frame][led_num] == 0xFF ) // if not a valid led
+        led_pos = pgm_read_byte_near(&led_LUT[led_frame][led_num]);
+        if(led_pos == 0xFF) // if not a valid led
             SPDR = 0;
         else
-            SPDR = led_buffer.whole[led_LUT[led_frame][led_num]];
+            SPDR = led_buffer.whole[led_pos];
         led_num ++;
         if( led_num == FRAME_SIZE )
         {
