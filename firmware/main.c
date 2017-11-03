@@ -1,11 +1,14 @@
 #include "sled1735.h"
 #include <util/delay.h>
 #include "main.h"
+#include "keyscanner.h"
 
 #define TEST_P 3
 
 static inline void setup(void) {
     setup_spi(); // setup sled 1735 driver chip
+    keyscanner_init();
+
     twi_init();
 
     //DDRA = (1<<TEST_P);
@@ -35,6 +38,7 @@ int main(void) {
     led_set_all_to( off );
 
     while(1) {
+        keyscanner_main();
 //        sled_test();
 /*
     led_set_all_to( red );

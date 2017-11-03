@@ -71,7 +71,7 @@ led_buffer_t led_buffer = { LED64 }; // 59 RGBs
 
 #define CHECK_ID
 #define SETUP
-#define BREATH
+//#define BREATH
 //#define LED_ON
 //#define LED_PWM
 //#define LED_FADE
@@ -81,7 +81,7 @@ led_buffer_t led_buffer = { LED64 }; // 59 RGBs
 #define INIT_PWM 0xFF
 //#define BLINK_TEST
 //#define MAP_TEST
-//#define INT_TEST
+#define INT_TEST
 
 
 #define SHUTDOWN_PIN 6 //shutdown when low
