@@ -70,7 +70,7 @@ all:	main.hex
 	$(COMPILE) -S $< -o $@
 
 flash:	all
-	$(AVRDUDE) -B 1 -U flash:w:main.hex:i
+	$(AVRDUDE) -v -B 1 -U flash:w:main.hex:i
 
 fuse:
 	$(AVRDUDE) -B 100 $(FUSES)

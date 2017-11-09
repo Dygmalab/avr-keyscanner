@@ -2,6 +2,8 @@
 #include <util/delay.h>
 #include "main.h"
 #include "keyscanner.h"
+#include "wire-protocol.h"
+#include <stdint.h>
 
 #define TEST_P 3
 
@@ -23,19 +25,21 @@ int main(void) {
     uint8_t led[3] = { 100, 0, 0 };
 //    led_set_one_to(0, led);
 
-    for(int i = 0; i < 24; i ++ )
-        bank[i] = 10;
-    led_update_bank(bank, 0);
-    uint8_t bank[24];
-    for(int i = 0; i < 24; i ++ )
-        bank[i] = 150;
-    led_update_bank(bank, 1);
 */
+    uint8_t bank[24];
+    for(int b = 0; b < 8; b ++ )
+    {
+        for(int i = 0; i < 24; i ++ )
+            bank[i] = b * 20;
+        led_update_bank(bank, b);
+    }
+/*
     uint8_t buf[4] = { 0x03, 0x50, 0x00, 0x50 };
     uint8_t off[3] = { 0, 0, 0 };
     uint8_t red[3] = { 255, 0, 0 };
     uint8_t blue[3] = { 0, 0, 255 };
-    led_set_all_to( off );
+    led_set_all_to( blue );
+    */
 
     while(1) {
         keyscanner_main();

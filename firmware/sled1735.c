@@ -54,7 +54,7 @@ typedef struct {
 typedef union {
     uint8_t whole[NUM_LEDS * LED_DATA_SIZE];
     led_t weach[NUM_LEDS];
-//    led_t bank[7][8];
+    uint8_t bank[NUM_LED_BANKS][LED_BANK_SIZE];
 } led_buffer_t ;
 
 #define LED1 0, 0, 0
@@ -126,8 +126,7 @@ void SPI_MasterTransmit(char cData)
 #define B 200
 void led_update_bank(uint8_t *buf, const uint8_t bank) {
 
-//    if(bank < 2)
-    //memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
+    memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
 }
 
 void led_set_one_to(uint8_t led, uint8_t *buf) {
