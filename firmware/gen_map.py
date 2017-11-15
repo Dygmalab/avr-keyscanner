@@ -7,9 +7,15 @@ sled_cols = 16
 LUT_banks = 2
 
 # mapping from pcb to led number
-key_map = [ 4, 5, 6, 7, 8, 9, 10, 20, 21, 22, 23, 24, 25, 34, 35, 36, 37, 38, 39, 42, 43, 44, 45, 46, 47, 50, 51, 52, 53, 54, 59, 58 ]
-underglow_map = [ 57, 56, 49, 41, 33, 19, 18, 17, 12, 11, 32, 40, 48, 55 ]
-palm_map = [ 13, 14, 0, 29, 2, 3, 26, 15, 28, 30, 31, 16, 27, 1 ]
+key_map = [ 5, 6, 7, 8, 9, 10, 11, 22, 23, 24, 25, 26, 27, 34, 35, 36, 37, 38, 39, 42, 43, 44, 45, 46, 47, 50, 51, 52, 53, 54, 62, 63] 
+underglow_map = [ 56, 58, 49, 41, 59, 21, 33, 20, 19, 13, 57, 12, 32, 40, 48, 55, 60, 61] # last 2 are lp unders
+palm_map = [ 0, 1, 2, 3, 4, 14, 15, 16, 17, 18, 28, 29, 30, 31 ]
+
+# list of leds that are reverse mounted (different wiring of rgb)
+led_rev = palm_map + [56, 55, 62, 63 ]
+
+##############################
+# don't change below here
 
 all_map = key_map + underglow_map + palm_map
 num_rgbs = len(all_map)
@@ -18,9 +24,23 @@ num_rgbs = len(all_map)
 #    print(all_map[i])
 
 # couple of assertions on valid input
-assert num_rgbs == 60
+
+n_palms = 14
+n_unders = 16
+n_unders_lps = 2
+n_keys = 30
+n_keys_lps = 2
+
+num_rgbs = n_keys_lps + n_keys + n_unders_lps + n_unders + n_palms
+print("//generating map for %d rgbs (%d leds)" % (num_rgbs, num_rgbs*3))
+
 for i in range(num_rgbs):
-    assert i in all_map
+    assert i in all_map, "%d not in map" % i
+
+assert len(key_map) == n_keys + n_keys_lps, "len keymap %d != num keys %d" % (len(key_map), n_keys + n_keys_lps)
+assert len(underglow_map) == n_unders + n_unders_lps, "len under %d != unders %d" % (len(underglow_map), n_unders + n_unders_lps)
+assert len(palm_map) == n_palms
+
 
 # sled driver has blank patches distributed through the matrix that can't be used for leds
 # make a mask to define where these places are
@@ -35,15 +55,14 @@ for x in range(0, 13, 3):
 led_mask[sled_rows-1] = [0] * sled_cols
 
 # missing leds due to deletions on the pcbs
-x = 6
-y = 0
+x = 4
+y = 6
 led_mask[y:y+3, x:x+1] = [[0],[0],[0]]
 x = 5
-y = 3
 led_mask[y:y+3, x:x+1] = [[0],[0],[0]]
+x = 6
 y = 12
-for x in range(3, 8):
-    led_mask[y:y+3, x:x+1] = [[0],[0],[0]]
+led_mask[y:y+3, x:x+1] = [[0],[0],[0]]
 
 #print(led_mask)
 
@@ -67,7 +86,10 @@ for led_num in range(num_rgbs):
     led_pos = all_map.index(led_num)
     #led_pos = all_map[led_num]
     # each led has its RGB legs tied to subsequent rows
-    led_map[y:y+3, x:x+1] = [[led_pos * 3],[led_pos * 3 + 1],[led_pos * 3 + 2]]
+    if led_num in led_rev:
+        led_map[y:y+3, x:x+1] = [[led_pos * 3],[led_pos * 3 + 1],[led_pos * 3 + 2]]
+    else: # swap g & b
+        led_map[y:y+3, x:x+1] = [[led_pos * 3],[led_pos * 3 + 2],[led_pos * 3 + 1]]
 
 
 # format it for c
