@@ -38,8 +38,8 @@ easily receive values from I2C buf and copy to led_buffer
 #define LP_KEYS 2
 #define PALM 14
 #define UNDERGLOW 13
-#define NUM_LEDS 60 
-#define NUM_LED_BANKS 8
+#define NUM_LEDS 70 
+#define NUM_LED_BANKS 9
 #define LED_BANK_SIZE (LED_DATA_SIZE*NUM_LEDS_PER_BANK)
 
 #define FRAME_SIZE 128
@@ -65,7 +65,7 @@ typedef union {
 #define LED64 LED32, LED32
 #define LED128 LED64, LED64
 
-led_buffer_t led_buffer = { LED64 }; // 59 RGBs
+led_buffer_t led_buffer = { LED64, LED8 }; // 59 RGBs
 
 
 
@@ -82,6 +82,7 @@ led_buffer_t led_buffer = { LED64 }; // 59 RGBs
 //#define BLINK_TEST
 //#define MAP_TEST
 #define INT_TEST
+//#define INT_TEST_PULSE
 
 
 #define SHUTDOWN_PIN 6 //shutdown when low
