@@ -7,12 +7,47 @@ sled_cols = 16
 LUT_banks = 2
 
 # mapping from pcb to led number
-key_map = [ 5, 6, 7, 8, 9, 10, 11, 22, 23, 24, 25, 26, 27, 34, 35, 36, 37, 38, 39, 42, 43, 44, 45, 46, 47, 50, 51, 52, 53, 54, 62, 63] 
-underglow_map = [ 56, 58, 49, 41, 59, 21, 33, 20, 19, 13, 57, 12, 32, 40, 48, 55, 60, 61] # last 2 are lp unders
-palm_map = [ 0, 1, 2, 3, 4, 14, 15, 16, 17, 18, 28, 29, 30, 31 ]
+left_key_map = [ 5, 6, 7, 8, 9, 10, 11, 22, 23, 24, 25, 26, 27, 34, 35, 36, 37, 38, 39, 42, 43, 44, 45, 46, 47, 50, 51, 52, 53, 54, 62, 63] 
+left_underglow_map = [ 56, 58, 49, 41, 59, 21, 33, 20, 19, 13, 57, 12, 32, 40, 48, 55, 60, 61] # last 2 are lp unders
+left_palm_map = [ 0, 1, 2, 3, 4, 14, 15, 16, 17, 18, 28, 29, 30, 31 ]
 
 # list of leds that are reverse mounted (different wiring of rgb)
-led_rev = palm_map + [56, 55, 62, 63 ]
+left_led_rev = left_palm_map + [56, 55, 62, 63 ]
+
+# mapping from pcb to led number
+#right_key_map = [ 5, 6, 7, 8, 9, 10, 11, 60, 22, 23, 24, 25, 26, 27, 61, 36, 37, 38, 39, 40, 41, 62, 44, 45, 46, 47, 48, 49, 52, 53, 54, 55, 56, 65, 66] 
+right_key_map = [ 11, 10, 9, 8, 7, 6, 5, 61, 27, 26, 25, 24, 23, 22, 60, 62, 41, 40, 39, 38, 37, 36, 49, 48, 47, 46, 45, 44, 56, 55, 54, 53, 52, 57, 66, 65] 
+right_underglow_map = [ 58, 35, 43, 21, 67, 20, 19,13, 12, 59, 69, 34, 42, 68, 50, 51, 63, 64] # last 2 are lp unders
+right_palm_map = [ 0, 1, 2, 3, 4, 14, 15, 16, 17, 18, 28, 29, 30, 31, 32, 33 ]
+
+# list of leds that are reverse mounted (different wiring of rgb)
+right_led_rev = right_palm_map + [57, 51, 65, 66 ]
+
+left = False
+right = True
+
+if right:
+    key_map = right_key_map
+    underglow_map = right_underglow_map
+    palm_map = right_palm_map
+    led_rev = right_led_rev
+
+    n_palms = 16
+    n_unders = 16 # took one of the underglow lights to make the missing keylight
+    n_unders_lps = 2
+    n_keys = 34 # should be 34 but led h4 got moved to lps...
+    n_keys_lps = 2
+elif left:
+    key_map = left_key_map
+    underglow_map = left_underglow_map
+    palm_map = left_palm_map
+    led_rev = left_led_rev
+
+    n_palms = 14
+    n_unders = 16
+    n_unders_lps = 2
+    n_keys = 30
+    n_keys_lps = 2
 
 ##############################
 # don't change below here
@@ -25,11 +60,6 @@ num_rgbs = len(all_map)
 
 # couple of assertions on valid input
 
-n_palms = 14
-n_unders = 16
-n_unders_lps = 2
-n_keys = 30
-n_keys_lps = 2
 
 num_rgbs = n_keys_lps + n_keys + n_unders_lps + n_unders + n_palms
 print("//generating map for %d rgbs (%d leds)" % (num_rgbs, num_rgbs*3))
@@ -54,15 +84,16 @@ for x in range(0, 13, 3):
 # last row is all blank
 led_mask[sled_rows-1] = [0] * sled_cols
 
-# missing leds due to deletions on the pcbs
-x = 4
-y = 6
-led_mask[y:y+3, x:x+1] = [[0],[0],[0]]
-x = 5
-led_mask[y:y+3, x:x+1] = [[0],[0],[0]]
-x = 6
-y = 12
-led_mask[y:y+3, x:x+1] = [[0],[0],[0]]
+if left:
+    # missing leds due to deletions on the pcbs
+    x = 4
+    y = 6
+    led_mask[y:y+3, x:x+1] = [[0],[0],[0]]
+    x = 5
+    led_mask[y:y+3, x:x+1] = [[0],[0],[0]]
+    x = 6
+    y = 12
+    led_mask[y:y+3, x:x+1] = [[0],[0],[0]]
 
 #print(led_mask)
 
