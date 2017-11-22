@@ -16,8 +16,8 @@ left_led_rev = left_palm_map + [56, 55, 62, 63 ]
 
 # mapping from pcb to led number
 #right_key_map = [ 5, 6, 7, 8, 9, 10, 11, 60, 22, 23, 24, 25, 26, 27, 61, 36, 37, 38, 39, 40, 41, 62, 44, 45, 46, 47, 48, 49, 52, 53, 54, 55, 56, 65, 66] 
-right_key_map = [ 11, 10, 9, 8, 7, 6, 5, 61, 27, 26, 25, 24, 23, 22, 60, 62, 41, 40, 39, 38, 37, 36, 49, 48, 47, 46, 45, 44, 56, 55, 54, 53, 52, 57, 66, 65] 
-right_underglow_map = [ 58, 35, 43, 21, 67, 20, 19,13, 12, 59, 69, 34, 42, 68, 50, 51, 63, 64] # last 2 are lp unders
+right_key_map = [ 11, 10, 9, 8, 7, 6, 5, 61, 27, 26, 25, 24, 23, 22, 60, 62, 41, 40, 39, 38, 37, 36, 49, 48, 47, 46, 45, 44, 56, 55, 54, 53, 52, 63, 66, 65] 
+right_underglow_map = [ 57, 58, 35, 43, 21, 67, 20, 19,13, 12, 59, 69, 34, 42, 68, 50, 51, 64] # last 1 are lp unders - removed one for the missing key
 right_palm_map = [ 0, 1, 2, 3, 4, 14, 15, 16, 17, 18, 28, 29, 30, 31, 32, 33 ]
 
 # list of leds that are reverse mounted (different wiring of rgb)
@@ -33,8 +33,8 @@ if right:
     led_rev = right_led_rev
 
     n_palms = 16
-    n_unders = 16 # took one of the underglow lights to make the missing keylight
-    n_unders_lps = 2
+    n_unders = 17 
+    n_unders_lps = 1
     n_keys = 34 # should be 34 but led h4 got moved to lps...
     n_keys_lps = 2
 elif left:
