@@ -3,7 +3,6 @@
 #include "main.h"
 #include "ringbuf.h"
 #include "twi-slave.h"
-#include "led-spiout.h"
 
 
 uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
