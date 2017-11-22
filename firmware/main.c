@@ -26,6 +26,7 @@ int main(void) {
 //    led_set_one_to(0, led);
 
 */
+/*
     uint8_t bank[24];
     for(int b = 0; b < 8; b ++ )
     {
@@ -33,14 +34,15 @@ int main(void) {
             bank[i] = b * 20;
         led_update_bank(bank, b);
     }
+    */
 /*
     uint8_t buf[4] = { 0x03, 0x50, 0x00, 0x50 };
-    uint8_t off[3] = { 0, 0, 0 };
     uint8_t red[3] = { 255, 0, 0 };
     uint8_t blue[3] = { 0, 0, 255 };
-    led_set_all_to( blue );
     */
+    uint8_t off[3] = { 0, 0, 0 };
 
+    led_set_all_to( off );
     while(1) {
         keyscanner_main();
 //        sled_test();
