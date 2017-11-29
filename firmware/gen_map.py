@@ -1,5 +1,18 @@
 #!/usr/bin/python
 import numpy as np
+import sys
+
+left = False
+right = False
+if len(sys.argv) != 2:
+    print("must specify left or right")
+    exit(1)
+if sys.argv[1] == 'left':
+    left = True
+elif sys.argv[1] == 'right':
+    right = True
+else:
+    print("unknown arg")
 
 # hard definitions
 sled_rows = 16
@@ -23,8 +36,6 @@ right_palm_map = [ 0, 1, 2, 3, 4, 14, 15, 16, 17, 18, 28, 29, 30, 31, 32, 33 ]
 # list of leds that are reverse mounted (different wiring of rgb)
 right_led_rev = right_palm_map + [57, 51, 65, 66 ]
 
-left = False
-right = True
 
 if right:
     key_map = right_key_map
