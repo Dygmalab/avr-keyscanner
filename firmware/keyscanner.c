@@ -45,7 +45,7 @@ void keyscanner_init(void) {
 bool keyscanner_main(void) {
     uint8_t debounced_changes = 0;
     uint8_t pin_data;
-
+    
     if (__builtin_expect(do_scan == 0, 1)) {
         return false;
     }
@@ -79,6 +79,7 @@ bool keyscanner_main(void) {
         // cause us to do reads too fast and mis-debounce
         // some secondary key while we successfully debounce a
         // first key.
+        do_scan = 0;
         return true;
     }
     // Snapshot the keystate to add to the ring buffer
