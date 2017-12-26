@@ -30,11 +30,11 @@ typedef struct {
  *
  * returns: bits that have changed in the final debounced state
  *
- * handy XOR truth table:   A  B  O
- *                          0  0  0
- *                          0  1  1
- *                          1  0  1
- *                          1  1  0
+ * handy XOR truth table:   A   B   O
+ *                          0 ^ 0 = 0
+ *                          0 ^ 1 = 1
+ *                          1 ^ 0 = 1
+ *                          1 ^ 1 = 0
  * 
  * This is used below as a difference detector:
  *   if A ^ B is true, A and B are different.
