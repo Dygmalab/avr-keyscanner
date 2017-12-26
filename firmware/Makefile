@@ -107,6 +107,9 @@ disassemble: disasm
 disasm:	$(ELF_FILE_PATH)
 	avr-objdump -d $(ELF_FILE_PATH)
 
+size-map: $(ELF_FILE_PATH)
+	avr-nm --size-sort -C -r -l "$(ELF_FILE_PATH)"
+
 cpp:
 	$(COMPILE) -E main.c
 
