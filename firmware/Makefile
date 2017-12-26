@@ -33,6 +33,12 @@ CLOCK      ?= 8000000
 # Add more objects for each .c file here
 OBJECTS    = main.o twi-slave.o ringbuf.o wire-protocol.o keyscanner.o led-spiout.o
 
+
+# Output files
+ELF_FILE_PATH = main.elf
+
+HEX_FILE_PATH = main.hex
+
 # For computing fuse byte values for other devices and options see
 # the fuse bit calculator at http://www.engbedded.com/fusecalc/
 FUSES      = -U lfuse:w:0xee:m -U hfuse:w:0xdd:m -U efuse:w:0xfe:m
@@ -53,7 +59,7 @@ AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE)
 COMPILE = $(GCC_PATH) -Wall -Wextra $(OPTIMIZATION) -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK)
 
 # symbolic targets:
-all:	main.hex
+all:	$(HEX_FILE_PATH)
 
 .c.o:
 	$(COMPILE) -c $< -o $@
@@ -69,7 +75,7 @@ all:	main.hex
 	$(COMPILE) -S $< -o $@
 
 flash:	all
-	$(AVRDUDE) -B 2 -U flash:w:main.hex:i
+	$(AVRDUDE) -B 2 -U flash:w:$(HEX_FILE_PATH):i
 
 fuse:
 	$(AVRDUDE) -B 100 $(FUSES)
@@ -79,25 +85,25 @@ install: flash fuse
 
 # if you use a bootloader, change the command below appropriately:
 load: all
-	bootloadHID main.hex
+	bootloadHID $(HEX_FILE_PATH)
 
 clean:
-	rm -f main.hex main.elf $(OBJECTS)
+	rm -f $(HEX_FILE_PATH) $(ELF_FILE_PATH) $(OBJECTS)
 
 # file targets:
-main.elf: $(OBJECTS)
-	$(COMPILE) -o main.elf $(OBJECTS)
+$(ELF_FILE_PATH): $(OBJECTS)
+	$(COMPILE) -o $(ELF_FILE_PATH) $(OBJECTS)
 
-main.hex: main.elf
-	rm -f main.hex
-	avr-objcopy -j .text -j .data -O ihex main.elf main.hex
-	avr-size --format=avr --mcu=$(DEVICE) main.elf
+$(HEX_FILE_PATH): $(ELF_FILE_PATH)
+	rm -f $(HEX_FILE_PATH)
+	avr-objcopy -j .text -j .data -O ihex $(ELF_FILE_PATH) $(HEX_FILE_PATH)
+	avr-size --format=avr --mcu=$(DEVICE) $(ELF_FILE_PATH)
 # If you have an EEPROM section, you must also create a hex file for the
 # EEPROM and add it to the "flash" target.
 
 # Targets for code debugging and analysis:
-disasm:	main.elf
-	avr-objdump -d main.elf
+disasm:	$(ELF_FILE_PATH)
+	avr-objdump -d $(ELF_FILE_PATH)
 
 cpp:
 	$(COMPILE) -E main.c
