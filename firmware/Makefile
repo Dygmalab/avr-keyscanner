@@ -102,6 +102,8 @@ $(HEX_FILE_PATH): $(ELF_FILE_PATH)
 # EEPROM and add it to the "flash" target.
 
 # Targets for code debugging and analysis:
+disassemble: disasm
+
 disasm:	$(ELF_FILE_PATH)
 	avr-objdump -d $(ELF_FILE_PATH)
 
