@@ -11,10 +11,21 @@ static inline void setup(void) {
     setup_spi(); // setup sled 1735 driver chip
     keyscanner_init();
 
-    twi_init();
-
     //DDRA = (1<<TEST_P);
     //LOW(PORTA,TEST_P);
+    
+    DDRA &= ~_BV(1); // setup as input
+    PORTA &= ~_BV(1); // pull down
+    _delay_ms(10); // wait for chip to be ready
+
+    // if getting signal over usb C that pc is connected
+    uint8_t red[3] = { 255, 0, 0 };
+    while(PINA & _BV(1))
+        led_set_all_to( red );
+
+    uint8_t off[3] = { 0, 0, 0 };
+    led_set_all_to( off );
+    twi_init();
 }
 #define R 0
 #define G 50
@@ -37,13 +48,10 @@ int main(void) {
     */
 /*
     uint8_t buf[4] = { 0x03, 0x50, 0x00, 0x50 };
-    uint8_t red[3] = { 255, 0, 0 };
-    uint8_t blue[3] = { 0, 0, 255 };
     */
-    uint8_t off[3] = { 0, 0, 0 };
 
-    led_set_all_to( off );
     while(1) {
+
         keyscanner_main();
 //        sled_test();
 /*
