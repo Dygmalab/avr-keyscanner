@@ -2,11 +2,6 @@
 #include "Arduino.h"
 #include "Wire.h"
 
-void setup() {
-    delay(5000);
-    Wire.begin();
-}
-
 #define page_size %d
 #define frame_size %d
 #define blank 0x%x
@@ -24,30 +19,41 @@ void setup() {
 #define ENDTRANS_ERROR 4
 
 uint16_t offsets[pages] = {%s};
-const byte firmware[firmware_length] PROGMEM = {%s};
+const byte firmware_left[firmware_length] PROGMEM = {%s};
+const byte firmware_right[firmware_length] PROGMEM = {%s};
+
+void setup() {
+    delay(1000);
+    pinMode(0, OUTPUT);
+    pinMode(1, OUTPUT);
+    power_off_left_attiny();
+    power_off_right_attiny();
+    Serial.begin(115200);
+    Wire.begin();
+    while(!Serial)
+    {;;}
+}
 
 int left_written = 0;
 int right_written = 0;
 
-// The LEFT ATTiny has a reset pin directly connected to the ATMega
-void reset_left_attiny() {
-    // Hold the left ATTiny in reset,
-    DDRC |= _BV(6);
-    PORTC &= ~_BV(6);
-    delay(30);
-    DDRC &= ~_BV(6); // Turn the ATTiny back on
+void power_off_left_attiny() {
+    digitalWrite(0, HIGH);
+    //power_off_i2c();
 }
 
-// The RIGHT ATTiny is on the other side of the wired i2c bus.
-// Our best chance at resetting it is by toggling the current limiter.
-
-void reset_right_attiny() {
-    // Hold the left ATTiny in reset,
-    DDRC |= _BV(7);
-    PORTC &= ~_BV(7);
-    delay(1000);
-    PORTC |= _BV(7); // Turn the ATTiny back on
+void power_on_left_attiny() {
+    digitalWrite(0, LOW);
 }
+
+void power_off_right_attiny() {
+    digitalWrite(1, HIGH);
+    //power_off_i2c();
+}
+void power_on_right_attiny() {
+    digitalWrite(1, LOW);
+}
+
 void print_result(byte result) {
     Serial.print("result = ");
     Serial.println(result);
@@ -146,7 +152,8 @@ int erase_program(byte addr) {
 }
 
 
-int write_firmware(byte addr ) {
+//int write_firmware(byte addr) { //, byte *firmware ) {
+int write_firmware(byte addr, const byte *firmware ) {
 
     byte result = 3;
     byte o = 0;
@@ -206,7 +213,7 @@ int write_firmware(byte addr ) {
 }
 
 
-int verify_firmware(byte addr) {
+int verify_firmware(byte addr, const byte *firmware) {
     byte result = 3;
     // verify firmware
     Serial.println("## Verifying firmware installation");
@@ -248,7 +255,7 @@ int verify_firmware(byte addr) {
     return 0;
 }
 
-byte update_attiny(byte addr) {
+byte update_attiny(byte addr, byte *firmware) {
     Serial.println("Communicating");
 
     get_version(addr);
@@ -261,13 +268,13 @@ byte update_attiny(byte addr) {
         return 0;
     }
 
-    int firmware_written = write_firmware(addr);
+    int firmware_written = write_firmware(addr, firmware);
     if(firmware_written == -1) {
         Serial.println("Firmware write failed.");
         return 0;
     }
 
-    int firmware_verified = verify_firmware(addr);
+    int firmware_verified = verify_firmware(addr, firmware);
     if(firmware_verified == -1) {
         Serial.println("Firmware verify failed");
         return 0;
@@ -282,7 +289,7 @@ byte update_attiny(byte addr) {
 
 void loop() {
 
-    delay(5000);
+    delay(1000);
 
 
     if (left_written > 0 && right_written > 0 ) {
@@ -293,13 +300,16 @@ void loop() {
     }
 
     Serial.println("Starting!");
+    Wire.begin();
 
     if (left_written > 0) {
         Serial.println("Already done with the left hand.");
         // we're done
     } else {
-        reset_left_attiny();
-        left_written = update_attiny(LEFT_ADDRESS);
+        //reset_left_attiny();
+        power_on_left_attiny();
+        left_written = update_attiny(LEFT_ADDRESS, firmware_left);
+        power_off_left_attiny();
 
     }
 
@@ -308,12 +318,15 @@ void loop() {
         Serial.println(right_written);
         // we're done
     } else {
-        reset_right_attiny();
-        right_written = update_attiny(RIGHT_ADDRESS);
+        //reset_right_attiny();
+        power_on_right_attiny();
+        right_written = update_attiny(RIGHT_ADDRESS, firmware_right);
+        power_off_right_attiny();
     }
 
 
 
 }
+
 
 

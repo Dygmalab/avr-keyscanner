@@ -32,7 +32,7 @@ build:
 
 
 flash: build
-	stty -F `ls /dev/ttyACM*` 1200 hupcl
+	stty -F `ls /dev/ttyACM1` 1200 hupcl
 	sleep 2
-	avrdude -p${MCU} -cavr109 -D -P `ls /dev/ttyACM*` -b57600 "-Uflash:w:${SKETCH}.hex:i"
+	avrdude -p${MCU} -cavr109 -D -P `ls /dev/ttyACM1` -b57600 "-Uflash:w:${SKETCH}.hex:i"
 
