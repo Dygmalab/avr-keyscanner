@@ -18,20 +18,44 @@
 #define ENDTRANS_DATA_NACK 3
 #define ENDTRANS_ERROR 4
 
+#define BRIGHT 50
+#define RED   BRIGHT,0,0
+#define GREEN 0,BRIGHT,0
+#define BLUE  0,0,BRIGHT
+#define OFF   0,0,0
+
+
 uint16_t offsets[pages] = {%s};
 const byte firmware_left[firmware_length] PROGMEM = {%s};
 const byte firmware_right[firmware_length] PROGMEM = {%s};
 
+void huble_led(byte r, byte g, byte b)
+{
+  // huble led is just pwm connected
+  analogWrite(9, 255 - r);
+  analogWrite(10, 255 - b);
+  analogWrite(11, 255 - g);
+}
+
 void setup() {
+    huble_led(BLUE);
     delay(1000);
     pinMode(0, OUTPUT);
     pinMode(1, OUTPUT);
     power_off_left_attiny();
     power_off_right_attiny();
+
+
     Serial.begin(115200);
     Wire.begin();
     while(!Serial)
-    {;;}
+    {
+        huble_led(OFF);
+        delay(100);
+        huble_led(BLUE);
+        delay(100);
+    }
+
 }
 
 int left_written = 0;
@@ -296,6 +320,7 @@ void loop() {
 
         Serial.println ("Both ATTiny MCUs have been flashed");
         Serial.println("It is now safe to reflash your keyboard with regular firmware");
+        huble_led(GREEN);
         return;
     }
 
@@ -308,8 +333,15 @@ void loop() {
     } else {
         //reset_left_attiny();
         power_on_left_attiny();
+        huble_led(BLUE);
         left_written = update_attiny(LEFT_ADDRESS, firmware_left);
         power_off_left_attiny();
+
+        if(left_written)
+            huble_led(GREEN);
+        else
+            huble_led(RED);
+        delay(1000);
 
     }
 
@@ -320,8 +352,15 @@ void loop() {
     } else {
         //reset_right_attiny();
         power_on_right_attiny();
+        huble_led(BLUE);
         right_written = update_attiny(RIGHT_ADDRESS, firmware_right);
         power_off_right_attiny();
+
+        if(right_written)
+            huble_led(GREEN);
+        else
+            huble_led(RED);
+        delay(1000);
     }
 
 
