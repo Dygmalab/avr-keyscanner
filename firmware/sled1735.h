@@ -3,6 +3,10 @@
 void sled_test();
 void setup_spi();
 
+uint8_t led_open_status[32];
+uint8_t led_short_status[32];
+uint8_t sled1735_status;
+
 /* Call to begin transmitting LED data */
 
 //void led_init(void);
@@ -22,3 +26,5 @@ void led_set_all_to(uint8_t * led_data);
 
 /* Call this with a value between 0 and 31 to set the LED's global brightness */
 //void led_set_global_brightness(uint8_t global_brightness);
+
+void read_led_open_reg();

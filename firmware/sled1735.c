@@ -45,6 +45,7 @@ easily receive values from I2C buf and copy to led_buffer
 #define FRAME_SIZE 128
 #define NUM_FRAMES 2
 
+
 typedef struct {
     uint8_t g;
     uint8_t r;
@@ -122,6 +123,7 @@ void SPI_MasterTransmit(char cData)
     while(!(SPSR & (1<<SPIF)));
 }
 
+
 #define R 0
 #define G 50
 #define B 200
@@ -164,7 +166,7 @@ void setup_spi()
     SPI_MasterTransmit(0x1B);
 
     SPI_MasterTransmit(0x00);
-    stat = SPDR;
+    sled1735_status = SPDR;
 
     // data returned should be 0111 0010 = 0x72
 
@@ -226,7 +228,7 @@ void setup_spi()
     SPI_MasterTransmit(0x2B); 
     //reg 0x0F: constant current
     SPI_MasterTransmit(0x0F);
-    SPI_MasterTransmit(0b10111111); // set to 25 : 8 + (25-1)*0.5 = 20 mA
+    SPI_MasterTransmit(0b10111111); // set to full current
     HIGH(PORTB,SS_PIN);
     
     #endif
@@ -322,11 +324,87 @@ void setup_spi()
     #endif
     
 
+    read_led_open_reg();
+
     #ifdef INT_TEST
     SPCR |= (1<<SPIE);
     sei();
     #endif
 }
+
+void read_led_open_reg()
+{
+
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0x2B);  // write function reg
+    SPI_MasterTransmit(0x11);  // reg 11 - open and short detection status
+    SPI_MasterTransmit(0x00);  // 
+    HIGH(PORTB,SS_PIN);
+
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0xAB);  // read function reg
+    SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
+    SPI_MasterTransmit(0x00);  // check status
+    HIGH(PORTB,SS_PIN);
+
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0x2B);  // write function reg
+    SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
+    SPI_MasterTransmit(0b10001111); //start open and short test
+    HIGH(PORTB,SS_PIN);
+
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0xAB);  // read function reg
+    SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
+    SPI_MasterTransmit(0x00);  // check status
+    HIGH(PORTB,SS_PIN);
+
+    _delay_ms(5);
+
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0xAB);  // read function reg
+    SPI_MasterTransmit(0x11);  // reg 11 - open and short detection status
+    SPI_MasterTransmit(0x00);  // reg 11 - open and short detection status
+    HIGH(PORTB,SS_PIN);
+
+
+    // read the reg
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0xAC);  // read 0xC
+    SPI_MasterTransmit(0);  // start at first address
+    for(int i=0x0; i<0x20; i++)
+    {
+        SPI_MasterTransmit(0x00);  // dummy byte
+        led_open_status[i] = SPDR;
+
+    }
+    HIGH(PORTB,SS_PIN);
+
+
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0x2B);  // write function reg
+    SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
+    SPI_MasterTransmit(0b01001111); //start open and short test
+    HIGH(PORTB,SS_PIN);
+
+    _delay_ms(5);
+
+    HIGH(PORTA,0); // debug pin HIGH
+
+    // read the reg
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0xAC);  // read 0xC
+    SPI_MasterTransmit(0x20);  // start at first address
+    for(int i=0x0; i<0x20; i++)
+    {
+        SPI_MasterTransmit(0x00);  // dummy byte
+        led_short_status[i] = SPDR;
+
+    }
+    HIGH(PORTB,SS_PIN);
+
+}
+
 int j = 0;
 int i = 0;
 const int num_leds = 22;

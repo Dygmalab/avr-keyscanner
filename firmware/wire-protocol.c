@@ -4,6 +4,7 @@
 #include "ringbuf.h"
 #include "twi-slave.h"
 #include "i2c_addr.h"
+#include "sled1735.h"
 
 
 uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
@@ -71,8 +72,21 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         break;
 
     case TWI_CMD_VERSION:
-        twi_command = 0x10;
+        twi_command = TWI_CMD_VERSION;
         break;
+
+    case TWI_CMD_SLED_STATUS:
+        twi_command = TWI_CMD_SLED_STATUS;
+        break;
+
+    case TWI_CMD_LED_OPEN:
+        twi_command = TWI_CMD_LED_OPEN;
+        break;
+
+    case TWI_CMD_LED_SHORT:
+        twi_command = TWI_CMD_LED_SHORT;
+        break;
+
         /*
     case TWI_CMD_LED_GLOBAL_BRIGHTNESS:
 	led_set_global_brightness(buf[1]);
@@ -118,6 +132,21 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
         case TWI_CMD_LED_SPI_FREQUENCY:
             buf[0] = led_spi_frequency;
             *bufsiz = 1;
+            twi_command = TWI_CMD_NONE;
+            break;
+        case TWI_CMD_SLED_STATUS:
+            buf[0] = sled1735_status;
+            *bufsiz = 1;
+            twi_command = TWI_CMD_NONE;
+            break;
+        case TWI_CMD_LED_OPEN:
+            memcpy(buf, led_open_status, 32);
+            *bufsiz = 32;
+            twi_command = TWI_CMD_NONE;
+            break;
+        case TWI_CMD_LED_SHORT:
+            memcpy(buf, led_short_status, 32);
+            *bufsiz = 32;
             twi_command = TWI_CMD_NONE;
             break;
         default:

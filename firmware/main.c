@@ -13,7 +13,7 @@ static inline void setup(void) {
 
     twi_init();
 
-    //DDRA = (1<<TEST_P);
+    DDRA |= (1<<0);
     //LOW(PORTA,TEST_P);
 }
 #define R 0
