@@ -26,25 +26,12 @@ easily receive values from I2C buf and copy to led_buffer
 #define LED_DATA_SIZE 3
 #define NUM_LEDS_PER_BANK 8
 
-/* defs for the 8x7 test board
-#define COLS 8
-#define ROWS 7
-#define LED_DATA_SIZE 3
-#define NUM_LEDS_PER_BANK 8
-#define NUM_LEDS COLS * ROWS
-*/
-
-#define KEYS 30
-#define LP_KEYS 2
-#define PALM 14
-#define UNDERGLOW 13
-#define NUM_LEDS 70 
+#define NUM_LEDS 72 
 #define NUM_LED_BANKS 9
 #define LED_BANK_SIZE (LED_DATA_SIZE*NUM_LEDS_PER_BANK)
 
 #define FRAME_SIZE 128
 #define NUM_FRAMES 2
-
 
 typedef struct {
     uint8_t g;
@@ -58,6 +45,7 @@ typedef union {
     uint8_t bank[NUM_LED_BANKS][LED_BANK_SIZE];
 } led_buffer_t ;
 
+
 #define LED1 0, 0, 0
 #define LED4 LED1, LED1, LED1, LED1
 #define LED8 LED4, LED4
@@ -66,36 +54,21 @@ typedef union {
 #define LED64 LED32, LED32
 #define LED128 LED64, LED64
 
-led_buffer_t led_buffer = { LED64, LED8 }; // 59 RGBs
-
-
+led_buffer_t led_buffer = { LED64, LED8 };
 
 #define CHECK_ID
 #define SETUP
-//#define BREATH
-//#define LED_ON
-//#define LED_PWM
-//#define LED_FADE
-//#define LOOP_DELAY
-//#define DELAY_TIME 200
 #define CONST_CURR
 #define INIT_PWM 0x00
-//#define BLINK_TEST
-//#define MAP_TEST
-#define INT_TEST
-//#define INT_TEST_PULSE
-
+#define SPI_INTS
+#define SELF_TEST
 
 #define SHUTDOWN_PIN 6 //shutdown when low
-#define SS_PIN 2
+#define SS_PIN 7
 #define DDR_SPI DDRB
 #define DD_MOSI 3
 #define DD_SCK 5
 #define SS_PIN_2 2 // the real SS pin
-
-uint8_t stat = 0;
-volatile bool done = false;
-// hold the chip in shutdown until configured
 
 
 void SPI_MasterInit(void)
@@ -123,10 +96,6 @@ void SPI_MasterTransmit(char cData)
     while(!(SPSR & (1<<SPIF)));
 }
 
-
-#define R 0
-#define G 50
-#define B 200
 void led_update_bank(uint8_t *buf, const uint8_t bank) {
 
     memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
@@ -143,42 +112,32 @@ void led_set_all_to( uint8_t *buf) {
         }
 }
 
-//        memcpy((uint8_t *)led_buffer.each[led], buf, LED_DATA_SIZE);
 
 void setup_spi()
 {
     SPI_MasterInit(); 
 
-    #ifdef CHECK_ID
-    LOW(PORTB,SS_PIN);
-    
-
     // 1st 4bits is: 0xA read, 0x2 write
     // 2nd 4bits is: 0x0 frame1, 0x1 frame2, 0xB function, 0xC detect, 0xD led Vaf
     // eg 0x20 - write to frame1
 
+    #ifdef CHECK_ID
+    LOW(PORTB,SS_PIN);
+    
     // header: read function
     SPI_MasterTransmit(0xAB);
-
-
     // check ID returns OK
     // reg 0x1B is ID
     SPI_MasterTransmit(0x1B);
-
     SPI_MasterTransmit(0x00);
     sled1735_status = SPDR;
-
     // data returned should be 0111 0010 = 0x72
-
     HIGH(PORTB,SS_PIN);
-    
 
     #endif
-    #ifdef SETUP
-    
-    LOW(PORTB,SS_PIN);
-    
 
+    #ifdef SETUP
+    LOW(PORTB,SS_PIN);
     // header: write function
     SPI_MasterTransmit(0x2B); 
     // reg 0x00: configuration
@@ -324,9 +283,11 @@ void setup_spi()
     #endif
     
 
+    #ifdef SELF_TEST
     read_led_open_reg();
+    #endif
 
-    #ifdef INT_TEST
+    #ifdef SPI_INTS
     SPCR |= (1<<SPIE);
     sei();
     #endif
@@ -334,46 +295,54 @@ void setup_spi()
 
 void read_led_open_reg()
 {
-
+    // make sure tests are off to start with
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0x2B);  // write function reg
     SPI_MasterTransmit(0x11);  // reg 11 - open and short detection status
     SPI_MasterTransmit(0x00);  // 
     HIGH(PORTB,SS_PIN);
 
+    // check no tests running
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0xAB);  // read function reg
     SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
     SPI_MasterTransmit(0x00);  // check status
     HIGH(PORTB,SS_PIN);
 
+    // start the open test
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0x2B);  // write function reg
     SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
-    SPI_MasterTransmit(0b10001111); //start open and short test
+    SPI_MasterTransmit(0b10001111); //start open test
     HIGH(PORTB,SS_PIN);
 
+    // check the test is started
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0xAB);  // read function reg
     SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
     SPI_MasterTransmit(0x00);  // check status
     HIGH(PORTB,SS_PIN);
 
+    // wait for the test to finish
     _delay_ms(5);
 
+    // we could instead check that the open detection pin is now high - 0x11 should be 0x80
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0xAB);  // read function reg
     SPI_MasterTransmit(0x11);  // reg 11 - open and short detection status
     SPI_MasterTransmit(0x00);  // reg 11 - open and short detection status
     HIGH(PORTB,SS_PIN);
 
+    //////////// debug pin!!!!!!!!!!!!
+    HIGH(PORTA,1); // debug pin HIGH
 
-    // read the reg
+    // now read all the registers
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0xAC);  // read 0xC
-    SPI_MasterTransmit(0);  // start at first address
+    SPI_MasterTransmit(0x00);  // start at first address
     for(int i=0x0; i<0x20; i++)
     {
+        // auto inc addresses
         SPI_MasterTransmit(0x00);  // dummy byte
         led_open_status[i] = SPDR;
 
@@ -381,265 +350,54 @@ void read_led_open_reg()
     HIGH(PORTB,SS_PIN);
 
 
+    // start the short test
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0x2B);  // write function reg
     SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
-    SPI_MasterTransmit(0b01001111); //start open and short test
+    SPI_MasterTransmit(0b01000011); //start short test
     HIGH(PORTB,SS_PIN);
 
+    // wait for it to complete
     _delay_ms(5);
 
-    HIGH(PORTA,0); // debug pin HIGH
+    // could check that the short detection pin is now high
+    // 0x11 should be 0xC0 (as previous test has finished and we didn't reset it
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0xAB);  // read function reg
+    SPI_MasterTransmit(0x11);  // reg 11 - open and short detection status
+    SPI_MasterTransmit(0x00);  // reg 11 - open and short detection status
+    HIGH(PORTB,SS_PIN);
 
-    // read the reg
+    // read the short registers
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0xAC);  // read 0xC
     SPI_MasterTransmit(0x20);  // start at first address
     for(int i=0x0; i<0x20; i++)
     {
+        // auto inc addresses
         SPI_MasterTransmit(0x00);  // dummy byte
         led_short_status[i] = SPDR;
 
     }
     HIGH(PORTB,SS_PIN);
 
+    //////////// debug pin!!!!!!!!!!!!
+    LOW(PORTA,1); // debug pin LOW
+
+    // have to read this register again, otherwise sled never responds again
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0xAB);  // read function reg
+    SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
+    SPI_MasterTransmit(0x00);  // check status
+    HIGH(PORTB,SS_PIN);
 }
 
-int j = 0;
-int i = 0;
-const int num_leds = 22;
-const int order[] = { 0, 1, 2, 3, 4, 5, 6 ,7, 8, 9, 10, 11, 12, 13, 14, 15, 22, 36, 42, 49, 50, 51 };
-uint8_t r, g, b = 0;
-//////////////////////////////////////////////////////////////////////////////////////////////////
-void sled_test()
-{
-
-    #ifdef INT_TEST_PULSE
-    // pulse through
-    for(int i = num_leds - 1; i > 0; i --)
-        led_buffer.weach[order[i]] = led_buffer.weach[order[i-1]];
-    j ++;
-    if( j % 3 == 0)
-    {
-        led_buffer.weach[order[0]].r = 255;
-        led_buffer.weach[order[0]].g = 0;
-        led_buffer.weach[order[0]].b = 0;
-    }
-    else if(j %3 == 1)
-    {
-        led_buffer.weach[order[0]].r = 0;
-        led_buffer.weach[order[0]].g = 255;
-        led_buffer.weach[order[0]].b = 0;
-    }
-    else
-    {
-        led_buffer.weach[order[0]].r = 0;
-        led_buffer.weach[order[0]].g = 0;
-        led_buffer.weach[order[0]].b = 255;
-    }
-
-    #endif
-
-    #ifdef MAP_TEST
-    j++;
-    led_buffer.weach[order[0]].r += 15;
-    led_buffer.weach[order[0]].g -= 3;
-    led_buffer.weach[order[0]].b += 7;
-
-    // access by frame
-     
-    uint8_t frames[NUM_FRAMES][FRAME_SIZE] = FRAME_MAP( led_buffer.whole );
-
-    for( int f = 0; f < NUM_FRAMES; f++ )
-    {
-        LOW(PORTB,SS_PIN);
-        
-
-        // header: write frame 1
-        SPI_MasterTransmit(0x20 + f); 
-        // pwm reg
-        SPI_MasterTransmit(0x20);  
-
-        for(int i = 0; i < FRAME_SIZE; i ++)
-        {
-            SPI_MasterTransmit(frames[f][i]);  
-        }
-        HIGH(PORTB,SS_PIN);
-        
-    }
-
-    // pulse through
-    for(int i = num_leds - 1; i > 0; i --)
-        led_buffer.weach[order[i]] = led_buffer.weach[order[i-1]];
-
-    #endif
-
-    #ifdef BLINK_TEST
-    for(uint8_t i = 0; i < 8; i ++)
-    {
-        LOW(PORTB,SS_PIN);
-        
-
-        // header: write frame 2
-        SPI_MasterTransmit(0x20); 
-        // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
-        SPI_MasterTransmit(0x20 + i); 
-
-        SPI_MasterTransmit(0xFF);
-
-        HIGH(PORTB,SS_PIN);
-        
-
-        _delay_ms(200);
-        LOW(PORTB,SS_PIN);
-        
-
-        // header: write frame 2
-        SPI_MasterTransmit(0x20); 
-        // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
-        SPI_MasterTransmit(0x20 + i); 
-
-        SPI_MasterTransmit(0x00);
-
-        HIGH(PORTB,SS_PIN);
-        _delay_ms(200);
-
-    }
-    #endif
-
-    #ifdef LED_ON
-    LOW(PORTB,SS_PIN);
-    
-
-    // header: write frame 1
-    SPI_MasterTransmit(0x20); 
-    // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
-    SPI_MasterTransmit(0x00); 
-
-    // write 0xFF 16 times to get all 128 LEDs in first frame turned on
-    // auto increment means don't need to change start reg
-    for(int i=0; i<16; i++)
-        SPI_MasterTransmit(0xFF);
-
-    HIGH(PORTB,SS_PIN);
-    
-    LOW(PORTB,SS_PIN);
-    
-    // header: write frame 2
-    SPI_MasterTransmit(0x21); 
-    // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
-    SPI_MasterTransmit(0x00); 
-
-    // write 0xFF 16 times to get all 128 LEDs in first frame turned on
-    // auto increment means don't need to change start reg
-    for(int i=0; i<16; i++)
-        SPI_MasterTransmit(0xFF);
-
-    HIGH(PORTB,SS_PIN);
-    
-    #endif
-
-    #ifdef LED_PWM
-
-    static int amount = 0;
-    for(int i=0; i<64; i++)
-    {
-    LOW(PORTB,SS_PIN);
-    
-    // header: write frame 1
-    SPI_MasterTransmit(0x20); 
-    // reg 0x20: pwm, 8 bits per led, 128 bytes for 128 leds
-    SPI_MasterTransmit(0x20 + i); 
-    // do 128 times to get all LEDS
-    SPI_MasterTransmit(amount); 
-    HIGH(PORTB,SS_PIN);
-    
-    }
-    /*
-    for(int i=0; i<128; i++)
-    {
-    LOW(PORTB,SS_PIN);
-    
-    // header: write frame 2
-    SPI_MasterTransmit(0x21); 
-    // reg 0x20: pwm, 8 bits per led, 128 bytes for 128 leds
-    SPI_MasterTransmit(0x20 + i); 
-    // do 128 times to get all LEDS
-    SPI_MasterTransmit(amount); 
-    HIGH(PORTB,SS_PIN);
-    
-    }
-    */
-
-    if(amount == 0)
-        amount =  0x0F;
-    else
-        amount = 0x00;
-
-/*
-    LOW(PORTB,SS_PIN);
-    
-    // header: write frame 2
-    SPI_MasterTransmit(0x21); 
-    // reg 0x20: pwm, 8 bits per led, 128 bytes for 128 leds
-    SPI_MasterTransmit(0x20); 
-    // do 128 times to get all LEDS
-    for(int i=0; i<128; i++)
-        SPI_MasterTransmit(i % 3 == j ? 0xFF : 0x00); // half bright
-
-    HIGH(PORTB,SS_PIN);
-    
-    */
-
-    #endif
-
-    #ifdef LED_FADE
-    // try to fade in and out each LED in turn
-    LOW(PORTB,SS_PIN);
-    
-
-    // header: write frame 1
-    SPI_MasterTransmit(0x20); 
-    // reg 0x20: pwm, 8 bits per led, 128 bytes for 128 leds
-    SPI_MasterTransmit(0x20); 
-    // do 128 times to get all LEDS
-    for(int i=0; i<128; i++)
-        SPI_MasterTransmit(0x00); // all off
-
-    HIGH(PORTB,SS_PIN);
-    
-
-    // each LED address
-    for(int addr=0x20; addr<0xA0; addr++)
-    {
-        for(int pwm=0; pwm <=0xFF; pwm ++)
-        {
-            LOW(PORTB,SS_PIN);
-            SPI_MasterTransmit(0x20); // write frame 1
-            SPI_MasterTransmit(addr); // PWM reg of current LED
-            SPI_MasterTransmit(pwm);  // write PWM val
-            HIGH(PORTB,SS_PIN);
-        }
-        for(int pwm=0xFF; pwm >=0; pwm --)
-        {
-            LOW(PORTB,SS_PIN);
-            SPI_MasterTransmit(0x20); 
-            SPI_MasterTransmit(addr); 
-            SPI_MasterTransmit(pwm);
-            HIGH(PORTB,SS_PIN);
-        }
-    }
-    #endif
-
-    #ifdef LOOP_DELAY
-    _delay_ms(DELAY_TIME);
-    #endif
-}
-
+// state machine variables
 uint8_t volatile led_num = 0;
 uint8_t volatile led_frame = 0;
 uint8_t volatile led_pos = 0;
 static volatile enum { BANK, REG, DATA, END } led_state;
+
 /* Each time a byte finishes transmitting, queue the next one */
 ISR(SPI_STC_vect) {
     switch(led_state) {
