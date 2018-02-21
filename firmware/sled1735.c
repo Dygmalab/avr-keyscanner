@@ -62,6 +62,7 @@ led_buffer_t led_buffer = { LED64, LED8 };
 #define INIT_PWM 0x00
 #define SPI_INTS
 #define SELF_TEST
+#define VAF
 
 #define SHUTDOWN_PIN 6 //shutdown when low
 #define SS_PIN 7
@@ -287,10 +288,83 @@ void setup_spi()
     read_led_open_reg();
     #endif
 
+    #ifdef VAF
+    setup_vaf();
+    #endif
+
     #ifdef SPI_INTS
     SPCR |= (1<<SPIE);
     sei();
     #endif
+}
+
+void setup_vaf()
+{
+/* this stuff from the demo code
+        //Setting SLED1735 Ram Page to Function Page            
+        // System must go to SW shutdowm mode when initialization
+        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
+        //Setting Matrix Type = Type3   
+        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, PICTURE_DISPLAY_REG, mskMATRIX_TYPE_TYPE3);                
+        //Setting Staggered Delay                       
+        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, STAGGERED_DELAY_REG, ((mskSTD4 & CONST_STD_GROUP4)|(mskSTD3 & CONST_STD_GROUP3)|(mskSTD2 & CONST_STD_GROUP2)|(mskSTD1 & CONST_STD_GROUP1)));
+        //Enable Slew Rate control 
+        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SLEW_RATE_CTL_REG, mskSLEW_RATE_CTL_EN);
+        
+        //===============================================================
+        //VAF Control settings base on the LED type.
+        //================================================================
+        #if ((TYPE3_VAF_OPTION == TYPE3_CATHODE_COLOR_RGB)||(TYPE3_VAF_OPTION == TYPE3_ANODE_COLOR_RGB))
+        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG, (mskVAF2|mskVAF1));
+        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG2, (mskFORCEVAFCTL_VAFTIMECTL|(mskFORCEVAFTIME_CONST & 0x01)|mskVAF3));
+        #else
+        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG, (mskVAF2|mskVAF1));
+        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG2, (mskFORCEVAFCTL_ALWAYSON|mskVAF3));
+        #endif
+        //================================================================
+        
+        //Setting LED driving current = 20mA and Enable current control 
+        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG, (mskCURRENT_CTL_EN|CONST_CURRENT_STEP_20mA));
+        
+        //Init Frame1Page and Frame2Page(Clear all Ram)
+        LED_SPIType3ClearFrame1Page();  
+        LED_SPIType3ClearFrame2Page();          
+        
+        //======================================================//
+        //Init Type3 FrameVAFPage : Single R/G/B ,              //
+        //Anode RGB or Cathode RGB have different VAF settings  //
+        //which can choice by " TYPE2_VAF_OPTION ".             //
+        //======================================================//      
+        for( i = 0; i< TYPE3_VAF_FRAME_LENGTH ; i++)
+        {
+                hwSPI_Tx_Fifo[i+2] = tabLED_Type3Vaf[i];
+        }
+        SPI_W_NBYTE(SPI_FRAME_LED_VAF_PAGE, TYPE3_VAF_FRAME_FIRST_ADDR, TYPE3_VAF_FRAME_LENGTH);        
+        
+        //After initialization , system back to SW Normal mode.
+        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_NORMAL_MODE);              
+*/
+
+    const uint8_t tabLED_Type3Vaf[64] = { //Reference SLED1735 Datasheet Type3 Circuit Map
+    //Frame 1
+    0x50, 0x55, 0x55, 0x55, //C1-A ~ C1-P
+    0x00, 0x00, 0x00, 0x00, //C2-A ~ C2-P ,
+    0x00, 0x00, 0x00, 0x00, //C3-A ~ C3-P  
+    0x15, 0x54, 0x55, 0x55, //C4-A ~ C4-P 
+    0x00, 0x00, 0x00, 0x00, //C5-A ~ C5-P  
+    0x00, 0x00, 0x00, 0x00, //C6-A ~ C6-P 
+    0x55, 0x05, 0x55, 0x55, //C7-A ~ C7-P  
+    0x00, 0x00, 0x00, 0x00, //C8-A ~ C8-P
+    //Frame 2
+    0x00, 0x00, 0x00, 0x00, //C9-A ~ C9-P 
+    0x55, 0x55, 0x41, 0x55, //C10-A ~ C10-P 
+    0x00, 0x00, 0x00, 0x00, //C11-A ~ C11-P  
+    0x00, 0x00, 0x00, 0x00, //C12-A ~ C12-P 
+    0x55, 0x55, 0x55, 0x50, //C13-A ~ C13-P  
+    0x00, 0x00, 0x00, 0x00, //C14-A ~ C14-P 
+    0x00, 0x00, 0x00, 0x00, //C15-A ~ C15-P 
+    0x00, 0x00, 0x00, 0x00, //C16-A ~ C16-P 
+    };
 }
 
 void read_led_open_reg()
