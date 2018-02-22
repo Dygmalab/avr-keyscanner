@@ -154,6 +154,15 @@ void setup_spi()
     // 1st 4bits is: 0xA read, 0x2 write
     // 2nd 4bits is: 0x0 frame1, 0x1 frame2, 0xB function, 0xC detect, 0xD led Vaf
     // eg 0x20 - write to frame1
+    
+
+    // some stuff has to be done in shutdown
+//        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0x2B);
+    SPI_MasterTransmit(SW_SHUT_DOWN_REG);
+    SPI_MasterTransmit(mskSW_SHUT_DOWN_MODE);
+    HIGH(PORTB,SS_PIN);
 
     #ifdef CHECK_ID
     LOW(PORTB,SS_PIN);
@@ -169,6 +178,7 @@ void setup_spi()
     HIGH(PORTB,SS_PIN);
 
     #endif
+
 
     #ifdef SETUP
     LOW(PORTB,SS_PIN);
@@ -202,6 +212,10 @@ void setup_spi()
     SPI_MasterTransmit(0x00);
     HIGH(PORTB,SS_PIN);
     
+    #ifdef VAF
+    // think this has to happen while chip is in shutdown
+    setup_vaf();
+    #endif
 
     // header: write function
     LOW(PORTB,SS_PIN);
@@ -321,9 +335,6 @@ void setup_spi()
     read_led_open_reg();
     #endif
 
-    #ifdef VAF
-    setup_vaf();
-    #endif
 
     #ifdef SPI_INTS
     SPCR |= (1<<SPIE);
@@ -346,36 +357,14 @@ void setup_vaf()
         SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SLEW_RATE_CTL_REG, mskSLEW_RATE_CTL_EN);
         */
 
-            //check masks -depend on package?
-            #define	mskVAF1										(0x4<<0) 		
-            #define	mskVAF2										(0x4<<4)		
-            #define	mskVAF3										(0x4<<0) 		
-
-            #define	mskFORCEVAFTIME_CONST			(0x0<<3) 			
-            #define	mskFORCEVAFCTL_ALWAYSON		(0x0<<6) 	
-            #define	mskFORCEVAFCTL_VAFTIMECTL	(0x1<<6) 	
-            #define	mskFORCEVAFCTL_DISABLE		(0x2<<6) 	
-
-            #define	VAF_CTL_REG 0X14			
-            #define	VAF_CTL_REG2 0X15	
-
-            #define	LED_VAF_PAGE 0X0D
-
-			#define	TYPE3_VAF_FRAME_FIRST_ADDR					0x00	
-			#define	TYPE3_VAF_FRAME_LAST_ADDR						0x3F								 	
-			#define	TYPE3_VAF_FRAME_LENGTH					((TYPE3_VAF_FRAME_LAST_ADDR-TYPE3_VAF_FRAME_FIRST_ADDR)+1)
-
-        #define		SPI_FRAME_ONE_PAGE				0x0			//Setting SLED1735 Frame Page 1
-        #define		SPI_FRAME_TWO_PAGE				0x1			//Setting SLED1735 Frame Page 2	
-        #define		SPI_FRAME_FUNCTION_PAGE		0xB			//Setting SLED1735 Frame Page 9	
-        #define		SPI_FRAME_DETECTION_PAGE	0xC			//Setting SLED1735 Frame Page 10
-        #define		SPI_FRAME_LED_VAF_PAGE		0xD			//Setting SLED1735 Frame Page 11	
         
         //===============================================================
         //VAF Control settings base on the LED type.
         //================================================================
         
        // SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG, (mskVAF2|mskVAF1));
+
+    // consider VAF1,2 and 3 fine tuning, can see the difference on the scope, but the main part is turning it on in the first place.
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0x2B); 
     SPI_MasterTransmit(VAF_CTL_REG); 
@@ -383,11 +372,16 @@ void setup_vaf()
     HIGH(PORTB,SS_PIN);
 
        // SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG2, (mskFORCEVAFCTL_VAFTIMECTL|(mskFORCEVAFTIME_CONST & 0x01)|mskVAF3));
+
+       // this is the crucial configuration...
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0x2B); 
     SPI_MasterTransmit(VAF_CTL_REG2); 
-    SPI_MasterTransmit(mskFORCEVAFCTL_VAFTIMECTL|(mskFORCEVAFTIME_CONST & 0x01)); 
+    SPI_MasterTransmit(mskFORCEVAFCTL_VAFTIMECTL|(mskFORCEVAFTIME_CONST & 0x01)|mskVAF3); 
+    //SPI_MasterTransmit(mskFORCEVAFCTL_ALWAYSON|mskVAF3); 
+    //SPI_MasterTransmit(mskFORCEVAFCTL_DISABLE|mskVAF3); 
     HIGH(PORTB,SS_PIN);
+    
 
         //================================================================
         
@@ -396,6 +390,9 @@ void setup_vaf()
         //Anode RGB or Cathode RGB have different VAF settings  //
         //which can choice by " TYPE2_VAF_OPTION ".             //
         //======================================================//      
+        
+// vaf is set to vaf2 by default
+// this part doesn't seem to make any difference
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0x2D); 
     SPI_MasterTransmit(TYPE3_VAF_FRAME_FIRST_ADDR); 
@@ -407,6 +404,7 @@ void setup_vaf()
     //    SPI_W_NBYTE(SPI_FRAME_LED_VAF_PAGE, TYPE3_VAF_FRAME_FIRST_ADDR, TYPE3_VAF_FRAME_LENGTH);        
 
     HIGH(PORTB,SS_PIN);
+
        #endif 
 
 }

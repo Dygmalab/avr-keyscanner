@@ -30,3 +30,31 @@ void led_set_all_to(uint8_t * led_data);
 //void led_set_global_brightness(uint8_t global_brightness);
 
 void read_led_open_reg();
+
+            //check masks -depend on package?
+            #define	mskVAF1										(0x7<<0) 		
+            #define	mskVAF2										(0x0<<4)		
+            #define	mskVAF3										(0x0<<0) 		
+
+            #define	mskFORCEVAFTIME_CONST			(0x0<<3) 			
+            #define	mskFORCEVAFCTL_ALWAYSON		(0x0<<6) 	
+            #define	mskFORCEVAFCTL_VAFTIMECTL	(0x1<<6) 	
+            #define	mskFORCEVAFCTL_DISABLE		(0x2<<6) 	
+
+            #define	VAF_CTL_REG 0X14			
+            #define	VAF_CTL_REG2 0X15	
+
+            #define	LED_VAF_PAGE 0X0D
+
+			#define	TYPE3_VAF_FRAME_FIRST_ADDR					0x00	
+			#define	TYPE3_VAF_FRAME_LAST_ADDR						0x3F								 	
+			#define	TYPE3_VAF_FRAME_LENGTH					((TYPE3_VAF_FRAME_LAST_ADDR-TYPE3_VAF_FRAME_FIRST_ADDR)+1)
+
+        #define		SPI_FRAME_ONE_PAGE				0x0			//Setting SLED1735 Frame Page 1
+        #define		SPI_FRAME_TWO_PAGE				0x1			//Setting SLED1735 Frame Page 2	
+        #define		SPI_FRAME_FUNCTION_PAGE		0xB			//Setting SLED1735 Frame Page 9	
+        #define		SPI_FRAME_DETECTION_PAGE	0xC			//Setting SLED1735 Frame Page 10
+        #define		SPI_FRAME_LED_VAF_PAGE		0xD			//Setting SLED1735 Frame Page 11	
+
+        #define mskSW_SHUT_DOWN_MODE                                    (0x0<<0)
+		#define	SW_SHUT_DOWN_REG 0X0A	
