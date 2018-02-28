@@ -268,37 +268,51 @@ void setup_spi()
 
     #endif
 
-    // all leds on
-    LOW(PORTB,SS_PIN);
-    
+    for(int led_frame = 0; led_frame < 2; led_frame ++)
+    {
+        LOW(PORTB,SS_PIN);
+        // header: write frame 1
+        SPI_MasterTransmit(0x20 + led_frame); 
+        // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
+        SPI_MasterTransmit(0x00); 
 
-    // header: write frame 1
-    SPI_MasterTransmit(0x20); 
-    // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
-    SPI_MasterTransmit(0x00); 
+        // write 0xFF 16 times to get all 128 LEDs in first frame turned on
+        // auto increment means don't need to change start reg
+        for(int i=0; i<16; i++)
+            SPI_MasterTransmit(0xFF);
 
-    // write 0xFF 16 times to get all 128 LEDs in first frame turned on
-    // auto increment means don't need to change start reg
-    for(int i=0; i<16; i++)
-        SPI_MasterTransmit(0xFF);
+        HIGH(PORTB,SS_PIN);
+        _delay_ms(1);
+    }
 
-    HIGH(PORTB,SS_PIN);
-    
-
-    LOW(PORTB,SS_PIN);
-    
-    // header: write frame 2
-    SPI_MasterTransmit(0x21); 
-    // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
-    SPI_MasterTransmit(0x00); 
 
     // write 0xFF 16 times to get all 128 LEDs in first frame turned on
-    // auto increment means don't need to change start reg
-    for(int i=0; i<16; i++)
-        SPI_MasterTransmit(0xFF);
+    /*
+    for(int led_frame = 0; led_frame < 2; led_frame ++)
+    {
+        LOW(PORTB,SS_PIN);
+        // header: write frame 1
+        SPI_MasterTransmit(0x20 + led_frame); 
+        // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
+        SPI_MasterTransmit(0x00); 
+        int led_num = 0;
+        while(led_num < 256)
+        {
+            // build mask
+            uint8_t mask = 0xFF;
+            for(int i = 0; i < 8; i ++)
+            {
+                //if led is placed
+                if(pgm_read_byte_near(&led_LUT[led_frame][led_num++]) == 0xFF)
+                    mask |= 0 << i;
+            }
 
-    HIGH(PORTB,SS_PIN);
-   
+//            SPI_MasterTransmit(mask);
+            SPI_MasterTransmit(0xFF);
+        }
+        HIGH(PORTB,SS_PIN);
+    } 
+    */
 
     #ifdef INIT_PWM
     LOW(PORTB,SS_PIN);
@@ -411,46 +425,53 @@ void setup_vaf()
 
 void read_led_open_reg()
 {
-    // make sure tests are off to start with
+
+    // make sure test results are off to start with
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0x2B);  // write function reg
     SPI_MasterTransmit(0x11);  // reg 11 - open and short detection status
     SPI_MasterTransmit(0x00);  // 
     HIGH(PORTB,SS_PIN);
 
-    // check no tests running
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xAB);  // read function reg
-    SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
-    SPI_MasterTransmit(0x00);  // check status
-    HIGH(PORTB,SS_PIN);
+
 
     // start the open test
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0x2B);  // write function reg
     SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
-    SPI_MasterTransmit(0b10001111); //start open test
+    SPI_MasterTransmit(0b10000001); //start open test. The 1 at the end is the OSDD (open short detection duty). At 63 and 3 I get bad results for leds B1 through P3. At 1 I get the results I expect.
     HIGH(PORTB,SS_PIN);
 
-    // check the test is started
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xAB);  // read function reg
-    SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
-    SPI_MasterTransmit(0x00);  // check status
-    HIGH(PORTB,SS_PIN);
+    while(true)
+    {
+        // check the test is started
+        LOW(PORTB,SS_PIN);
+        SPI_MasterTransmit(0xAB);  // read function reg
+        SPI_MasterTransmit(0x11);  // reg 10 - open and short detection start
+        SPI_MasterTransmit(0x00);  // check status
+        HIGH(PORTB,SS_PIN);
 
-    // wait for the test to finish
-    _delay_ms(5);
-
-    // we could instead check that the open detection pin is now high - 0x11 should be 0x80
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xAB);  // read function reg
-    SPI_MasterTransmit(0x11);  // reg 11 - open and short detection status
-    SPI_MasterTransmit(0x00);  // reg 11 - open and short detection status
-    HIGH(PORTB,SS_PIN);
-
+        if(SPDR == 0x80)
+            break;
+        else
+            // wait for the test to finish
+            _delay_ms(1);
+    }
     //////////// debug pin!!!!!!!!!!!!
     HIGH(PORTA,1); // debug pin HIGH
+    /* test for sigrok logic analyser
+    unsigned int i = 0;
+    while(i < 65535)
+    {
+        SPI_MasterTransmit(i >> 8);  // start at first address
+        SPI_MasterTransmit((uint8_t)(i & 0x00FF));  // start at first address
+        i++;
+        HIGH(PORTA,1); // debug pin HIGH
+        _delay_us(50);
+        LOW(PORTA,1); // debug pin HIGH
+        _delay_us(50);
+    }
+    */
 
     // now read all the registers
     LOW(PORTB,SS_PIN);
@@ -465,6 +486,9 @@ void read_led_open_reg()
     }
     HIGH(PORTB,SS_PIN);
 
+    //////////// debug pin!!!!!!!!!!!!
+    LOW(PORTA,1); // debug pin LOW
+
 
     // start the short test
     LOW(PORTB,SS_PIN);
@@ -473,16 +497,24 @@ void read_led_open_reg()
     SPI_MasterTransmit(0b01000011); //start short test
     HIGH(PORTB,SS_PIN);
 
-    // wait for it to complete
-    _delay_ms(5);
 
-    // could check that the short detection pin is now high
-    // 0x11 should be 0xC0 (as previous test has finished and we didn't reset it
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xAB);  // read function reg
-    SPI_MasterTransmit(0x11);  // reg 11 - open and short detection status
-    SPI_MasterTransmit(0x00);  // reg 11 - open and short detection status
-    HIGH(PORTB,SS_PIN);
+    while(true)
+    {
+        // check the test is started
+        LOW(PORTB,SS_PIN);
+        SPI_MasterTransmit(0xAB);  // read function reg
+        SPI_MasterTransmit(0x11);  // reg 10 - open and short detection start
+        SPI_MasterTransmit(0x00);  // check status
+        HIGH(PORTB,SS_PIN);
+
+        // 0x11 should be 0xC0 (as previous test has finished and we didn't reset it
+        if(SPDR == 0xC0)
+            break;
+        else
+            // wait for the test to finish
+            _delay_ms(1);
+    }
+
 
     // read the short registers
     LOW(PORTB,SS_PIN);
@@ -496,9 +528,6 @@ void read_led_open_reg()
 
     }
     HIGH(PORTB,SS_PIN);
-
-    //////////// debug pin!!!!!!!!!!!!
-    LOW(PORTA,1); // debug pin LOW
 
     // have to read this register again, otherwise sled never responds again
     LOW(PORTB,SS_PIN);
