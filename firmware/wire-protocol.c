@@ -70,8 +70,12 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         }
         break;
 
+    case TWI_CMD_JOINED:
+        twi_command = TWI_CMD_JOINED;
+        break;
+
     case TWI_CMD_VERSION:
-        twi_command = 0x10;
+        twi_command = TWI_CMD_VERSION;
         break;
         /*
     case TWI_CMD_LED_GLOBAL_BRIGHTNESS:
@@ -117,6 +121,11 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             break;
         case TWI_CMD_LED_SPI_FREQUENCY:
             buf[0] = led_spi_frequency;
+            *bufsiz = 1;
+            twi_command = TWI_CMD_NONE;
+            break;
+        case TWI_CMD_JOINED:
+            buf[0] = PINA & 0x00000010; // mask for pin 1 where the hall effect sensor is attached
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;

@@ -5,7 +5,7 @@
 #include "wire-protocol.h"
 #include <stdint.h>
 
-#define TEST_P 3
+#define TEST_P 1
 
 static inline void setup(void) {
     setup_spi(); // setup sled 1735 driver chip
@@ -13,8 +13,8 @@ static inline void setup(void) {
 
     twi_init();
 
-    //DDRA = (1<<TEST_P);
-    //LOW(PORTA,TEST_P);
+    DDRA = (0<<TEST_P);
+    HIGH(PORTA,TEST_P);
 }
 #define R 0
 #define G 50
