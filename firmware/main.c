@@ -21,7 +21,7 @@ static inline void setup(void) {
     setup_adc();
     while(true)
     {
-        if(read_adc() > 500)
+        if(read_adc() < 500)
             led_set_all_to( red );
         else
             led_set_all_to( grn );
