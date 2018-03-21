@@ -12,6 +12,7 @@ uint8_t red[3] = { 255, 0, 0 };
 uint8_t grn[3] = { 0, 255, 0 };
 uint8_t off[3] = { 0, 0, 0 };
 
+
 static inline void setup(void) {
     setup_spi(); // setup sled 1735 driver chip
     keyscanner_init();
@@ -27,6 +28,9 @@ static inline void setup(void) {
     }
     #endif
     twi_init();
+
+    SET_INPUT(DDRA,JOINT_PIN);
+    HIGH(PORTB,JOINT_PIN);
 }
 
 int main(void) {
