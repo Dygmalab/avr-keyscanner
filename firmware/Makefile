@@ -32,7 +32,7 @@ CLOCK      ?= 8000000
 PROGRAMMER = -c stk500v2 -P /dev/ttyACM2
 
 # Add more objects for each .c file here
-OBJECTS    = main.o sled1735.o wire-protocol.o twi-slave.o ringbuf.o keyscanner.o
+OBJECTS    = main.o sled1735.o wire-protocol.o twi-slave.o ringbuf.o keyscanner.o adc.o
 
 # For computing fuse byte values for other devices and options see
 # the fuse bit calculator at http://www.engbedded.com/fusecalc/

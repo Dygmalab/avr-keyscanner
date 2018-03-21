@@ -71,6 +71,10 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         }
         break;
 
+    case TWI_CMD_JOINED:
+        twi_command = TWI_CMD_JOINED;
+        break;
+
     case TWI_CMD_VERSION:
         twi_command = TWI_CMD_VERSION;
         break;
@@ -147,6 +151,11 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
         case TWI_CMD_LED_SHORT:
             memcpy(buf, led_short_status, 32);
             *bufsiz = 32;
+            twi_command = TWI_CMD_NONE;
+            break;
+        case TWI_CMD_JOINED:
+            buf[0] = JOINT();
+            *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
         default:
