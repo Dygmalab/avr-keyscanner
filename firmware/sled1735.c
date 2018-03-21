@@ -268,6 +268,24 @@ void setup_spi()
 
     #endif
 
+    #ifdef INIT_PWM
+    for(int led_frame = 0; led_frame < 2; led_frame ++)
+    {
+        LOW(PORTB,SS_PIN);
+        // header: write frame 2
+        SPI_MasterTransmit(0x20 + led_frame); 
+        // reg 0x20: led pwm
+        SPI_MasterTransmit(0x20); 
+
+        // auto increment means don't need to change start reg
+        for(int i=0; i<128; i++)
+            SPI_MasterTransmit(INIT_PWM);
+
+        HIGH(PORTB,SS_PIN);
+        _delay_ms(1);
+    }
+    #endif
+
     for(int led_frame = 0; led_frame < 2; led_frame ++)
     {
         LOW(PORTB,SS_PIN);
@@ -314,35 +332,6 @@ void setup_spi()
     } 
     */
 
-    #ifdef INIT_PWM
-    LOW(PORTB,SS_PIN);
-    
-    // header: write frame 2
-    SPI_MasterTransmit(0x20); 
-    // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
-    SPI_MasterTransmit(0x20); 
-
-    // write 0xFF 16 times to get all 128 LEDs in first frame turned on
-    // auto increment means don't need to change start reg
-    for(int i=0; i<128; i++)
-        SPI_MasterTransmit(INIT_PWM);
-
-    HIGH(PORTB,SS_PIN);
-
-    LOW(PORTB,SS_PIN);
-    
-    // header: write frame 2
-    SPI_MasterTransmit(0x21); 
-    // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
-    SPI_MasterTransmit(0x20); 
-
-    // write 0xFF 16 times to get all 128 LEDs in first frame turned on
-    // auto increment means don't need to change start reg
-    for(int i=0; i<128; i++)
-        SPI_MasterTransmit(INIT_PWM);
-
-    HIGH(PORTB,SS_PIN);
-    #endif
     
 
     #ifdef SELF_TEST
