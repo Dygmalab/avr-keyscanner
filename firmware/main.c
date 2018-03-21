@@ -29,8 +29,9 @@ static inline void setup(void) {
     #endif
     twi_init();
 
+    // joint detect setup
     SET_INPUT(DDRA,JOINT_PIN);
-    HIGH(PORTB,JOINT_PIN);
+    HIGH(PORTA,JOINT_PIN);
 }
 
 int main(void) {
