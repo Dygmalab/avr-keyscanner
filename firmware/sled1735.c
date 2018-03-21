@@ -86,11 +86,11 @@ led_buffer_t led_buffer = { LED64, LED8 }; // 59 RGBs
 
 
 #define SHUTDOWN_PIN 6 //shutdown when low
-#define SS_PIN 2
+#define SS_PIN 7 // the one used for sled1735
 #define DDR_SPI DDRB
 #define DD_MOSI 3
 #define DD_SCK 5
-#define SS_PIN_2 2 // the real SS pin
+#define SS_PIN_2 2 // the real SS pin, has to be setup as output or spi doesn't work
 
 uint8_t stat = 0;
 volatile bool done = false;
