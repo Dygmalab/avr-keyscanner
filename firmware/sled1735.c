@@ -98,7 +98,7 @@ const uint8_t tabLED_Type3Vaf[64] = { //Reference SLED1735 Datasheet Type3 Circu
 #endif
 
 #define SHUTDOWN_PIN 6 //shutdown when low
-#define SS_PIN 7
+#define SS_PIN 2
 #define DDR_SPI DDRB
 #define DD_MOSI 3
 #define DD_SCK 5
