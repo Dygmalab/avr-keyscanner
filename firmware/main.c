@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "adc.h"
 
-#define DETECT_ADC
+// #define DETECT_ADC
 
 uint8_t red[3] = { 255, 0, 0 };
 uint8_t grn[3] = { 0, 255, 0 };
