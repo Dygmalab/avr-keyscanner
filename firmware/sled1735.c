@@ -59,13 +59,11 @@ typedef union {
 led_buffer_t led_buffer = { LED64, LED8 };
 
 #define CHECK_ID
-#define SETUP
 #define CONST_CURR
 #define SPI_INTS
 #define SELF_TEST
 #define VAF
 #define INIT_PWM 0x00
-//#define BREATHE
 
 #ifdef VAF
 // k2 and i4 are lit red when off
@@ -98,12 +96,11 @@ const uint8_t tabLED_Type3Vaf[64] = { //Reference SLED1735 Datasheet Type3 Circu
 #endif
 
 #define SHUTDOWN_PIN 6 //shutdown when low
-#define SS_PIN 2
+#define SS_PIN 7
 #define DDR_SPI DDRB
 #define DD_MOSI 3
 #define DD_SCK 5
 #define SS_PIN_2 2 // the real SS pin
-
 
 void SPI_MasterInit(void)
 {
@@ -130,6 +127,25 @@ void SPI_MasterTransmit(char cData)
     while(!(SPSR & (1<<SPIF)));
 }
 
+void SPI_W_3BYTE(uint8_t page, uint8_t reg, uint8_t data)
+{
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0x20 + page);
+    SPI_MasterTransmit(reg);
+    SPI_MasterTransmit(data);
+    HIGH(PORTB,SS_PIN);
+}
+
+uint8_t SPI_R_3BYTE(uint8_t page, uint8_t reg)
+{
+    LOW(PORTB,SS_PIN);
+    SPI_MasterTransmit(0xA0 + page);
+    SPI_MasterTransmit(reg);
+    SPI_MasterTransmit(0x00); // dummy byte
+    HIGH(PORTB,SS_PIN);
+    return SPDR;
+}
+
 void led_update_bank(uint8_t *buf, const uint8_t bank) {
 
     memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
@@ -154,190 +170,68 @@ void setup_spi()
     // 1st 4bits is: 0xA read, 0x2 write
     // 2nd 4bits is: 0x0 frame1, 0x1 frame2, 0xB function, 0xC detect, 0xD led Vaf
     // eg 0x20 - write to frame1
-    
 
-    // some stuff has to be done in shutdown
-//        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0x2B);
-    SPI_MasterTransmit(SW_SHUT_DOWN_REG);
-    SPI_MasterTransmit(mskSW_SHUT_DOWN_MODE);
-    HIGH(PORTB,SS_PIN);
+    // shutdown
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
 
-    #ifdef CHECK_ID
-    LOW(PORTB,SS_PIN);
-    
-    // header: read function
-    SPI_MasterTransmit(0xAB);
-    // check ID returns OK
-    // reg 0x1B is ID
-    SPI_MasterTransmit(0x1B);
-    SPI_MasterTransmit(0x00);
-    sled1735_status = SPDR;
-    // data returned should be 0111 0010 = 0x72
-    HIGH(PORTB,SS_PIN);
+    // get the chip's ID
+    sled1735_status = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CHIP_ID_REG);
 
-    #endif
+    // enable picture mode, disable ADC
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CONFIGURATION_REG, 0x00);           
 
+    // matrix type 3
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, PICTURE_DISPLAY_REG, mskMATRIX_TYPE_TYPE3);           
 
-    #ifdef SETUP
-    LOW(PORTB,SS_PIN);
-    // header: write function
-    SPI_MasterTransmit(0x2B); 
-    // reg 0x00: configuration
-    SPI_MasterTransmit(0x00);
-    // enable picture mode bit 3 set low - what does picture mode do? Do we need it?
-    SPI_MasterTransmit(0b00000000);
-
-    HIGH(PORTB, SS_PIN);
-    
-    
-    LOW(PORTB,SS_PIN);
-    
-
-    // header: write function
-    SPI_MasterTransmit(0x2B); 
-    // reg 0x01: matrix type
-    SPI_MasterTransmit(0x01);
-    // choose matrix type 3 
-    SPI_MasterTransmit(0b00010000); // 0x10
-
-    HIGH(PORTB,SS_PIN);
-    
-
-    // check it
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xAB);
-    SPI_MasterTransmit(0x01);
-    SPI_MasterTransmit(0x00);
-    HIGH(PORTB,SS_PIN);
+    /* these from the demo code, haven't tested them
+    // Setting Staggered Delay                       
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, STAGGERED_DELAY_REG, ((mskSTD4 & CONST_STD_GROUP4)|(mskSTD3 & CONST_STD_GROUP3)|(mskSTD2 & CONST_STD_GROUP2)|(mskSTD1 & CONST_STD_GROUP1)));
+    // Enable Slew Rate control 
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SLEW_RATE_CTL_REG, mskSLEW_RATE_CTL_EN);
+    */
     
     #ifdef VAF
-    // think this has to happen while chip is in shutdown
-    setup_vaf();
-    #endif
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG, (mskVAF2|mskVAF1));
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG2, (mskFORCEVAFCTL_VAFTIMECTL|(mskFORCEVAFTIME_CONST & 0x01)|mskVAF3));
 
-    // header: write function
+    // vaf is set to vaf2 by default
+    // this part doesn't seem to make any difference
     LOW(PORTB,SS_PIN);
-    
-    SPI_MasterTransmit(0x2B); 
-    SPI_MasterTransmit(0x0A);
-    // turn shutdown onto normal mode, (controlled by external pin?)
-    SPI_MasterTransmit(0b00000001);
+    SPI_MasterTransmit(0x20 + SPI_FRAME_LED_VAF_PAGE); 
+    SPI_MasterTransmit(TYPE3_VAF_FRAME_FIRST_ADDR); 
+    for( int i = 0; i< TYPE3_VAF_FRAME_LENGTH ; i++)
+        SPI_MasterTransmit(tabLED_Type3Vaf[i]); 
     HIGH(PORTB,SS_PIN);
-    
-
-    #endif
+    #endif 
 
     #ifdef CONST_CURR
-    LOW(PORTB,SS_PIN);
-    
-    SPI_MasterTransmit(0x2B); 
-    //reg 0x0F: constant current
-    SPI_MasterTransmit(0x0F);
-    SPI_MasterTransmit(0b10111111); // set to full current
-    HIGH(PORTB,SS_PIN);
-    
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG, mskCURRENT_CTL_EN | CONST_CURRENT_STEP_40mA);           
     #endif
 
-    #ifdef BREATH
-    LOW(PORTB,SS_PIN);
-    
-
-    // header: write function
-    SPI_MasterTransmit(0x2B); 
-    // reg 0x08: breath in and out time
-    SPI_MasterTransmit(0x08);
-    // enable breath, continuous, 1ms extinguish time
-    SPI_MasterTransmit(0b01000100);
-
-    HIGH(PORTB,SS_PIN);
-    
-    LOW(PORTB,SS_PIN);
-    
-
-    // header: write function
-    SPI_MasterTransmit(0x2B); 
-    // reg 0x09: breath extinguish time and auto play
-    SPI_MasterTransmit(0x09);
-    // enable breath, continuous, 1ms extinguish time
-    SPI_MasterTransmit(0b00110111);
-
-    HIGH(PORTB,SS_PIN);
-    
-
-    #endif
 
     #ifdef INIT_PWM
-    for(int led_frame = 0; led_frame < 2; led_frame ++)
-    {
-        LOW(PORTB,SS_PIN);
-        // header: write frame 2
-        SPI_MasterTransmit(0x20 + led_frame); 
-        // reg 0x20: led pwm
-        SPI_MasterTransmit(0x20); 
+    // initialise pwm to our default value
+    for(int i=TYPE3_PWM_FRAME_FIRST_ADDR; i<TYPE3_PWM_FRAME_LAST_ADDR; i++)
+        SPI_W_3BYTE(SPI_FRAME_ONE_PAGE, i, INIT_PWM);           
 
-        // auto increment means don't need to change start reg
-        for(int i=0; i<128; i++)
-            SPI_MasterTransmit(INIT_PWM);
-
-        HIGH(PORTB,SS_PIN);
-        _delay_ms(1);
-    }
+    for(int i=TYPE3_PWM_FRAME_FIRST_ADDR; i<TYPE3_PWM_FRAME_LAST_ADDR; i++)
+        SPI_W_3BYTE(SPI_FRAME_TWO_PAGE, i, INIT_PWM);           
     #endif
 
-    for(int led_frame = 0; led_frame < 2; led_frame ++)
-    {
-        LOW(PORTB,SS_PIN);
-        // header: write frame 1
-        SPI_MasterTransmit(0x20 + led_frame); 
-        // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
-        SPI_MasterTransmit(0x00); 
+    // turn on all leds - alternative is to only turn on those that are set in the LUT
+    for(int i=TYPE3_LED_FRAME_FIRST_ADDR; i<TYPE3_LED_FRAME_LAST_ADDR; i++)
+        SPI_W_3BYTE(SPI_FRAME_ONE_PAGE, i, 0xFF);           
 
-        // write 0xFF 16 times to get all 128 LEDs in first frame turned on
-        // auto increment means don't need to change start reg
-        for(int i=0; i<16; i++)
-            SPI_MasterTransmit(0xFF);
+    for(int i=TYPE3_LED_FRAME_FIRST_ADDR; i<TYPE3_LED_FRAME_LAST_ADDR; i++)
+        SPI_W_3BYTE(SPI_FRAME_TWO_PAGE, i, 0xFF);           
 
-        HIGH(PORTB,SS_PIN);
-        _delay_ms(1);
-    }
-
-
-    // write 0xFF 16 times to get all 128 LEDs in first frame turned on
-    /*
-    for(int led_frame = 0; led_frame < 2; led_frame ++)
-    {
-        LOW(PORTB,SS_PIN);
-        // header: write frame 1
-        SPI_MasterTransmit(0x20 + led_frame); 
-        // reg 0x00: led on/off, 1 bit per led, 16 bytes for 128 leds
-        SPI_MasterTransmit(0x00); 
-        int led_num = 0;
-        while(led_num < 256)
-        {
-            // build mask
-            uint8_t mask = 0xFF;
-            for(int i = 0; i < 8; i ++)
-            {
-                //if led is placed
-                if(pgm_read_byte_near(&led_LUT[led_frame][led_num++]) == 0xFF)
-                    mask |= 0 << i;
-            }
-
-//            SPI_MasterTransmit(mask);
-            SPI_MasterTransmit(0xFF);
-        }
-        HIGH(PORTB,SS_PIN);
-    } 
-    */
-
+    // turn on the chip
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_NORMAL_MODE);           
     
 
     #ifdef SELF_TEST
     read_led_open_reg();
     #endif
-
 
     #ifdef SPI_INTS
     SPCR |= (1<<SPIE);
@@ -345,185 +239,54 @@ void setup_spi()
     #endif
 }
 
-void setup_vaf()
-{
-#ifdef VAF
-        /*
-        //Setting SLED1735 Ram Page to Function Page            
-        // System must go to SW shutdowm mode when initialization
-        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
-        //Setting Matrix Type = Type3   
-        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, PICTURE_DISPLAY_REG, mskMATRIX_TYPE_TYPE3);                
-        //Setting Staggered Delay                       
-        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, STAGGERED_DELAY_REG, ((mskSTD4 & CONST_STD_GROUP4)|(mskSTD3 & CONST_STD_GROUP3)|(mskSTD2 & CONST_STD_GROUP2)|(mskSTD1 & CONST_STD_GROUP1)));
-        //Enable Slew Rate control 
-        SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SLEW_RATE_CTL_REG, mskSLEW_RATE_CTL_EN);
-        */
-
-        
-        //===============================================================
-        //VAF Control settings base on the LED type.
-        //================================================================
-        
-       // SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG, (mskVAF2|mskVAF1));
-
-    // consider VAF1,2 and 3 fine tuning, can see the difference on the scope, but the main part is turning it on in the first place.
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0x2B); 
-    SPI_MasterTransmit(VAF_CTL_REG); 
-    SPI_MasterTransmit(mskVAF2|mskVAF1); 
-    HIGH(PORTB,SS_PIN);
-
-       // SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG2, (mskFORCEVAFCTL_VAFTIMECTL|(mskFORCEVAFTIME_CONST & 0x01)|mskVAF3));
-
-       // this is the crucial configuration...
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0x2B); 
-    SPI_MasterTransmit(VAF_CTL_REG2); 
-    SPI_MasterTransmit(mskFORCEVAFCTL_VAFTIMECTL|(mskFORCEVAFTIME_CONST & 0x01)|mskVAF3); 
-    //SPI_MasterTransmit(mskFORCEVAFCTL_ALWAYSON|mskVAF3); 
-    //SPI_MasterTransmit(mskFORCEVAFCTL_DISABLE|mskVAF3); 
-    HIGH(PORTB,SS_PIN);
-    
-
-        //================================================================
-        
-        //======================================================//
-        //Init Type3 FrameVAFPage : Single R/G/B ,              //
-        //Anode RGB or Cathode RGB have different VAF settings  //
-        //which can choice by " TYPE2_VAF_OPTION ".             //
-        //======================================================//      
-        
-// vaf is set to vaf2 by default
-// this part doesn't seem to make any difference
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0x2D); 
-    SPI_MasterTransmit(TYPE3_VAF_FRAME_FIRST_ADDR); 
-        for( int i = 0; i< TYPE3_VAF_FRAME_LENGTH ; i++)
-        {
-                //hwSPI_Tx_Fifo[i+2] = tabLED_Type3Vaf[i];
-                SPI_MasterTransmit(tabLED_Type3Vaf[i]); 
-        }
-    //    SPI_W_NBYTE(SPI_FRAME_LED_VAF_PAGE, TYPE3_VAF_FRAME_FIRST_ADDR, TYPE3_VAF_FRAME_LENGTH);        
-
-    HIGH(PORTB,SS_PIN);
-
-       #endif 
-
-}
 
 void read_led_open_reg()
 {
-
     // make sure test results are off to start with
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
+
+    // OSDD = open short detection duty - don't know how it works. At 63 and 3 I get bad results for leds B1 through P3. At 1 I get the results I expect.
+    uint8_t osdd = 0x01;
+
+    // start open test
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG, mskOPEN_DETECT_START + osdd);           
+
+    // wait for test to run
+    while(SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2) != mskOPEN_DETECT_INT)
+        _delay_ms(1);
+
+    // read all open registers
     LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0x2B);  // write function reg
-    SPI_MasterTransmit(0x11);  // reg 11 - open and short detection status
-    SPI_MasterTransmit(0x00);  // 
-    HIGH(PORTB,SS_PIN);
-
-
-
-    // start the open test
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0x2B);  // write function reg
-    SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
-    SPI_MasterTransmit(0b10000001); //start open test. The 1 at the end is the OSDD (open short detection duty). At 63 and 3 I get bad results for leds B1 through P3. At 1 I get the results I expect.
-    HIGH(PORTB,SS_PIN);
-
-    while(true)
-    {
-        // check the test is started
-        LOW(PORTB,SS_PIN);
-        SPI_MasterTransmit(0xAB);  // read function reg
-        SPI_MasterTransmit(0x11);  // reg 10 - open and short detection start
-        SPI_MasterTransmit(0x00);  // check status
-        HIGH(PORTB,SS_PIN);
-
-        if(SPDR == 0x80)
-            break;
-        else
-            // wait for the test to finish
-            _delay_ms(1);
-    }
-    //////////// debug pin!!!!!!!!!!!!
-    HIGH(PORTA,1); // debug pin HIGH
-    /* test for sigrok logic analyser
-    unsigned int i = 0;
-    while(i < 65535)
-    {
-        SPI_MasterTransmit(i >> 8);  // start at first address
-        SPI_MasterTransmit((uint8_t)(i & 0x00FF));  // start at first address
-        i++;
-        HIGH(PORTA,1); // debug pin HIGH
-        _delay_us(50);
-        LOW(PORTA,1); // debug pin HIGH
-        _delay_us(50);
-    }
-    */
-
-    // now read all the registers
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xAC);  // read 0xC
+    SPI_MasterTransmit(0xA0 + SPI_FRAME_DETECTION_PAGE);
     SPI_MasterTransmit(0x00);  // start at first address
     for(int i=0x0; i<0x20; i++)
     {
-        // auto inc addresses
         SPI_MasterTransmit(0x00);  // dummy byte
         led_open_status[i] = SPDR;
-
     }
     HIGH(PORTB,SS_PIN);
 
-    //////////// debug pin!!!!!!!!!!!!
-    LOW(PORTA,1); // debug pin LOW
+    // start short circuit test, set results to 0 again
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG, mskSHORT_DETECT_START + osdd);
 
-
-    // start the short test
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0x2B);  // write function reg
-    SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
-    SPI_MasterTransmit(0b01000011); //start short test
-    HIGH(PORTB,SS_PIN);
-
-
-    while(true)
-    {
-        // check the test is started
-        LOW(PORTB,SS_PIN);
-        SPI_MasterTransmit(0xAB);  // read function reg
-        SPI_MasterTransmit(0x11);  // reg 10 - open and short detection start
-        SPI_MasterTransmit(0x00);  // check status
-        HIGH(PORTB,SS_PIN);
-
-        // 0x11 should be 0xC0 (as previous test has finished and we didn't reset it
-        if(SPDR == 0xC0)
-            break;
-        else
-            // wait for the test to finish
-            _delay_ms(1);
-    }
-
+    // wait for test to run
+    while(SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2) != mskSHORT_DETECT_INT)
+        _delay_ms(1);
 
     // read the short registers
     LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xAC);  // read 0xC
+    SPI_MasterTransmit(0xA0 + SPI_FRAME_DETECTION_PAGE);
     SPI_MasterTransmit(0x20);  // start at first address
     for(int i=0x0; i<0x20; i++)
     {
-        // auto inc addresses
         SPI_MasterTransmit(0x00);  // dummy byte
         led_short_status[i] = SPDR;
-
     }
     HIGH(PORTB,SS_PIN);
 
-    // have to read this register again, otherwise sled never responds again
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xAB);  // read function reg
-    SPI_MasterTransmit(0x10);  // reg 10 - open and short detection start
-    SPI_MasterTransmit(0x00);  // check status
-    HIGH(PORTB,SS_PIN);
+    // this shouldn't be necessary, but otherwise chip never responds again
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
 }
 
 // state machine variables
