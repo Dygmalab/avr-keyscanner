@@ -23,7 +23,12 @@ easily receive values from I2C buf and copy to led_buffer
 #include "main.h"
 #include "map.h"
 
-
+// functionality
+#define CONST_CURR
+#define SPI_INTS
+#define SELF_TEST
+#define VAF
+#define INIT_PWM 0x00
 
 #define LED_DATA_SIZE 3
 #define NUM_LEDS_PER_BANK 8
@@ -47,6 +52,12 @@ typedef union {
     uint8_t bank[NUM_LED_BANKS][LED_BANK_SIZE];
 } led_buffer_t ;
 
+// state machine variables for SPI update of sled1735 LED buffer
+uint8_t volatile led_num = 0;
+uint8_t volatile led_frame = 0;
+uint8_t volatile led_pos = 0;
+static volatile enum { BANK, REG, DATA, END } led_state;
+
 
 #define LED1 0, 0, 0
 #define LED4 LED1, LED1, LED1, LED1
@@ -58,17 +69,9 @@ typedef union {
 
 led_buffer_t led_buffer = { LED64, LED8 };
 
-#define CHECK_ID
-#define CONST_CURR
-#define SPI_INTS
-#define SELF_TEST
-#define VAF
-#define INIT_PWM 0x00
-
 #ifdef VAF
-// k2 and i4 are lit red when off
-// k2 is leds c4-k, c5-k, c6-k
-const uint8_t tabLED_Type3Vaf[64] = { //Reference SLED1735 Datasheet Type3 Circuit Map
+//Reference SLED1735 Datasheet Type3 Circuit Map
+const uint8_t tabLED_Type3Vaf[64] = { 
   //Frame  1
   //DCBA  HGFE  LKJI  PONM
     0x50, 0x55, 0x55, 0x55, //C1-A ~ C1-P
@@ -95,8 +98,9 @@ const uint8_t tabLED_Type3Vaf[64] = { //Reference SLED1735 Datasheet Type3 Circu
 };
 #endif
 
+// pin defs
 #define SHUTDOWN_PIN 6 //shutdown when low
-#define SS_PIN 7
+#define SS_PIN 2
 #define DDR_SPI DDRB
 #define DD_MOSI 3
 #define DD_SCK 5
@@ -127,6 +131,10 @@ void SPI_MasterTransmit(char cData)
     while(!(SPSR & (1<<SPIF)));
 }
 
+// when writing to sled1735:
+// 1st byte split into: 4bits is 0xA read, 0x2 write
+//                      4bits is the page
+// 2nd byte is the register to write/read
 void SPI_W_3BYTE(uint8_t page, uint8_t reg, uint8_t data)
 {
     LOW(PORTB,SS_PIN);
@@ -146,20 +154,24 @@ uint8_t SPI_R_3BYTE(uint8_t page, uint8_t reg)
     return SPDR;
 }
 
-void led_update_bank(uint8_t *buf, const uint8_t bank) {
+void led_update_bank(uint8_t *buf, const uint8_t bank) 
+{
 
     memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
 }
 
-void led_set_one_to(uint8_t led, uint8_t *buf) {
+void led_set_one_to(uint8_t led, uint8_t *buf) 
+{
     //overflow possible here
     memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
 }
 
-void led_set_all_to( uint8_t *buf) {
-    for(uint8_t led=0; led <NUM_LEDS; led++) {
+void led_set_all_to( uint8_t *buf) 
+{
+    for(uint8_t led=0; led <NUM_LEDS; led++) 
+    {
         memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
-        }
+    }
 }
 
 
@@ -167,20 +179,16 @@ void setup_spi()
 {
     SPI_MasterInit(); 
 
-    // 1st 4bits is: 0xA read, 0x2 write
-    // 2nd 4bits is: 0x0 frame1, 0x1 frame2, 0xB function, 0xC detect, 0xD led Vaf
-    // eg 0x20 - write to frame1
-
-    // shutdown
+    // shutdown - chip must be shutdown to do a lot of the setup
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
 
-    // get the chip's ID
+    // get the chip's ID - this is fetchable over I2C interface
     sled1735_status = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CHIP_ID_REG);
 
     // enable picture mode, disable ADC
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CONFIGURATION_REG, 0x00);           
 
-    // matrix type 3
+    // matrix type 3 - 70 RGB common anode
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, PICTURE_DISPLAY_REG, mskMATRIX_TYPE_TYPE3);           
 
     /* these from the demo code, haven't tested them
@@ -190,12 +198,13 @@ void setup_spi()
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SLEW_RATE_CTL_REG, mskSLEW_RATE_CTL_EN);
     */
     
+    // vaf fixes dim red LEDs that should be off
     #ifdef VAF
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG, (mskVAF2|mskVAF1));
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG2, (mskFORCEVAFCTL_VAFTIMECTL|(mskFORCEVAFTIME_CONST & 0x01)|mskVAF3));
 
     // vaf is set to vaf2 by default
-    // this part doesn't seem to make any difference
+    // this part doesn't seem to make any visible difference, only visible on the scope
     LOW(PORTB,SS_PIN);
     SPI_MasterTransmit(0x20 + SPI_FRAME_LED_VAF_PAGE); 
     SPI_MasterTransmit(TYPE3_VAF_FRAME_FIRST_ADDR); 
@@ -207,7 +216,6 @@ void setup_spi()
     #ifdef CONST_CURR
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG, mskCURRENT_CTL_EN | CONST_CURRENT_STEP_40mA);           
     #endif
-
 
     #ifdef INIT_PWM
     // initialise pwm to our default value
@@ -230,17 +238,18 @@ void setup_spi()
     
 
     #ifdef SELF_TEST
-    read_led_open_reg();
+    // run the self test to get list of opens and shorts - use this after assembly to aid in checking leds
+    self_test();
     #endif
 
     #ifdef SPI_INTS
+    // turn on spi interrupts to start automatic update of sled1735's led ram.
     SPCR |= (1<<SPIE);
     sei();
     #endif
 }
 
-
-void read_led_open_reg()
+void self_test()
 {
     // make sure test results are off to start with
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
@@ -289,13 +298,8 @@ void read_led_open_reg()
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
 }
 
-// state machine variables
-uint8_t volatile led_num = 0;
-uint8_t volatile led_frame = 0;
-uint8_t volatile led_pos = 0;
-static volatile enum { BANK, REG, DATA, END } led_state;
 
-/* Each time a byte finishes transmitting, queue the next one */
+// continuously transmit the contents of the led_buffer
 ISR(SPI_STC_vect) {
     switch(led_state) {
     case BANK:
