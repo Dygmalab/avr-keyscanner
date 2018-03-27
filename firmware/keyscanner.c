@@ -40,9 +40,9 @@ void keyscanner_main(void) {
 	 // Toggle the output we want to check
          ACTIVATE_OUTPUT_PIN(output_pin);
 
-        /* We need a no-op for synchronization. 
-	 * So says the datasheet in Section 10.2.5 */
-        asm("nop");
+        /* We need a no-op for synchronization. So says the datasheet
+         * in Section 10.2.5 */
+        asm volatile("nop\n\t");
 
         // Read pin data
         pin_data = PIN_INPUT;
