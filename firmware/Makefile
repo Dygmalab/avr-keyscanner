@@ -48,7 +48,7 @@ GCC_PATH ?= avr-gcc
 # Tune the lines below only if you know what you are doing:
 
 # Optimize for many things (including perf)
-OPTIMIZATION = -O2
+OPTIMIZATION = -O3
 
 # Optimize, but focus on keeping code size small
 #OPTIMIZATION = -Os
