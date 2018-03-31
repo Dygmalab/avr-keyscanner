@@ -26,8 +26,6 @@ void keyscanner_init(void) {
     DDR_ROWS &= ~ROW_PINMASK;
     PORT_ROWS &= ~ROW_PINMASK;
 
-    LOW(DDRC,_BV(0));
-    LOW(PORTC,_BV(0));
     // Read from cols -- We use all 8 bits of cols
     DDR_COLS  = 0xFF;
     // Turn on the Pullups
@@ -97,11 +95,6 @@ void keyscanner_main(void) {
      uint8_t rows2[8]={0,0,0,0,0,0,0,0};
   for(int i=0; i<8; ++i){
     for(int j=0; j<8; ++j){
-
-	// counter clockwise
-      // rows2[i] = (  ( (db[j].state & (1 << i ) ) >> i ) << (7-j) ) | rows2[i];
-      //
-      // clockwise
       rows2[i] = (  ( (db[j].state & (1 << (7-i) ) ) >> (7-i) ) << j ) | rows2[i];
 
     }
@@ -114,11 +107,6 @@ void keyscanner_main(void) {
             ringbuf_append( rows2[6] );
             ringbuf_append( rows2[5] );
             ringbuf_append( rows2[4] );
-
-//        ringbuf_append( db[0].state ^ 0xff );
- //       ringbuf_append( db[1].state ^ 0xff );
-  //      ringbuf_append( db[2].state ^ 0xff );
-   //     ringbuf_append( db[3].state ^ 0xff );
     });
 }
 
