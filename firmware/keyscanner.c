@@ -52,6 +52,7 @@ void keyscanner_main(void) {
     if (__builtin_expect(do_scan == 0, 1)) {
         return;
     }
+    do_scan = 0;
 
     // For each enabled row...
     for (uint8_t col = 0; col < 8; ++col) {
@@ -62,15 +63,15 @@ void keyscanner_main(void) {
          * in Section 10.2.5 */
         asm("nop");
         pin_data = PIN_ROWS;
+        LOW(PORT_COLS,col);
 
 	// Drive the rows low to try to clear them;
 	DDR_ROWS |= ROW_PINMASK;
-	PORT_ROWS &= ~ROW_PINMASK;
-        LOW(PORT_COLS,col);
+	//PORT_ROWS &= ~ROW_PINMASK;
         // Debounce key state
         debounced_changes += debounce((pin_data) , db + col);
-    DDR_ROWS &= ~ROW_PINMASK;
-    PORT_ROWS &= ~ROW_PINMASK;
+    	DDR_ROWS &= ~ROW_PINMASK;
+    	//PORT_ROWS &= ~ROW_PINMASK;
     }
 
     // Most of the time there will be no new key events
@@ -78,11 +79,6 @@ void keyscanner_main(void) {
         // Only run the debouncing delay when we haven't successfully found
         // a debounced event
 
-        // XXX TODO make sure this isn't crazy. could this 
-        // cause us to do reads too fast and mis-debounce
-        // some secondary key while we successfully debounce a
-        // first key.
-        do_scan = 0;
         return;
     }
 
