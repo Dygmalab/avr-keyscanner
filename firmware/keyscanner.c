@@ -65,11 +65,18 @@ void keyscanner_main(void) {
         pin_data = PIN_ROWS;
         LOW(PORT_COLS,col);
 
-	// Drive the rows low to try to clear them;
+
+	// We don't have pull-down pins. Because of this, current can pretty easily leak across 
+	// an entire column after a scan.
+	// To pull the pins down, we flip them to outputs. By default, an output pin is driven low
+	// so we don't need to explicitly drive it low.
 	DDR_ROWS |= ROW_PINMASK;
 	//PORT_ROWS &= ~ROW_PINMASK;
         // Debounce key state
         debounced_changes += debounce((pin_data) , db + col);
+
+	// The rows are inputs, set them back to input mode so we can read them 
+	// on the next go round. By default, pullups are off, which is good because we want them off.
     	DDR_ROWS &= ~ROW_PINMASK;
     	//PORT_ROWS &= ~ROW_PINMASK;
     }
