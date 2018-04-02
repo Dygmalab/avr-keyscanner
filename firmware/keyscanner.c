@@ -22,13 +22,15 @@ volatile uint8_t do_scan = 1;
 
 void keyscanner_init(void) {
 
-    // Write to rows - we only use some of the pins in the row port
+    // Read from rows - we only use some of the pins in the row port
     DDR_ROWS &= ~ROW_PINMASK;
+
+    // Because we're reading high values, we don't want to turn on pull-ups
     PORT_ROWS &= ~ROW_PINMASK;
 
-    // Read from cols -- We use all 8 bits of cols
+    // Write to cols -- We use all 8 bits of cols
     DDR_COLS  = 0xFF;
-    // Turn on the Pullups
+    // Start the columns all at low values
     PORT_COLS = 0x00;
 
     // Assert comm_en so we can use the interhand transcievers
@@ -59,10 +61,14 @@ void keyscanner_main(void) {
         // Reset all of our row pins, then
         // set the one we want to read as low
         HIGH(PORT_COLS, col);
+
+
         /* We need a no-op for synchronization. So says the datasheet
          * in Section 10.2.5 */
         asm("nop");
+
         pin_data = PIN_ROWS;
+
         LOW(PORT_COLS,col);
 
 
