@@ -88,10 +88,10 @@ void keyscanner_main(void) {
     // four bytes representing a single keyboard state.
     //
     //
-     uint8_t rows2[8]={0,0,0,0,0,0,0,0};
+     uint8_t scan_data_as_rows[8]={0,0,0,0,0,0,0,0};
   for(int i=0; i<8; ++i){
     for(int j=0; j<8; ++j){
-      rows2[i] = (  ( (db[j].state & (1 << (7-i) ) ) >> (7-i) ) << j ) | rows2[i];
+      scan_data_as_rows[i] = (  ( (db[j].state & (1 << (7-i) ) ) >> (7-i) ) << j ) | scan_data_as_rows[i];
 
     }
   }
@@ -99,10 +99,10 @@ void keyscanner_main(void) {
 
 
     DISABLE_INTERRUPTS({
-            ringbuf_append( rows2[7] );
-            ringbuf_append( rows2[6] );
-            ringbuf_append( rows2[5] );
-            ringbuf_append( rows2[4] );
+            ringbuf_append( scan_data_as_rows[7] );
+            ringbuf_append( scan_data_as_rows[6] );
+            ringbuf_append( scan_data_as_rows[5] );
+            ringbuf_append( scan_data_as_rows[4] );
     });
 }
 
