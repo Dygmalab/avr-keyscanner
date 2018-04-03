@@ -42,6 +42,19 @@
 #define OUTPUT_PINMASK COL_PINMASK
 #define OUTPUT_COUNT COL_COUNT
 
+// Set data direction as output on the output pins
+// Default to all output pins low
+
+#define CONFIGURE_OUTPUT_PINS \
+    PINS_HIGH(DDR_OUTPUT, OUTPUT_PINMASK); \
+    PINS_LOW(PORT_OUTPUT, OUTPUT_PINMASK);
+
+// Set the data direction for our inputs to be "input"
+// Because we're reading high values, we don't want to turn on pull-ups
+#define CONFIGURE_INPUT_PINS \
+    PINS_LOW(DDR_INPUT, INPUT_PINMASK); \
+    PINS_LOW(PORT_INPUT, INPUT_PINMASK);
+
 #else
 
 //Signal port (rows)

@@ -13,17 +13,10 @@ volatile uint8_t do_scan = 1;
 
 void keyscanner_init(void) {
 
-    // Set data direction as output on the output pins
-    PINS_HIGH(DDR_OUTPUT, OUTPUT_PINMASK);
+    CONFIGURE_OUTPUT_PINS;
+    
+    CONFIGURE_INPUT_PINS;
 
-    // Default to all output pins low
-    PINS_LOW(PORT_OUTPUT, OUTPUT_PINMASK);
-
-    // Set the data direction for our inputs to be "input"
-    PINS_LOW(DDR_INPUT, INPUT_PINMASK);
-
-    // Because we're reading high values, we don't want to turn on pull-ups
-    PINS_LOW(PORT_INPUT, INPUT_PINMASK);
 
     debouncer_init(db, OUTPUT_COUNT);
     keyscanner_timer1_init();
