@@ -87,15 +87,12 @@ void keyscanner_main(void) {
     // four bytes representing a single keyboard state.
     //
     //
-     uint8_t scan_data_as_rows[8]={0,0,0,0,0,0,0,0};
-  for(int i=0; i<8; ++i){
-    for(int j=0; j<8; ++j){
-      scan_data_as_rows[i] = (  ( (db[j].state & (1 << (7-i) ) ) >> (7-i) ) << j ) | scan_data_as_rows[i];
-
+     uint8_t scan_data_as_rows[OUTPUT_COUNT]={0,0,0,0,0,0,0,0};
+     for(int i=0; i<OUTPUT_COUNT; ++i){
+    	for(int j=0; j<OUTPUT_COUNT; ++j){
+      		scan_data_as_rows[i] = (  ( (db[j].state & (1 << (7-i) ) ) >> (7-i) ) << j ) | scan_data_as_rows[i];
+    	}
     }
-  }
-
-
 
     DISABLE_INTERRUPTS({
             ringbuf_append( scan_data_as_rows[7] );
