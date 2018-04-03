@@ -28,6 +28,7 @@
 
 //#define DEBOUNCER "debounce-integrator.h"
 #define DEBOUNCER "debounce-counter.h"
+//#define DEBOUNCER "debounce-none.h"
 
 
 
