@@ -6,12 +6,19 @@
 #include "ringbuf.h"
 #include "keyscanner.h"
 
-debounce_t db[OUTPUT_COUNT] = { };
+debounce_t db[OUTPUT_COUNT];
 
 // do_scan gets set any time we should actually do a scan
 volatile uint8_t do_scan = 1;
 
 void keyscanner_init(void) {
+
+    // Write to cols -- We use all 8 bits of cols
+    DDR_OUTPUT  = 0xFF;
+
+    // Start the columns all at low values
+    PORT_OUTPUT = 0x00;
+
 
     // Read from rows - we only use some of the pins in the row port
     DDR_INPUT &= ~INPUT_PINMASK;
@@ -19,10 +26,6 @@ void keyscanner_init(void) {
     // Because we're reading high values, we don't want to turn on pull-ups
     PORT_INPUT &= ~INPUT_PINMASK;
 
-    // Write to cols -- We use all 8 bits of cols
-    DDR_OUTPUT  = 0xFF;
-    // Start the columns all at low values
-    PORT_OUTPUT = 0x00;
 
     debouncer_init(db, OUTPUT_COUNT);
     keyscanner_timer1_init();
@@ -36,6 +39,7 @@ void keyscanner_main(void) {
     if (__builtin_expect(do_scan == 0, 1)) {
         return;
     }
+
     do_scan = 0;
 
     // For each enabled row...
@@ -48,6 +52,7 @@ void keyscanner_main(void) {
 	 * So says the datasheet in Section 10.2.5 */
         asm("nop");
 
+        // Read pin data
         pin_data = PIN_INPUT;
 
         LOW(PORT_OUTPUT,output_pin);
@@ -67,12 +72,12 @@ void keyscanner_main(void) {
     }
 
     // Most of the time there will be no new key events
-    if (__builtin_expect(debounced_changes != 0 , 0)) {
+    if (__builtin_expect(debounced_changes != 0, 0)) {
     	keyscanner_record_state();
     }
 }
 
- inline void keyscanner_record_state (void) {
+inline void keyscanner_record_state (void) {
 
     // The wire protocol expects data to be four rows of data, rather than 8 cols
     // of data. So we rotate it to match the original outputs
