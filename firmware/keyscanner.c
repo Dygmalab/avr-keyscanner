@@ -81,12 +81,9 @@ void keyscanner_main(void) {
 
  inline void keyscanner_record_state (void) {
 
-    // Snapshot the keystate to add to the ring buffer
-    // Run this with interrupts off to make sure that
-    // when we read from the ringbuffer, we always get 
-    // four bytes representing a single keyboard state.
     //
-    //
+    // The wire protocol expects data to be four rows of data, rather than 8 cols
+    // of data. So we rotate it to match the original outputs
      uint8_t scan_data_as_rows[OUTPUT_COUNT]={0,0,0,0,0,0,0,0};
      for(int i=0; i<OUTPUT_COUNT; ++i){
     	for(int j=0; j<OUTPUT_COUNT; ++j){
@@ -94,6 +91,10 @@ void keyscanner_main(void) {
     	}
     }
 
+    // Snapshot the keystate to add to the ring buffer
+    // Run this with interrupts off to make sure that
+    // when we read from the ringbuffer, we always get 
+    // four bytes representing a single keyboard state.
     DISABLE_INTERRUPTS({
             ringbuf_append( scan_data_as_rows[7] );
             ringbuf_append( scan_data_as_rows[6] );
