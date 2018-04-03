@@ -13,11 +13,11 @@ volatile uint8_t do_scan = 1;
 
 void keyscanner_init(void) {
 
-    // Write to cols -- We use all 8 bits of cols
-    DDR_OUTPUT  = 0xFF;
+    // Set data direction as output on the output pins
+    DDR_OUTPUT |= OUTPUT_PINMASK;
 
-    // Start the columns all at low values
-    PORT_OUTPUT = 0x00;
+    // Default to all output pins low
+    PORT_OUTPUT &= ~OUTPUT_PINMASK;
 
 
     // Read from rows - we only use some of the pins in the row port
