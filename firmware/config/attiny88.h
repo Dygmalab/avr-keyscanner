@@ -71,6 +71,21 @@
 #define INPUT_PINMASK COL_PINMASK
 #define INPUT_COUNT COL_COUNT
 
+
+
+// Set data direction as output on the output pins
+// Default to all output pins high
+#define CONFIGURE_OUTPUT_PINS \
+    PINS_HIGH(DDR_OUTPUT, OUTPUT_PINMASK); \
+    PINS_HIGH(PORT_OUTPUT, OUTPUT_PINMASK);
+
+// Set the data direction for our inputs to be "input"
+// Turn on the pullups on the inputs
+#define CONFIGURE_INPUT_PINS \
+    PINS_LOW(DDR_INPUT, INPUT_PINMASK); \
+    PINS_HIGH(PORT_INPUT, INPUT_PINMASK);
+
+
 #endif
 
 

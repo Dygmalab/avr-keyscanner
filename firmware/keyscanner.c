@@ -14,9 +14,8 @@ volatile uint8_t do_scan = 1;
 void keyscanner_init(void) {
 
     CONFIGURE_OUTPUT_PINS;
-    
-    CONFIGURE_INPUT_PINS;
 
+    CONFIGURE_INPUT_PINS;
 
     debouncer_init(db, OUTPUT_COUNT);
     keyscanner_timer1_init();
