@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "main.h"
 
 void ringbuf_append(uint8_t value);
 bool ringbuf_empty(void);

@@ -26,7 +26,7 @@ void keyscanner_main(void) {
     uint8_t debounced_changes = 0;
     uint8_t pin_data;
 
-    if (__builtin_expect(do_scan == 0, 1)) {
+    if (__builtin_expect(do_scan == 0, EXPECT_TRUE)) {
         return;
     }
 
@@ -58,7 +58,7 @@ void keyscanner_main(void) {
     }
 
     // Most of the time there will be no new key events
-    if (__builtin_expect(debounced_changes != 0, 0)) {
+    if (__builtin_expect(debounced_changes != 0, EXPECT_FALSE)) {
     	RECORD_KEY_STATE;
     }
 }

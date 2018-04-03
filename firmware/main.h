@@ -21,6 +21,10 @@
 #define PINS_HIGH(sfr, bitmask) ( _SFR_BYTE(sfr) |= bitmask)
 #define PINS_LOW(sfr, bitmask) ( _SFR_BYTE(sfr) &= ~bitmask)
 
+#define EXPECT_FALSE 0
+#define EXPECT_TRUE 1
+
+
 #define DISABLE_INTERRUPTS(code) do{ \
     cli(); \
     { \

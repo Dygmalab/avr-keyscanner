@@ -30,7 +30,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     // if the upper four bits of the byte say this is an LED cmd
     // this is the most common case. It's also the only case where
     // we can't just compare buf[0] to a static value
-    if (__builtin_expect( ((buf[0] & 0xf0) == TWI_CMD_LED_BASE),1))  {
+    if (__builtin_expect( ((buf[0] & 0xf0) == TWI_CMD_LED_BASE),EXPECT_TRUE))  {
         led_update_bank(&buf[1], buf[0] & 0x0f); // the lowest four bits are the bank #
         return;
     }
@@ -80,7 +80,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 uint8_t key_substate;
 
 void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
-    if (__builtin_expect(*bufsiz != 0, 1)) {
+    if (__builtin_expect(*bufsiz != 0, EXPECT_TRUE)) {
         switch (twi_command) {
         case TWI_CMD_NONE:
             // Keyscanner Status Register
