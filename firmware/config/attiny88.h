@@ -9,30 +9,29 @@
  *
  */
 
-// ROWS: Signal port (rows)
+// ROWS
 #define PORT_ROWS PORTC
 #define DDR_ROWS DDRC
 #define PIN_ROWS PINC
-
 #define ROW_PINMASK  (_BV(0)|_BV(1)|_BV(2)|_BV(3))
-
 #define ROW_COUNT 4
 
-// COLS: Scanning port (cols)
+// COLS
 #define PORT_COLS PORTD
 #define DDR_COLS DDRD
 #define PIN_COLS PIND
-
-#define COL_PINMASK  0xFF
+#define COL_PINMASK  (_BV(0)|_BV(1)|_BV(2)|_BV(3)|_BV(4)|_BV(5)|_BV(6)|_BV(7))
 #define COL_COUNT 8
 
 
+//Scanning port (rows)
 #define PORT_INPUT PORT_ROWS
 #define DDR_INPUT DDR_ROWS
 #define PIN_INPUT PIN_ROWS
 #define INPUT_PINMASK ROW_PINMASK
 #define INPUT_COUNT ROW_COUNT
 
+//Signal port (cols)
 #define PORT_OUTPUT PORT_COLS
 #define DDR_OUTPUT DDR_COLS
 #define PIN_OUTPUT PIN_COLS
