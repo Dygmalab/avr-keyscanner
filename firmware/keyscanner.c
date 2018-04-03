@@ -6,16 +6,7 @@
 #include "ringbuf.h"
 #include "keyscanner.h"
 
-debounce_t db[] = {
-    {0x00, 0x00, 0xFF},
-    {0x00, 0x00, 0xFF},
-    {0x00, 0x00, 0xFF},
-    {0x00, 0x00, 0xFF},
-    {0x00, 0x00, 0xFF},
-    {0x00, 0x00, 0xFF},
-    {0x00, 0x00, 0xFF},
-    {0x00, 0x00, 0xFF}
-};
+debounce_t db[OUTPUT_COUNT] = { };
 
 // do_scan gets set any time we should actually do a scan
 volatile uint8_t do_scan = 1;
@@ -43,6 +34,7 @@ void keyscanner_init(void) {
     HIGH(PORTC,7);
     SET_OUTPUT(DDRC,7);
 
+    debouncer_init(db, OUTPUT_COUNT);
     keyscanner_timer1_init();
 }
 
