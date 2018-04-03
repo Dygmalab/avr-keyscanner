@@ -42,9 +42,8 @@ void keyscanner_main(void) {
 
     // For each enabled row...
     for (uint8_t output_pin = 0; output_pin < OUTPUT_COUNT; ++output_pin) {
-        // Set the output we want to read as high
-        HIGH(PORT_OUTPUT, output_pin);
-
+	 // Toggle the output we want to check
+         HIGH(PORT_OUTPUT, output_pin);
 
         /* We need a no-op for synchronization. 
 	 * So says the datasheet in Section 10.2.5 */
@@ -53,6 +52,7 @@ void keyscanner_main(void) {
         // Read pin data
         pin_data = PIN_INPUT;
 
+        // Toggle the output we want to read back off
         LOW(PORT_OUTPUT,output_pin);
 
 	// We don't have pull-down pins. Because of this, current can pretty easily leak across 
@@ -76,7 +76,6 @@ void keyscanner_main(void) {
 }
 
 inline void keyscanner_record_state (void) {
-
     // The wire protocol expects data to be four rows of data, rather than 8 cols
     // of data. So we rotate it to match the original outputs
      uint8_t scan_data_as_rows[OUTPUT_COUNT]={0,0,0,0,0,0,0,0};
