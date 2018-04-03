@@ -14,18 +14,16 @@ volatile uint8_t do_scan = 1;
 void keyscanner_init(void) {
 
     // Set data direction as output on the output pins
-    DDR_OUTPUT |= OUTPUT_PINMASK;
+    PINS_HIGH(DDR_OUTPUT, OUTPUT_PINMASK);
 
     // Default to all output pins low
-    PORT_OUTPUT &= ~OUTPUT_PINMASK;
+    PINS_LOW(PORT_OUTPUT, OUTPUT_PINMASK);
 
-
-    // Read from rows - we only use some of the pins in the row port
-    DDR_INPUT &= ~INPUT_PINMASK;
+    // Set the data direction for our inputs to be "input"
+    PINS_LOW(DDR_INPUT, INPUT_PINMASK);
 
     // Because we're reading high values, we don't want to turn on pull-ups
-    PORT_INPUT &= ~INPUT_PINMASK;
-
+    PINS_LOW(PORT_INPUT, INPUT_PINMASK);
 
     debouncer_init(db, OUTPUT_COUNT);
     keyscanner_timer1_init();
@@ -61,14 +59,14 @@ void keyscanner_main(void) {
 	// an entire column after a scan.
 	// To pull the pins down, we flip them to outputs. By default, an output pin is driven low
 	// so we don't need to explicitly drive it low.
-	DDR_INPUT |= INPUT_PINMASK;
+	PINS_HIGH(DDR_INPUT, INPUT_PINMASK);
 
         // Debounce key state
         debounced_changes += debounce((pin_data) , db + output_pin);
 
 	// The rows are inputs, set them back to input mode so we can read them 
 	// on the next go round. By default, pullups are off, which is good because we want them off.
-    	DDR_INPUT &= ~INPUT_PINMASK;
+    	PINS_LOW(DDR_INPUT, INPUT_PINMASK);
     }
 
     // Most of the time there will be no new key events
