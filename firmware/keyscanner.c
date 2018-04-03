@@ -34,6 +34,11 @@ void keyscanner_main(void) {
 
     // For each enabled row...
     for (uint8_t output_pin = 0; output_pin < OUTPUT_COUNT; ++output_pin) {
+	// The rows are inputs, set them back to input mode so we can read them 
+	// on the next go round. By default, pullups are off, which is good because we want them off.
+    	PINS_LOW(DDR_INPUT, INPUT_PINMASK);
+
+
 	 // Toggle the output we want to check
          ACTIVATE_OUTPUT_PIN(output_pin);
 
@@ -56,9 +61,6 @@ void keyscanner_main(void) {
         // Debounce key state
         debounced_changes += debounce((pin_data) , db + output_pin);
 
-	// The rows are inputs, set them back to input mode so we can read them 
-	// on the next go round. By default, pullups are off, which is good because we want them off.
-    	PINS_LOW(DDR_INPUT, INPUT_PINMASK);
     }
 
     // Most of the time there will be no new key events
