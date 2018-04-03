@@ -76,6 +76,11 @@ void keyscanner_main(void) {
         return;
     }
 
+    keyscanner_record_state();
+}
+
+ inline void keyscanner_record_state (void) {
+
     // Snapshot the keystate to add to the ring buffer
     // Run this with interrupts off to make sure that
     // when we read from the ringbuffer, we always get 
