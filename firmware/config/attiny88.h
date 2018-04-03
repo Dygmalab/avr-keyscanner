@@ -26,5 +26,19 @@
 #define COL_PINMASK  0xFF
 #define COL_COUNT 8
 
+
+#define PORT_INPUT PORT_ROWS
+#define DDR_INPUT DDR_ROWS
+#define PIN_INPUT PIN_ROWS
+#define INPUT_PINMASK ROW_PINMASK
+#define INPUT_COUNT ROW_COUNT
+
+#define PORT_OUTPUT PORT_COLS
+#define DDR_OUTPUT DDR_COLS
+#define PIN_OUTPUT PIN_COLS
+#define OUTPUT_PINMASK COL_PINMASK
+#define OUTPUT_COUNT COL_COUNT
+
+
 // AD01: lower two bits of device address
 #define AD01() ((PINB & _BV(0)) |( PINB & _BV(1)))
