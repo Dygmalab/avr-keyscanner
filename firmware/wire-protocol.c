@@ -10,6 +10,12 @@ uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
 
 void twi_init(void) {
 
+    // Assert comm_en so we can use the interhand transcievers
+    // (Until comm_en on the i2c transcievers is pulled high,
+    //  they're disabled)
+    HIGH(PORTC,7);
+    SET_OUTPUT(DDRC,7);
+
     TWI_Rx_Data_Callback = twi_data_received;
     TWI_Tx_Data_Callback = twi_data_requested;
 

@@ -24,16 +24,6 @@ void keyscanner_init(void) {
     // Start the columns all at low values
     PORT_COLS = 0x00;
 
-    // Assert comm_en so we can use the interhand transcievers
-    // (Until comm_en on the i2c transcievers is pulled high,
-    //  they're disabled)
-
-    // PC7 is on the same port as the four row pins.
-    // We refer to it here as PORTC because
-    // we're not using it as part of the keyscanner
-    HIGH(PORTC,7);
-    SET_OUTPUT(DDRC,7);
-
     debouncer_init(db, OUTPUT_COUNT);
     keyscanner_timer1_init();
 }
