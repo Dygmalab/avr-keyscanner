@@ -35,7 +35,7 @@ void keyscanner_main(void) {
     // For each enabled row...
     for (uint8_t output_pin = 0; output_pin < OUTPUT_COUNT; ++output_pin) {
 	 // Toggle the output we want to check
-         HIGH(PORT_OUTPUT, output_pin);
+         ACTIVATE_OUTPUT_PIN(output_pin);
 
         /* We need a no-op for synchronization. 
 	 * So says the datasheet in Section 10.2.5 */
@@ -45,7 +45,7 @@ void keyscanner_main(void) {
         pin_data = PIN_INPUT;
 
         // Toggle the output we want to read back off
-        LOW(PORT_OUTPUT,output_pin);
+        DEACTIVATE_OUTPUT_PIN(output_pin);
 
 	// We don't have pull-down pins. Because of this, current can pretty easily leak across 
 	// an entire column after a scan.

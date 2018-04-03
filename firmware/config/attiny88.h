@@ -55,6 +55,9 @@
     PINS_LOW(DDR_INPUT, INPUT_PINMASK); \
     PINS_LOW(PORT_INPUT, INPUT_PINMASK);
 
+#define ACTIVATE_OUTPUT_PIN(output_pin) HIGH(PORT_OUTPUT, output_pin);
+#define DEACTIVATE_OUTPUT_PIN(output_pin) LOW(PORT_OUTPUT, output_pin);
+
 #else
 
 //Signal port (rows)
@@ -85,8 +88,13 @@
     PINS_LOW(DDR_INPUT, INPUT_PINMASK); \
     PINS_HIGH(PORT_INPUT, INPUT_PINMASK);
 
+#define ACTIVATE_OUTPUT_PIN(output_pin) LOW(PORT_OUTPUT, output_pin);
+#define DEACTIVATE_OUTPUT_PIN(output_pin) HIGH(PORT_OUTPUT, output_pin);
 
 #endif
+
+
+
 
 
 // AD01: lower two bits of device address
