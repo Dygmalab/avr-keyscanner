@@ -26,6 +26,11 @@
 #define COL_COUNT 8
 
 
+//#define DEBOUNCER "debounce-integrator.h"
+#define DEBOUNCER "debounce-counter.h"
+
+
+
 #ifdef COLS_ARE_OUTPUTS
 
 //Scanning port (rows)

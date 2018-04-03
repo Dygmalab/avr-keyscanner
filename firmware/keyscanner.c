@@ -1,8 +1,8 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
-#include "debounce.h"
-#include "wire-protocol.h"
 #include "main.h"
+#include DEBOUNCER
+#include "wire-protocol.h"
 #include "ringbuf.h"
 #include "keyscanner.h"
 
