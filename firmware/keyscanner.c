@@ -59,11 +59,11 @@ void keyscanner_main(void) {
 
     // Most of the time there will be no new key events
     if (__builtin_expect(debounced_changes != 0, 0)) {
-    	keyscanner_record_state();
+    	RECORD_KEY_STATE;
     }
 }
 
-inline void keyscanner_record_state (void) {
+inline void keyscanner_record_state_rotate_ccw (void) {
     // The wire protocol expects data to be four rows of data, rather than 8 cols
     // of data. So we rotate it to match the original outputs
      uint8_t scan_data_as_rows[OUTPUT_COUNT]={0,0,0,0,0,0,0,0};
@@ -73,6 +73,10 @@ inline void keyscanner_record_state (void) {
     	}
     }
     keyscanner_ringbuf_update( scan_data_as_rows[7], scan_data_as_rows[6], scan_data_as_rows[5], scan_data_as_rows[4]);
+}
+
+inline void keyscanner_record_state (void) {
+    keyscanner_ringbuf_update( db[0].state, db[1].state, db[2].state, db[3].state );
 }
 
 inline void keyscanner_ringbuf_update(uint8_t row1, uint8_t row2, uint8_t row3, uint8_t row4) {

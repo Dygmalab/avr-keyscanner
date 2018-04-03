@@ -69,6 +69,8 @@
 	// so we don't need to explicitly drive it low.
 #define CLEANUP_INPUT_PINS PINS_HIGH(DDR_INPUT, INPUT_PINMASK);
 
+#define RECORD_KEY_STATE keyscanner_record_state_rotate_ccw();
+
 #else
 
 //Signal port (rows)
@@ -105,6 +107,7 @@
 #define REINIT_INPUT_PINS 0;
 #define CLEANUP_INPUT_PINS 0;
 
+#define RECORD_KEY_STATE keyscanner_record_state();
 
 #endif
 
