@@ -34,10 +34,8 @@ void keyscanner_main(void) {
 
     // For each enabled row...
     for (uint8_t output_pin = 0; output_pin < OUTPUT_COUNT; ++output_pin) {
-	// The rows are inputs, set them back to input mode so we can read them 
-	// on the next go round. By default, pullups are off, which is good because we want them off.
-    	PINS_LOW(DDR_INPUT, INPUT_PINMASK);
 
+	REINIT_INPUT_PINS;
 
 	 // Toggle the output we want to check
          ACTIVATE_OUTPUT_PIN(output_pin);
@@ -52,11 +50,7 @@ void keyscanner_main(void) {
         // Toggle the output we want to read back off
         DEACTIVATE_OUTPUT_PIN(output_pin);
 
-	// We don't have pull-down pins. Because of this, current can pretty easily leak across 
-	// an entire column after a scan.
-	// To pull the pins down, we flip them to outputs. By default, an output pin is driven low
-	// so we don't need to explicitly drive it low.
-	PINS_HIGH(DDR_INPUT, INPUT_PINMASK);
+	CLEANUP_INPUT_PINS;
 
         // Debounce key state
         debounced_changes += debounce((pin_data) , db + output_pin);

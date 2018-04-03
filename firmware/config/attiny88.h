@@ -58,6 +58,17 @@
 #define ACTIVATE_OUTPUT_PIN(output_pin) HIGH(PORT_OUTPUT, output_pin);
 #define DEACTIVATE_OUTPUT_PIN(output_pin) LOW(PORT_OUTPUT, output_pin);
 
+	// The rows are inputs, set them back to input mode so we can read them 
+	// on the next go round. By default, pullups are off, which is good because we want them off.
+#define REINIT_INPUT_PINS PINS_LOW(DDR_INPUT, INPUT_PINMASK);
+
+
+	// We don't have pull-down pins. Because of this, current can pretty easily leak across 
+	// an entire column after a scan.
+	// To pull the pins down, we flip them to outputs. By default, an output pin is driven low
+	// so we don't need to explicitly drive it low.
+#define CLEANUP_INPUT_PINS PINS_HIGH(DDR_INPUT, INPUT_PINMASK);
+
 #else
 
 //Signal port (rows)
@@ -90,6 +101,10 @@
 
 #define ACTIVATE_OUTPUT_PIN(output_pin) LOW(PORT_OUTPUT, output_pin);
 #define DEACTIVATE_OUTPUT_PIN(output_pin) HIGH(PORT_OUTPUT, output_pin);
+
+#define REINIT_INPUT_PINS 0;
+#define CLEANUP_INPUT_PINS 0;
+
 
 #endif
 
