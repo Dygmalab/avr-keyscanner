@@ -7,7 +7,7 @@
 #include "ringbuf.h"
 #include "keyscanner.h"
 
-debounce_t db[OUTPUT_COUNT];
+debounce_t db[COUNT_OUTPUT];
 
 // do_scan gets set any time we should actually do a scan
 volatile uint8_t do_scan = 1;
@@ -19,7 +19,7 @@ void keyscanner_init(void) {
     CONFIGURE_INPUT_PINS;
 
     // Initialize our debouncer datastructure.
-    memset(db, 0, sizeof(*db) * OUTPUT_COUNT);
+    memset(db, 0, sizeof(*db) * COUNT_OUTPUT);
 
     keyscanner_timer1_init();
 }
@@ -36,7 +36,7 @@ void keyscanner_main(void) {
     do_scan = 0;
 
     // For each enabled row...
-    for (uint8_t output_pin = 0; output_pin < OUTPUT_COUNT; ++output_pin) {
+    for (uint8_t output_pin = 0; output_pin < COUNT_OUTPUT; ++output_pin) {
 
 	REINIT_INPUT_PINS;
 
@@ -69,9 +69,9 @@ void keyscanner_main(void) {
 inline void keyscanner_record_state_rotate_ccw (void) {
     // The wire protocol expects data to be four rows of data, rather than 8 cols
     // of data. So we rotate it to match the original outputs
-     uint8_t scan_data_as_rows[OUTPUT_COUNT]={0,0,0,0,0,0,0,0};
-     for(int i=0; i<OUTPUT_COUNT; ++i){
-    	for(int j=0; j<OUTPUT_COUNT; ++j){
+     uint8_t scan_data_as_rows[COUNT_OUTPUT]={0,0,0,0,0,0,0,0};
+     for(int i=0; i<COUNT_OUTPUT; ++i){
+    	for(int j=0; j<COUNT_OUTPUT; ++j){
       		scan_data_as_rows[i] = (  ( (db[j].state & (1 << (7-i) ) ) >> (7-i) ) << j ) | scan_data_as_rows[i];
     	}
     }

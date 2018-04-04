@@ -42,15 +42,15 @@
 #define PORT_ROWS PORTC
 #define DDR_ROWS DDRC
 #define PIN_ROWS PINC
-#define ROW_PINMASK  (_BV(0)|_BV(1)|_BV(2)|_BV(3))
-#define ROW_COUNT 4
+#define MASK_ROWS  (_BV(0)|_BV(1)|_BV(2)|_BV(3))
+#define COUNT_ROWS 4
 
 // COLS
 #define PORT_COLS PORTD
 #define DDR_COLS DDRD
 #define PIN_COLS PIND
-#define COL_PINMASK  (_BV(0)|_BV(1)|_BV(2)|_BV(3)|_BV(4)|_BV(5)|_BV(6)|_BV(7))
-#define COL_COUNT 8
+#define MASK_COLS  (_BV(0)|_BV(1)|_BV(2)|_BV(3)|_BV(4)|_BV(5)|_BV(6)|_BV(7))
+#define COUNT_COLS 8
 
 
 // AD01: lower two bits of device address

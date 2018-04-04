@@ -61,7 +61,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     if (justchanged)
         debouncer->lastsample = sample;
 
-    for(int8_t i=0; i< INPUT_COUNT; i++)
+    for(int8_t i=0; i< COUNT_INPUT; i++)
     {
         if (justchanged & _BV(i))
         {

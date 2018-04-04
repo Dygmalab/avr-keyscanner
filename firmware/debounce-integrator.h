@@ -45,7 +45,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     uint8_t changes = 0;
 
     // Scan each pin from the bank
-    for(int8_t i=0; i< INPUT_COUNT; i++) {
+    for(int8_t i=0; i< COUNT_INPUT; i++) {
         // If the pin is on
         if (__builtin_expect(( sample & _BV(i)), EXPECT_FALSE) ) {  // It's probably not on
 

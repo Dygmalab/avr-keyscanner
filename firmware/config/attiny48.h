@@ -16,7 +16,7 @@
 #define DDR_ROWS DDRB
 #define PIN_ROWS PINB
 
-#define ROW_PINMASK (_BV(0)|_BV(1)|_BV(2)|_BV(3)|_BV(4)|_BV(5)|_BV(6)|_BV(7))
+#define MASK_ROWS (_BV(0)|_BV(1)|_BV(2)|_BV(3)|_BV(4)|_BV(5)|_BV(6)|_BV(7))
 
 // OD: Signal port (expect pins to be pulled up to Vᴄᴄ by 4.7KΩ)
 #define PORT_COLS PORTD
