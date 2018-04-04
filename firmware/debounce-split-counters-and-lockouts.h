@@ -65,7 +65,7 @@ inline void debouncer_init (debounce_t *db, uint8_t count){
 
 
 static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
-    sample = ~sample; // pin HIGH == key NOT PRESSED reverse now for easier code readability (and final state)
+    DEBOUNCER_CANONICALIZE_PINS(sample);
 
     uint8_t changes = 0;
     uint8_t statechanged = sample ^ debouncer->state;

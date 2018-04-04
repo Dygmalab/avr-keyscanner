@@ -54,6 +54,7 @@ inline void debouncer_init (debounce_t *db, uint8_t count){
 static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     uint8_t changes = 0;
 
+    DEBOUNCER_CANONICALIZE_PINS(sample);
 
     // Scan each pin from the bank
     for(int8_t i=0; i< INPUT_COUNT; i++) {

@@ -77,6 +77,9 @@
 
 #define RECORD_KEY_STATE keyscanner_record_state_rotate_ccw();
 
+// Active pins are high. So this macro is a no-op
+#define DEBOUNCER_CANONICALIZE_PINS(pins)
+
 #else
 
 //Signal port (rows)
@@ -114,6 +117,10 @@
 #define CLEANUP_INPUT_PINS 0;
 
 #define RECORD_KEY_STATE keyscanner_record_state();
+
+
+// Active pins on are low. So the debouncer inverts them before working with them
+#define DEBOUNCER_CANONICALIZE_PINS(pins) pins = ~pins;
 
 #endif
 
