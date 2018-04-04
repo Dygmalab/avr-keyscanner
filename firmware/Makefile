@@ -20,6 +20,10 @@
 # (ignored by git)
 -include Makefile.local
 
+# The name of the product we're building a keyscanner for
+# There should be a corresponding header file in config/
+PRODUCT_ID ?= keyboardio-model-01
+
 # See avr-help for all possible devices
 DEVICE     ?= attiny88
 
@@ -56,7 +60,7 @@ OPTIMIZATION = -O3
 
 
 AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE)
-COMPILE = $(GCC_PATH) -Wall -Wextra $(OPTIMIZATION) -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK)
+COMPILE = $(GCC_PATH) -Wall -Wextra $(OPTIMIZATION) -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK) -include "config/$(PRODUCT_ID).h"
 
 # symbolic targets:
 all:	$(HEX_FILE_PATH)

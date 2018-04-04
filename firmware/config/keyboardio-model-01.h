@@ -9,6 +9,9 @@
  *
  */
 
+
+#define PRODUCT_ID keyboardio-model-01
+
 #define COLS_ARE_OUTPUTS
 
 // ROWS

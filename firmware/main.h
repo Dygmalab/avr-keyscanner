@@ -5,11 +5,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#if defined (__AVR_ATtiny48__) || defined (__AVR_ATtiny88__)
-# include "config/attiny88.h"
-#else
-# error No port configuration found for hardware
+#if ! defined (PRODUCT_ID)
+#error No hardware definition included from Makefile
 #endif
+
 #include "config/validate.h"
 
 #define SET_OUTPUT(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
