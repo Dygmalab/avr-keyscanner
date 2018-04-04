@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "keyscanner.h"
 
 /*
 each of these 8 bit variables are storing the state for 8 keys
@@ -53,8 +54,6 @@ inline void debouncer_init (debounce_t *db, uint8_t count){
  */
 static inline uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     uint8_t delta, changes;
-
-    DEBOUNCER_CANONICALIZE_PINS(sample);
 
     // Use xor to detect changes from last stable state:
     // if a key has changed, it's bit will be 1, otherwise 0

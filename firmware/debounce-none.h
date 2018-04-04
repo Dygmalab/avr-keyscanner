@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-
+#include "keyscanner.h"
 
 // No debouncing, for debugging purposes
 typedef struct {
@@ -16,7 +16,6 @@ inline void debouncer_init (debounce_t *db, uint8_t count){
 }
 
 static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
-    DEBOUNCER_CANONICALIZE_PINS(sample);
 
     uint8_t changes = sample ^ debouncer->state;
     if (changes)

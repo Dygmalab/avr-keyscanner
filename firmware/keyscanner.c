@@ -53,7 +53,7 @@ void keyscanner_main(void) {
 	CLEANUP_INPUT_PINS;
 
         // Debounce key state
-        debounced_changes += debounce((pin_data) , db + output_pin);
+        debounced_changes += debounce(KEYSCANNER_CANONICALIZE_PINS(pin_data) , db + output_pin);
 
     }
 

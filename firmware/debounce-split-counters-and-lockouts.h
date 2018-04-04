@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdint.h>
+#include "keyscanner.h"
 
 /*
 
@@ -65,8 +66,6 @@ inline void debouncer_init (debounce_t *db, uint8_t count){
 
 
 static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
-    DEBOUNCER_CANONICALIZE_PINS(sample);
-
     uint8_t changes = 0;
     uint8_t statechanged = sample ^ debouncer->state;
     uint8_t justchanged = sample ^ debouncer->lastsample;
