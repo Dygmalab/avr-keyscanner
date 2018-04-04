@@ -93,11 +93,10 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 *bufsiz=1;
             } else {
                 buf[0]=TWI_REPLY_KEYDATA;
-                buf[1] = ringbuf_pop();
-                buf[2] = ringbuf_pop();
-                buf[3] = ringbuf_pop();
-                buf[4] = ringbuf_pop();
-                *bufsiz=5;
+		for(int i = 1;i<= KEY_REPORT_SIZE_BYTES; i++) {
+                    buf[i] = ringbuf_pop();
+		}
+                *bufsiz=(KEY_REPORT_SIZE_BYTES+1);
             }
             break;
         case TWI_CMD_VERSION:
