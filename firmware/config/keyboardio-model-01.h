@@ -12,7 +12,31 @@
 
 #define PRODUCT_ID keyboardio-model-01
 
+
+// Debouncer config
+
+#define DEBOUNCER "debounce-integrator.h"
+//#define DEBOUNCER "debounce-counter.h"
+//#define DEBOUNCER "debounce-none.h"
+//#define DEBOUNCER "debounce-split-counters-and-lockouts.h"
+//#define DEBOUNCER "debounce-split-counters.h"
+
+
+// Should we be treating our columns as outputs or our rows?
+// If the columns are outputs, our keyscanning loop has to do twice as much work,
+// as we have 8 columns and four rows. However, it means that we're able to drive
+// the column pins high, keeping the row pins low. When doing a read, we're pushing
+// a lot more power through the circuit. If there's a marginal connection, this should,
+// theoretically, get us much cleaner reads.
+//
+// If COLS_ARE_OUTPUTS is NOT defined, we treat our rows as outputs.
+// To do this we, turn on pull-up resistors on the columns and drive the rows
+// LOW when we want to read them. This is a pretty traditional scheme. It's less work
+// but, in theory, will not get us reads that are as clean as the other way round.
+
 #define COLS_ARE_OUTPUTS
+
+// Actual hardware configuration
 
 // ROWS
 #define PORT_ROWS PORTC
@@ -28,30 +52,6 @@
 #define COL_PINMASK  (_BV(0)|_BV(1)|_BV(2)|_BV(3)|_BV(4)|_BV(5)|_BV(6)|_BV(7))
 #define COL_COUNT 8
 
-
-#define DEBOUNCER "debounce-integrator.h"
-//#define DEBOUNCER "debounce-counter.h"
-//#define DEBOUNCER "debounce-none.h"
-//#define DEBOUNCER "debounce-split-counters-and-lockouts.h"
-//#define DEBOUNCER "debounce-split-counters.h"
-
-
-
-#ifdef COLS_ARE_OUTPUTS
-
-//Scanning port (rows)
-#define PORT_INPUT PORT_ROWS
-#define DDR_INPUT DDR_ROWS
-#define PIN_INPUT PIN_ROWS
-#define INPUT_PINMASK ROW_PINMASK
-#define INPUT_COUNT ROW_COUNT
-
-//Signal port (cols)
-#define PORT_OUTPUT PORT_COLS
-#define DDR_OUTPUT DDR_COLS
-#define PIN_OUTPUT PIN_COLS
-#define OUTPUT_PINMASK COL_PINMASK
-#define OUTPUT_COUNT COL_COUNT
 
 // Set data direction as output on the output pins
 // Default to all output pins low
