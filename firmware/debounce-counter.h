@@ -16,14 +16,6 @@ typedef struct {
 } debounce_t;
 
 
-inline void debouncer_init (debounce_t *db, uint8_t count){
-    for (int i = 0; i< count; i++) {
-       db[i].state = 0x00;
-       db[i].db0 = 0x00;
-       db[i].db1 = 0x00;
-    }
-}
-
 /**
  * debounce --
  *    The debouncer is based on a stacked counter implementation, with each bit

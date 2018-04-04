@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <string.h>
 #include "keyscanner.h"
 
 // #define DEBOUNCE_MINIMUM_MS 5
@@ -29,14 +28,6 @@ typedef struct {
     int8_t counters[8];
     uint8_t state;  // debounced state
 } debounce_t;
-
-
-inline void debouncer_init (debounce_t *db, uint8_t count){
-    for (int i = 0; i< count; i++) {
-	db[i].state = 0x00;
-	memset(db[i].counters,0,sizeof db[i].counters);
-    }
-}
 
 
 /**

@@ -1,5 +1,6 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <string.h>
 #include "main.h"
 #include DEBOUNCER
 #include "wire-protocol.h"
@@ -17,7 +18,9 @@ void keyscanner_init(void) {
 
     CONFIGURE_INPUT_PINS;
 
-    debouncer_init(db, OUTPUT_COUNT);
+    // Initialize our debouncer datastructure.
+    memset(db, 0, sizeof(*db) * OUTPUT_COUNT);
+
     keyscanner_timer1_init();
 }
 
