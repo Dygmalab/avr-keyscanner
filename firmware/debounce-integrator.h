@@ -27,7 +27,7 @@ each of these 8 bit variables are storing the state for 8 keys
 
 */
 typedef struct {
-    int8_t counters[INPUT_COUNT];
+    int8_t counters[8];
     uint8_t state;  // debounced state
 } debounce_t;
 
