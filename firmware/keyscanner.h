@@ -82,8 +82,8 @@
 #define ACTIVATE_OUTPUT_PIN(output_pin) LOW(PORT_OUTPUT, output_pin);
 #define DEACTIVATE_OUTPUT_PIN(output_pin) HIGH(PORT_OUTPUT, output_pin);
 
-#define REINIT_INPUT_PINS 0;
-#define CLEANUP_INPUT_PINS 0;
+#define REINIT_INPUT_PINS do {} while(0)
+#define CLEANUP_INPUT_PINS do {} while(0)
 
 #define RECORD_KEY_STATE keyscanner_record_state();
 
