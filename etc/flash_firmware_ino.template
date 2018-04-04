@@ -51,8 +51,8 @@ void setup() {
     delay(1000);
     pinMode(0, OUTPUT);
     pinMode(1, OUTPUT);
-    power_off_left_attiny();
-    power_off_right_attiny();
+    power_on_left_attiny();
+    power_on_right_attiny();
 
 
     SerialUSB.begin(115200);
@@ -63,6 +63,10 @@ void setup() {
         showAnalogRGB(BLUE, 1);
         delay(100);
     }
+
+    power_off_left_attiny();
+    power_off_right_attiny();
+
     showAnalogRGB(RED, 1);
     delay(1000);
 
