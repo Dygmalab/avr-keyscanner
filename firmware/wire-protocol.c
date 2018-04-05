@@ -103,7 +103,7 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             } else {
                 buf[0]=TWI_REPLY_KEYDATA;
 		for(int i = 1;i<= KEY_REPORT_SIZE_BYTES; i++) {
-                    buf[i] = ringbuf_pop();
+                    ringbuf_pop_to(buf+i);
 		}
                 *bufsiz=(KEY_REPORT_SIZE_BYTES+1);
             }
