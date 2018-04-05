@@ -104,6 +104,11 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
+	case TWI_CMD_KEYDATA_SIZE:
+	    buf[0] = KEY_REPORT_SIZE_BYTES;
+	    *bufsiz = 1;
+            twi_command = TWI_CMD_NONE;
+	    break;
         case TWI_CMD_KEYSCAN_INTERVAL:
             buf[0] = OCR1A;
             *bufsiz = 1;
