@@ -36,6 +36,10 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     }
 
     switch (buf[0]) {
+    case TWI_CMD_LED_UPDATE_ALL:
+	led_update_all(&buf[1]);
+        break;
+
     case TWI_CMD_KEYSCAN_INTERVAL:
         if (bufsiz == 2 ) {
             // SET the delay

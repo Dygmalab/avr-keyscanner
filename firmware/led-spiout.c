@@ -39,7 +39,7 @@ static volatile uint8_t global_brightness = 0xFF;
 static volatile uint8_t index; /* next byte to transmit */
 static volatile uint8_t subpixel = 0;
 
-/* Update the transmit buffer with LED_BUFSZ bytes of new data */
+/* Update the transmit buffer with LED_BANK_SIZE bytes of new data */
 void led_update_bank(uint8_t *buf, const uint8_t bank) {
     /* Double-buffering here is wasteful, but there isn't enough RAM on
        ATTiny48 to single buffer 32 LEDs and have everything else work
@@ -51,6 +51,19 @@ void led_update_bank(uint8_t *buf, const uint8_t bank) {
         memcpy((uint8_t *)led_buffer.bank[bank], buf, LED_BANK_SIZE);
     });
 }
+
+/* Update the transmit buffer with LED_BUFSZ bytes of new data 
+ *
+ * TODO: This MAY run afoul of Arduino's data size limit for an i2c transfer
+ *
+ * */
+
+void led_update_all(uint8_t *buf) {
+    DISABLE_INTERRUPTS({
+        memcpy((uint8_t *)led_buffer.whole, buf, LED_BUFSZ);
+    });
+}
+
 
 void led_set_one_to(uint8_t led, uint8_t *buf) {
     DISABLE_INTERRUPTS({
