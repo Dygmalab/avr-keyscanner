@@ -75,25 +75,28 @@ inline void keyscanner_record_state_rotate_ccw (void) {
       		scan_data_as_rows[i] = (  ( (db[j].state & (1 << (7-i) ) ) >> (7-i) ) << j ) | scan_data_as_rows[i];
     	}
     }
-    keyscanner_ringbuf_update( scan_data_as_rows[7], scan_data_as_rows[6], scan_data_as_rows[5], scan_data_as_rows[4]);
+
+    DISABLE_INTERRUPTS({
+	for(int i =7  ; i>= ( 8-KEY_REPORT_SIZE_BYTES); i--) {
+            ringbuf_append(scan_data_as_rows[i]);
+        }
+    });
+
+
 }
 
 inline void keyscanner_record_state (void) {
-    keyscanner_ringbuf_update( db[0].state, db[1].state, db[2].state, db[3].state );
-}
-
-inline void keyscanner_ringbuf_update(uint8_t row1, uint8_t row2, uint8_t row3, uint8_t row4) {
 
     // Snapshot the keystate to add to the ring buffer
     // Run this with interrupts off to make sure that
     // when we read from the ringbuffer, we always get 
     // four bytes representing a single keyboard state.
     DISABLE_INTERRUPTS({
-            ringbuf_append(row1);
-            ringbuf_append(row2);
-            ringbuf_append(row3);
-            ringbuf_append(row4);
+	for(int i =0 ; i< KEY_REPORT_SIZE_BYTES; i++) {
+            ringbuf_append(db[i].state);
+        }
     });
+
 }
 
 // initialize timer, interrupt and variable
