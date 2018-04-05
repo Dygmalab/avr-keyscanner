@@ -27,6 +27,7 @@ uint8_t ringbuf_pop(void) {
 
     uint8_t result = _ring.buf[_ring.start];
     _ring.count--;
-    _ring.start = (_ring.start + 1) % sizeof(_ring.buf);
+    _ring.start++;
+    _ring.start %= sizeof(_ring.buf);
     return result;
 }
