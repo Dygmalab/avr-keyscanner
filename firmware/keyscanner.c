@@ -69,7 +69,7 @@ void keyscanner_main(void) {
 inline void keyscanner_record_state_rotate_ccw (void) {
     // The wire protocol expects data to be four rows of data, rather than 8 cols
     // of data. So we rotate it to match the original outputs
-     uint8_t scan_data_as_rows[COUNT_OUTPUT]={0,0,0,0,0,0,0,0};
+     uint8_t scan_data_as_rows[COUNT_OUTPUT]={0};
      for(int i=0; i<COUNT_OUTPUT; ++i){
     	for(int j=0; j<COUNT_OUTPUT; ++j){
       		scan_data_as_rows[i] = (  ( (db[j].state & (1 << (7-i) ) ) >> (7-i) ) << j ) | scan_data_as_rows[i];
