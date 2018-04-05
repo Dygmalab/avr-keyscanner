@@ -100,7 +100,7 @@
 #else 
 
 // Active pins on are low. So the debouncer inverts them before working with them
-#define KEYSCANNER_CANONICALIZE_PINS(pins) ~pins;
+#define KEYSCANNER_CANONICALIZE_PINS(pins) ~pins
 
 #endif
 
