@@ -67,10 +67,10 @@ void setup() {
     power_off_left_attiny();
     power_off_right_attiny();
 
+    Wire.begin();
     showAnalogRGB(RED, 1);
     delay(1000);
 
-    Wire.begin();
 
 }
 
@@ -151,8 +151,10 @@ byte read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, uint
 void get_version (byte addr) {
 
     byte result = 2;
+    int count = 0;
     while (result != 0) {
         SerialUSB.print("Reading CRC16...");
+        count ++;
 
         byte version;
         uint16_t crc16;
@@ -163,6 +165,14 @@ void get_version (byte addr) {
 
         if (result != 0) {
             delay(100);
+            if(count == 10) {
+                SerialUSB.println("power cycling");
+                count = 0;
+                power_off_left_attiny();
+                delay(500);
+                power_on_left_attiny();
+                delay(100); // takes 100ms for the bootloader to startup
+            }
             continue;
         }
         SerialUSB.print("Version: ");
