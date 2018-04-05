@@ -47,7 +47,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     // Scan each pin from the bank
     for(int8_t i=0; i< COUNT_INPUT; i++) {
         // If the pin is on
-        if (__builtin_expect(( sample & _BV(i)), EXPECT_FALSE) ) {  // It's probably not on
+        if (__builtin_expect(!( sample & _BV(i)), EXPECT_FALSE) ) {  // It's probably not on
 
 
             // If the counter for this key is below the threshold
