@@ -3,5 +3,5 @@ ARDUINO_PATH=~/work/shortcut/arm/arduino-1.8.2
 build:
 	${ARDUINO_PATH}/arduino --verify --board arduino:samd:arduino_zero_native attiny_flasher.ino
 
-flash: build
+flash:
 	${ARDUINO_PATH}/arduino --upload --board arduino:samd:arduino_zero_native attiny_flasher.ino --port /dev/ttyACM1
