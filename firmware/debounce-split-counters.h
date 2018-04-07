@@ -80,6 +80,7 @@ uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     uint8_t c = ~0;
     uint8_t hit_press_delay = ~0;
     uint8_t hit_release_delay = ~0;
+
     // foreach bit in counterbits
     for(uint8_t i=0; i<NUM_COUNTER_BITS; i++)
     {
@@ -88,9 +89,9 @@ uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         c &= ~debouncer->counterbits[i]; // kind of carry
         // compare counterbits with DELAY bits
         if (i < _NUM_BITS(DEBOUNCE_PRESS_DELAY_COUNT))
-            hit_press_delay &= (((DEBOUNCE_PRESS_DELAY_COUNT + 1) & (1 << i)) ? debouncer->counterbits[i] : ~debouncer->counterbits[i]);
+            hit_press_delay &= (((DEBOUNCE_PRESS_DELAY_COUNT + 1) & _BV(i)) ? debouncer->counterbits[i] : ~debouncer->counterbits[i]);
         if (i < _NUM_BITS(DEBOUNCE_RELEASE_DELAY_COUNT))
-            hit_release_delay &= (((DEBOUNCE_RELEASE_DELAY_COUNT + 1) & (1 << i)) ? debouncer->counterbits[i] : ~debouncer->counterbits[i]);
+            hit_release_delay &= (((DEBOUNCE_RELEASE_DELAY_COUNT + 1) & _BV(i)) ? debouncer->counterbits[i] : ~debouncer->counterbits[i]);
     }
     uint8_t changes = statechanged & ((debouncer->state & hit_release_delay) | (~debouncer->state & hit_press_delay));
     debouncer->state ^= changes;
