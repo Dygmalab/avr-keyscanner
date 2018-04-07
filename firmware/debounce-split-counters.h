@@ -37,7 +37,7 @@
 /*
  * like the original debounce-counter, counters are tranposed:
  * - instead of counters[pin_bit] = counter_bits
- * - we store counterbits[counter_bit] = pin_bits
+ * - we store counter_bits[counter_bit] = pin_bits
  *
  * When optimzed, it should generates a small branch-less code.
  * higher delays will generate more code.
@@ -68,7 +68,7 @@
 #define NUM_COUNTER_BITS _NUM_BITS(_MAX(DEBOUNCE_RELEASE_DELAY_COUNT, DEBOUNCE_PRESS_DELAY_COUNT))
 
 typedef struct {
-    uint8_t counterbits[NUM_COUNTER_BITS];
+    uint8_t counter_bits[NUM_COUNTER_BITS];
     uint8_t state;  // debounced state
 } debounce_t;
 
@@ -76,24 +76,34 @@ __attribute__((optimize("unroll-loops"))) // we want to unroll loops, even when 
 //__attribute__ ((noinline))
 static inline
 uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
-    uint8_t statechanged = sample ^ debouncer->state;
+    uint8_t state_changed = sample ^ debouncer->state;
     uint8_t c = ~0;
     uint8_t hit_press_delay = ~0;
     uint8_t hit_release_delay = ~0;
 
-    // foreach bit in counterbits
+    // foreach bit in counter_bits
     for(uint8_t i=0; i<NUM_COUNTER_BITS; i++)
     {
         // increment if state changed, else reset to zero
-        debouncer->counterbits[i] = (debouncer->counterbits[i] ^ c) & statechanged;
-        c &= ~debouncer->counterbits[i]; // kind of carry
-        // compare counterbits with DELAY bits
+        debouncer->counter_bits[i] = (debouncer->counter_bits[i] ^ c) & state_changed;
+        c &= ~debouncer->counter_bits[i]; // kind of carry
+
+        // compare counter_bits with DELAY bits
         if (i < _NUM_BITS(DEBOUNCE_PRESS_DELAY_COUNT))
-            hit_press_delay &= (((DEBOUNCE_PRESS_DELAY_COUNT + 1) & _BV(i)) ? debouncer->counterbits[i] : ~debouncer->counterbits[i]);
+            hit_press_delay &= (
+			    ((DEBOUNCE_PRESS_DELAY_COUNT + 1) & _BV(i)) ? 
+			    debouncer->counter_bits[i] : 
+			    ~debouncer->counter_bits[i]);
+
         if (i < _NUM_BITS(DEBOUNCE_RELEASE_DELAY_COUNT))
-            hit_release_delay &= (((DEBOUNCE_RELEASE_DELAY_COUNT + 1) & _BV(i)) ? debouncer->counterbits[i] : ~debouncer->counterbits[i]);
+            hit_release_delay &= (
+			    ((DEBOUNCE_RELEASE_DELAY_COUNT + 1) & _BV(i)) ? 
+			    debouncer->counter_bits[i] : 
+			    ~debouncer->counter_bits[i]);
     }
-    uint8_t changes = statechanged & ((debouncer->state & hit_release_delay) | (~debouncer->state & hit_press_delay));
+    uint8_t changes = state_changed & (( debouncer->state & hit_release_delay) | 
+		    		       (~debouncer->state & hit_press_delay));
+
     debouncer->state ^= changes;
     return changes;
 }
