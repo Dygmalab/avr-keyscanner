@@ -10,8 +10,10 @@
 
 // Run the program with 'v' as its only commandline arg for verbose mode (where we output more data)
 // Run this program with 'i' as its only commandline arg to output the input data on one line
+// 'c' as the only argument will print the number of presses and nothing else. Exit code is presses-releases
 debounce_t db[1];
 
+uint8_t print_press_count = 0;
 uint8_t verbose = 0;
 uint8_t print_input = 0;
 uint8_t scan_counter =0;
@@ -53,8 +55,10 @@ int main(int argc,char *argv[]) {
     if(argc ==2 && *argv[1] == 'v')  {
         verbose = 1;
     }
-    if(argc ==2 && *argv[1] == 'i')  {
+    else if(argc ==2 && *argv[1] == 'i')  {
         print_input = 1;
+    } else if (argc ==2 && *argv[1] =='c') {
+	print_press_count =1;
     }
 
 
@@ -99,6 +103,10 @@ int main(int argc,char *argv[]) {
         printf("Total presses: %d\nTotal releases: %d\n",presses,releases);
         printf("\n");
     }
+    if (print_press_count) {
+	printf("%d\n",presses);
+	exit(presses-releases);
+    }
 
 
     if (verbose || print_input) {
@@ -108,7 +116,7 @@ int main(int argc,char *argv[]) {
         printf("\n");
     }
 
-    if (verbose || !print_input) {
+    if (verbose || !print_input || !print_press_count) {
 
         for(uint8_t i =0; i< scan_counter; i++) {
             printf("%d",debounced_data[i]);
