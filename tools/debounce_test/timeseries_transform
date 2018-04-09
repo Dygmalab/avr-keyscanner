@@ -1,0 +1,47 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+#use Math::BigFloat lib => 'GMP';
+
+#Math::BigFloat->precision(-6);
+
+my $sample_granularity_sec = shift @ARGV;
+#my $sample_granularity_sec = Math::BigFloat->new(shift @ARGV);
+my @timeseries;
+my @data = (<STDIN>);
+
+shift @data; # Toss the headers
+for my $line (@data) {
+	chomp($line);
+my ($time, $data) = split(/, /, $line);
+
+push @timeseries, [$time, $data];
+
+}
+#print "Finished data load\n";
+#my $timestamp = Math::BigFloat->new(0);
+my $timestamp = 0;
+my @output_data;
+for(my $i = 0; $i<= $#timeseries;$i++) {
+	my $entry = $timeseries[$i];
+	my $entry_stamp = $entry->[0];
+	#print $entry_stamp."\n";
+	my $next_entry_stamp =0;
+	if ($i< $#timeseries ) {
+		$next_entry_stamp = $timeseries[$i+1]->[0];
+	}
+
+	while (( $timestamp >= $entry_stamp)  &&	 ($next_entry_stamp > $timestamp)) {
+		push @output_data, [$timestamp, $entry->[1]];
+		$timestamp += $sample_granularity_sec;
+		print STDERR "$entry_stamp -> $next_entry_stamp\n";
+		print STDERR "next Timestamp $timestamp to check\n";
+	}
+
+}
+
+#print "Finished input\n";
+
+while (my $entry = shift @output_data) {
+	print $entry->[0] . " ".$entry->[1]."\n";
+}

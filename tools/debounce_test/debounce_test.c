@@ -89,7 +89,7 @@ int main(int argc,char *argv[]) {
 
         }
 
-        debounced_data[sample] = !( db[0].state & 1) ;
+        debounced_data[sample] = ( db[0].state & 1) ;
 
         if (verbose)
             printf("\n");
