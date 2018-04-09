@@ -1,5 +1,4 @@
 #include "debounce_test.h"
-#include "../../firmware/debounce.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

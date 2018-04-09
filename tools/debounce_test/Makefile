@@ -1,5 +1,8 @@
+
+
+
 debounce-test:
-	$(CC) debounce_test.c -o debounce_test
+	$(CC) debounce_test.c -include debounce_test.h -include ../../firmware/debounce-integrator.h -o debounce_test
 
 clean:
 	rm -rf debounce_test
