@@ -16,8 +16,8 @@ my $test_num =1;
 
 #run_debouncer('Source data', $debouncers[0], $datafile,'i');
 
-for my $test (@testcases) {
 for my $debouncer (@debouncers) {
+for my $test (@testcases) {
 	my $presses = -1;
 	my $metadata = `grep  PRESSES: $test`;
 	if ($metadata =~ /PRESSES:\s*(\d*)/ ){
