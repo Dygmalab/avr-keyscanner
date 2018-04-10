@@ -4,8 +4,8 @@
 #include "keyscanner.h"
 
 /**
- * original "debounce-counter" algo but with customizable press and
- * release delay (at compile-time).
+ * original "debounce-counter" algo but with customizable press and release
+ * delay (at compile-time).
  *
  * debounces by waiting for a change to last DELAY before registering it.
  *
@@ -35,15 +35,15 @@
 #define DEBOUNCE_RELEASE_DELAY_COUNT 7 // 11.2 ms
 
 /*
- * like the original debounce-counter, counters are tranposed:
+ * like the original debounce-counter, counters are transposed:
  * - instead of counters[pin_bit] = counter_bits
  * - we store counter_bits[counter_bit] = pin_bits
  *
- * When optimzed, it should generates a small branch-less code.
+ * When optimized, it should generates a small branch-less code.
  * higher delays will generate more code.
  *
  * // -O3, __attribute__ ((noinline)) uint8_t debounce()
- * deboucer              instruction count
+ * debouncer             instruction count
  * none                   5
  * counter               18
  * integrator            72
@@ -53,7 +53,7 @@
  * split-counter 3 3     18 (same delays as original debounce-counter)
  * split-counter 3 7     31
  * split-counter 4 9     49
- * split-counter 250 250 72 (uses a counters[8])
+ * split-counter 250 250 72 (still branchless (unrolled), uses a counters[8])
  *
  * none, counter, and split-counter are branchless, so performance should
  * be grossly proportional to their code size.
@@ -62,7 +62,7 @@
  * still in their final assembly, so performance is not related to code size.
  */
 #define _MAX(a, b) ((b) > (a) ? (b) : (a))
-// old compilers can't do clz at compile time
+// old compilers can't do clz at compile time (avr gcc 4.6.4)
 //#define _NUM_BITS(x) (sizeof(int) * 8 - __builtin_clz(x))
 #define _NUM_BITS(x) ((x)<2?1:(x)<4?2:(x)<8?3:(x)<16?4:(x)<32?5:(x)<64?6:(x)<128?7:(x)<256?8:-1)
 #define NUM_COUNTER_BITS _NUM_BITS(_MAX(DEBOUNCE_RELEASE_DELAY_COUNT, DEBOUNCE_PRESS_DELAY_COUNT))
@@ -76,34 +76,70 @@ __attribute__((optimize("unroll-loops"))) // we want to unroll loops, even when 
 //__attribute__ ((noinline))
 static inline
 uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
+
+    // this code is optimized for and by the compiler's unroll-loops, and it
+    // tries to give the compiler the opportunity to generate as little
+    // instructions as possible.
+    //
+    // so, when given the same delays as the hard-coded 'debounce-counter'
+    // (release=3, press=3), this code should generate the same number of
+    // instructions (and same behavior).
+    //
+    // @FIXME: there is fluke in the algo when delays are different, `delay+1`
+    //         is not a power of two, and the key changes right after the state
+    //         changes, then the counter miss it's reset (which is the overflow
+    //         to 0 when power of two).
+
     uint8_t state_changed = sample ^ debouncer->state;
-    uint8_t c = ~0;
-    uint8_t hit_press_delay = ~0;
-    uint8_t hit_release_delay = ~0;
+    uint8_t carry_inc = ~0;
+    uint8_t waited_for_press_delay = ~0;
+    uint8_t waited_for_release_delay = ~0;
 
     // foreach bit in counter_bits
     for(uint8_t i=0; i<NUM_COUNTER_BITS; i++)
     {
-        // increment if state changed, else reset to zero
-        debouncer->counter_bits[i] = (debouncer->counter_bits[i] ^ c) & state_changed;
-        c &= ~debouncer->counter_bits[i]; // kind of carry
+        // increment the counter if state changed, else reset the counter to zero.
+        // after simplification, we increment by flipping the bits one by one
+        // stopping after getting a 0.
+        debouncer->counter_bits[i] = (debouncer->counter_bits[i] ^ carry_inc) & state_changed;
+        carry_inc &= ~debouncer->counter_bits[i];
+        // note:
+        //   the carry is this way (and not, for example `counter ^= ~carry_inc;
+        //   carry_inc |= counter`) because it seems to help the compiler reuse
+        //   it for waited_for_*_delay when the firsts delay_plus_one_bit are 0
+        //   (for example, when delays=(3, 3), at the end `waited_for_*_delay =
+        //   carry_inc`)
 
-        // compare counter_bits with DELAY bits
+        // test if we waited for DELAY.
+        // notes:
+        // - (1) we only need to compare up to the number of bits of `DELAY`.
+        // - (2) here, the counter is already incremented to 1 at the first
+        //       state_changed (see above).
+        // - (3) to get the right delay we actually need to compare to `DELAY + 1`
+        //       (because of (2)).
+        // - (4) because of (1) and (3), delays like `3` will overflow to
+        //       `bits[2] = {0, 0}`.
+        // - (5) but we don't mind the overflow (4) (we don't need to add a bit
+        //       to counter_bits, and (1) still works) because we can use the
+        //       overflow to zero `{0, 0}` (4) as a valid of (2).
+        // (also see FIXME above)
         if (i < _NUM_BITS(DEBOUNCE_PRESS_DELAY_COUNT))
-            hit_press_delay &= (
-			    ((DEBOUNCE_PRESS_DELAY_COUNT + 1) & _BV(i)) ? 
-			    debouncer->counter_bits[i] : 
-			    ~debouncer->counter_bits[i]);
+            waited_for_press_delay &= (
+                ((DEBOUNCE_PRESS_DELAY_COUNT + 1) & _BV(i)) ?
+                debouncer->counter_bits[i] :
+                ~debouncer->counter_bits[i]);
 
+        // ditto
         if (i < _NUM_BITS(DEBOUNCE_RELEASE_DELAY_COUNT))
-            hit_release_delay &= (
-			    ((DEBOUNCE_RELEASE_DELAY_COUNT + 1) & _BV(i)) ? 
-			    debouncer->counter_bits[i] : 
-			    ~debouncer->counter_bits[i]);
+            waited_for_release_delay &= (
+                ((DEBOUNCE_RELEASE_DELAY_COUNT + 1) & _BV(i)) ?
+                debouncer->counter_bits[i] :
+                ~debouncer->counter_bits[i]);
     }
-    uint8_t changes = state_changed & (( debouncer->state & hit_release_delay) | 
-		    		       (~debouncer->state & hit_press_delay));
 
+    // change key state if state_changed and we waited for press or release delay
+    uint8_t changes = state_changed & ((~debouncer->state & waited_for_press_delay) |
+                                       ( debouncer->state & waited_for_release_delay));
     debouncer->state ^= changes;
     return changes;
 }
