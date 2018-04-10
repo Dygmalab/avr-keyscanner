@@ -122,7 +122,7 @@ uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     {
         // increment the counter if state changed, else reset the counter to zero.
         // after simplification, we increment by flipping the bits one by one
-        // stopping after getting a 0.
+        // stopping after getting a 1.
         debouncer->counter_bits[i] = (debouncer->counter_bits[i] ^ carry_inc) & state_changed;
         carry_inc &= ~debouncer->counter_bits[i];
         // note:
@@ -143,7 +143,8 @@ uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         //       `bits[2] = {0, 0}`.
         // - (5) but we don't mind the overflow (4) (we don't need to add a bit
         //       to counter_bits, and (1) still works) because we can use the
-        //       overflow to zero `{0, 0}` (4) as a valid of (2).
+        //       overflow to zero `{0, 0}` (4) as a valid counter value because
+        //       of (2).
         if (i < _NUM_BITS(DEBOUNCE_PRESS_DELAY_COUNT))
             waited_for_press_delay &= (
                 ((DEBOUNCE_PRESS_DELAY_COUNT + 1) & _BV(i)) ?
