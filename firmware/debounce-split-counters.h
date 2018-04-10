@@ -51,9 +51,11 @@
  * old split-counter     44 (branchless "transposed" version)
  * split-counter 0 0      5 (no delay)
  * split-counter 3 3     18 (same delays as original debounce-counter)
- * split-counter 3 7     31
- * split-counter 4 9     49
- * split-counter 250 250 72 (still branchless (unrolled), uses a counters[8])
+ * split-counter 2 6     37
+ * split-counter 3 7     34
+ * split-counter 4 8     44
+ * split-counter 4 9     48
+ * split-counter 253 253 72 (still branchless (unrolled), uses a counters[8])
  *
  * none, counter, and split-counter are branchless, so performance should
  * be grossly proportional to their code size.
@@ -64,11 +66,31 @@
 #define _MAX(a, b) ((b) > (a) ? (b) : (a))
 // old compilers can't do clz at compile time (avr gcc 4.6.4)
 //#define _NUM_BITS(x) (sizeof(int) * 8 - __builtin_clz(x))
-#define _NUM_BITS(x) ((x)<2?1:(x)<4?2:(x)<8?3:(x)<16?4:(x)<32?5:(x)<64?6:(x)<128?7:(x)<256?8:-1)
+#define _NUM_BITS(x) ((x)<1?0:(x)<2?1:(x)<4?2:(x)<8?3:(x)<16?4:(x)<32?5:(x)<64?6:(x)<128?7:(x)<256?8:-1)
 #define NUM_COUNTER_BITS _NUM_BITS(_MAX(DEBOUNCE_RELEASE_DELAY_COUNT, DEBOUNCE_PRESS_DELAY_COUNT))
+
+/*
+ * _DEBOUCE_FORCE_RESET forces a counter reset each time the state changes.
+ *
+ * without _DEBOUCE_FORCE_RESET's code, when delays are different or a `delay+1`
+ * is not a power two, and when the key sample changes again just after we
+ * register a state change, then the counter is not reset.
+ * (e.g. {state,sample} changes from {0,1} to {1,0}, then state_changed is 1
+ * both times).
+ * (does not matter with same `delay+1` power of two, because counter overflows
+ * to zero)
+ *
+ * so _DEBOUCE_FORCE_RESET fix this by introducing an additional lockout delay of
+ * 1 just after a state change to reset to counter.
+ */
+#define _IS_POWER_OF_TWO(x) (((x) & ((x) - 1)) == 0)
+#define _DEBOUNCE_FORCE_RESET (DEBOUNCE_PRESS_DELAY_COUNT != DEBOUNCE_RELEASE_DELAY_COUNT || \
+                               !_IS_POWER_OF_TWO(DEBOUNCE_PRESS_DELAY_COUNT+1) || \
+                               !_IS_POWER_OF_TWO(DEBOUNCE_RELEASE_DELAY_COUNT+1))
 
 typedef struct {
     uint8_t counter_bits[NUM_COUNTER_BITS];
+    uint8_t last_changes;
     uint8_t state;  // debounced state
 } debounce_t;
 
@@ -84,16 +106,16 @@ uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     // so, when given the same delays as the hard-coded 'debounce-counter'
     // (release=3, press=3), this code should generate the same number of
     // instructions (and same behavior).
-    //
-    // @FIXME: there is fluke in the algo when delays are different, `delay+1`
-    //         is not a power of two, and the key changes right after the state
-    //         changes, then the counter miss it's reset (which is the overflow
-    //         to 0 when power of two).
 
     uint8_t state_changed = sample ^ debouncer->state;
     uint8_t carry_inc = ~0;
     uint8_t waited_for_press_delay = ~0;
     uint8_t waited_for_release_delay = ~0;
+
+    if (_DEBOUNCE_FORCE_RESET != 0)
+        // if state changed during last debounce call, then force state_changed
+        // to 0 this time, so the counter has a chance to be reset.
+        state_changed &= ~debouncer->last_changes;
 
     // foreach bit in counter_bits
     for(uint8_t i=0; i<NUM_COUNTER_BITS; i++)
@@ -122,7 +144,6 @@ uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         // - (5) but we don't mind the overflow (4) (we don't need to add a bit
         //       to counter_bits, and (1) still works) because we can use the
         //       overflow to zero `{0, 0}` (4) as a valid of (2).
-        // (also see FIXME above)
         if (i < _NUM_BITS(DEBOUNCE_PRESS_DELAY_COUNT))
             waited_for_press_delay &= (
                 ((DEBOUNCE_PRESS_DELAY_COUNT + 1) & _BV(i)) ?
@@ -140,6 +161,8 @@ uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     // change key state if state_changed and we waited for press or release delay
     uint8_t changes = state_changed & ((~debouncer->state & waited_for_press_delay) |
                                        ( debouncer->state & waited_for_release_delay));
+    if (_DEBOUNCE_FORCE_RESET != 0)
+        debouncer->last_changes = changes;
     debouncer->state ^= changes;
     return changes;
 }
