@@ -14,6 +14,7 @@ map { chomp} @debouncers;
 
 my $test_num =1;
 
+my %stats_by_db ;
 #run_debouncer('Source data', $debouncers[0], $datafile,'i');
 
 for my $debouncer (@debouncers) {
@@ -28,11 +29,17 @@ for my $test (@testcases) {
 	chomp($title);
 	my $count = run_debouncer ($title, $debouncer, $test, 'c');
 	if ($count == $presses) {
-		print "ok ". $test_num++. " - $title $debouncer found $presses presses\n";
+		$stats_by_db{$debouncer}{ok}++;
+		print "ok ". $test_num++. "     - $title $debouncer found $presses presses\n";
 	} else {
+		$stats_by_db{$debouncer}{not_ok}++;
 		print "not ok ". $test_num++ ." - $title $debouncer found $count presses but expected $presses\n";
 	}
 }
+}
+
+for my $db (sort { $stats_by_db{$b}{ok} <=> $stats_by_db{$a}{ok}} keys %stats_by_db){
+	printf("%-40s: OK %-4d FAIL %-4d\n", $db,($stats_by_db{$db}{ok}||0),($stats_by_db{$db}{not_ok}||0));
 }
 
 sub run_debouncer {
