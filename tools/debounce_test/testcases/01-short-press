@@ -1,0 +1,9 @@
+#TITLE: A short press captured from a real keyboard key
+#PRESSES: 1
+# 1.6ms sample time.
+#SAMPLES-PER-SECOND: 625
+#
+00000 00000
+1111
+00000 00000
+
