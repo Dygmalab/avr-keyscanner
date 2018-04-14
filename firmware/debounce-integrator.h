@@ -8,16 +8,11 @@
 // #define KEYSCAN_TIME  (KEYSCAN_INTERVAL  * KEYSCAN_INTERVAL_TO_MS_MULTIPLIER)
 // #define DEBOUNCE_MINIMUM_CYCLES ((DEBOUNCE_MINIMUM_MS/KEYSCAN_TIME)+1)
 
-#define DEBOUNCE_COUNTER_LIMIT 6
-#define DEBOUNCE_THRESHOLD 3
 
-
-
-
-static int8_t debounce_integrator_ceiling = DEBOUNCE_COUNTER_LIMIT;
-static int8_t debounce_integrator_floor = (0-DEBOUNCE_COUNTER_LIMIT);
-static int8_t debounce_toggle_on_threshold = DEBOUNCE_THRESHOLD;
-static int8_t debounce_toggle_off_threshold =  (0-DEBOUNCE_THRESHOLD);
+static int8_t debounce_integrator_ceiling = 8;
+static int8_t debounce_toggle_on_threshold = 2;
+static int8_t debounce_integrator_floor = 0;
+static int8_t debounce_toggle_off_threshold =  0;
 
 
 /*
@@ -47,11 +42,11 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     // Scan each pin from the bank
     for(int8_t i=0; i< COUNT_INPUT; i++) {
         if (sample & _BV(i)) {
-           if ( debouncer->counters[i] > debounce_integrator_floor ) 
-                debouncer->counters[i]--;
-            
-        } else if (debouncer->counters[i] < debounce_integrator_ceiling) {
-                 debouncer->counters[i]++;
+	    if (debouncer->counters[i] < debounce_integrator_ceiling) {
+                debouncer->counters[i]++;
+            } 
+        } else if ( debouncer->counters[i] > debounce_integrator_floor )  {
+            debouncer->counters[i]--;
         }
 
         if (__builtin_expect (
