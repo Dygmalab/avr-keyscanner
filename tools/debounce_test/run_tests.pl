@@ -4,6 +4,8 @@
 
 use warnings;
 use strict;
+use IPC::Open3;
+
 
 my @testcases = `ls testcases/*`;
 
@@ -26,8 +28,14 @@ for my $test (@testcases) {
 	}
 	my $title = `grep TITLE: $test `;
 	$title =~ s/^.*?TITLE://;
+	my $sample_rate = `grep #SAMPLES-PER-SECOND: $test`;
+	if ($sample_rate =~ /SAMPLES-PER-SECOND:\s*(\d*)/) {
+		$sample_rate = $1;
+	} else {
+		$sample_rate = 625; # 1.6ms per sample
+	}
 	chomp($title);
-	my $count = run_debouncer ($title, $debouncer, $test, 'c');
+	my $count = run_debouncer ($title, $debouncer, $test, $sample_rate, 'c');
 	if ($count == $presses) {
 		$stats_by_db{$debouncer}{ok}++;
 		print "ok ". $test_num++. "     - $title $debouncer found $presses presses\n";
@@ -46,8 +54,107 @@ sub run_debouncer {
 	my $title = shift;
 	my $debouncer = shift;
 	my $data = shift;
+	my $sample_rate = shift;
 	my $arg = shift;
-	my $result = `$debouncer $arg < $data`;
+
+
+	my @samples = resample($data, 625/$sample_rate);
+	open3(\*CHLD_IN, \*CHLD_OUT, \*CHLD_ERR, "$debouncer $arg") or die "open3() failed $!";
+	my $result;
+
+	for my $line (@samples) {
+		print CHLD_IN $line;
+	}	
+	close(CHLD_IN);
+		$result .= <CHLD_OUT>;
 	chomp($result);
+	
 	return $result;
 }
+
+
+
+
+
+my $downsample_averaging = 1;
+
+
+
+sub resample {
+	my $file = shift;
+	my $output_ratio = shift;
+	open(FILE, '<', $file);
+
+my $output_counter = 0;
+my $input_counter  = 0;
+my $downsample_samples     = 0;
+my $downsample_accumulator = 0;
+	my @output;
+
+while ( my $line = <FILE> ) {
+    $line =~ s/\#.*$//g;
+    $line =~ s/[^01]//g;
+
+    for my $digit ( split( //, $line ) ) {
+        $input_counter++;
+        if ( $output_ratio > 1 ) {
+            while ( $output_counter < ( $input_counter * $output_ratio ) ) {
+                $output_counter++;
+                push @output, $digit
+                  . " # Input sample $input_counter. Output sample: "
+                  . $input_counter * $output_ratio . " - "
+                  . $output_counter . "\n";
+
+            }
+
+        }
+        else {
+
+            if ($downsample_averaging) {
+                $downsample_samples++;
+                $downsample_accumulator += $digit;
+                if ( ( $input_counter * $output_ratio ) >=
+                    ( $output_counter + 1 ) )
+                {
+                    $output_counter++;
+                    push @output, (
+                        ( $downsample_accumulator / $downsample_samples ) > 0.5
+                        ? '1'
+                        : '0' )
+                      . " # Input sample $input_counter. ($digit ) Output sample: "
+                      . $input_counter * $output_ratio . " - "
+                      . $output_counter . "\n";
+                    $downsample_samples     = 0;
+                    $downsample_accumulator = 0;
+                }
+                else {
+			#print STDERR "  # Input sample $input_counter Output sample " . $input_counter * $output_ratio . " DISCARDED\n";
+
+                }
+
+            }
+            else {
+
+                if ( ( $input_counter * $output_ratio ) >
+                    ( $output_counter + 1 ) )
+                {
+                    $output_counter++;
+                    push @output, $digit
+                      . " # Input sample $input_counter. Output sample: "
+                      . $input_counter * $output_ratio . " - "
+                      . $output_counter . "\n";
+                }
+                else {
+			#print STDERR "  # Input sample $input_counter Output sample " . $input_counter * $output_ratio . " DISCARDED\n";
+                }
+            }
+
+        }
+
+    }
+
+}
+
+close(FILE);
+return @output;
+};
