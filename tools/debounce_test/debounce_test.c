@@ -110,6 +110,7 @@ int main(int argc,char *argv[]) {
 
 
     if (verbose || print_input) {
+	printf("Raw input data: ");
         for(uint8_t i =0; i< scan_counter; i++) {
             printf("%d",pin_data[i]);
         }
@@ -118,6 +119,7 @@ int main(int argc,char *argv[]) {
 
     if (verbose || !print_input || !print_press_count) {
 
+	printf("Debounced data: ");
         for(uint8_t i =0; i< scan_counter; i++) {
             printf("%d",debounced_data[i]);
         }
