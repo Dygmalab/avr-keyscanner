@@ -75,8 +75,8 @@ int main(int argc,char *argv[]) {
             debounced_changes= debounce(pin_data[sample], db);
 
         if (verbose) {
-            printf("Sample %d: %d ",sample,pin_data[sample]);
-            printf("-> %d", !(db[0].state & 1));
+            printf("Sample %-3d: %d ",sample,pin_data[sample]);
+            printf("-> %d", (db[0].state ));
 
             if (pin_data[sample] != pin_data[sample-1]) {
                 printf(" input changed to %d", pin_data[sample]);
@@ -84,8 +84,8 @@ int main(int argc,char *argv[]) {
         }
         if (debounced_changes) {
             if (verbose)
-                printf(" state changed to %d", !(db[0].state & 1));
-            if (!(db[0].state & 1)) {
+                printf(" output changed to %d", (db[0].state ));
+            if (!(db[0].state )) {
                 releases++;
             } else {
                 presses++;
@@ -93,7 +93,7 @@ int main(int argc,char *argv[]) {
 
         }
 
-        debounced_data[sample] = ( db[0].state & 1) ;
+        debounced_data[sample] = ( db[0].state ) ;
 
         if (verbose)
             printf("\n");
