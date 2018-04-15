@@ -22,8 +22,9 @@ typedef union {
 
 extern uint8_t led_spi_frequency;
 
-// Default to a minimum of 1.6ms between reads
-#define KEYSCAN_INTERVAL_DEFAULT 50
+// Default about 0.47ms between reads.
+// This lets us do two scans per ms, which -might- let us send updates every ms.
+#define KEYSCAN_INTERVAL_DEFAULT 14
 
 // I²C driver functions
 void twi_data_received( uint8_t *buf, uint8_t bufsiz);
