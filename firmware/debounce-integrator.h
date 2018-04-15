@@ -9,10 +9,10 @@
 // #define DEBOUNCE_MINIMUM_CYCLES ((DEBOUNCE_MINIMUM_MS/KEYSCAN_TIME)+1)
 
 
-#define LOCK_OUT_CYCLES 8
+#define LOCK_OUT_CYCLES 5
 
-static int8_t debounce_integrator_ceiling = 8;
-static int8_t debounce_toggle_on_threshold = 2;
+static int8_t debounce_integrator_ceiling = 30 ;
+static int8_t debounce_toggle_on_threshold = 4;
 static int8_t debounce_integrator_floor = 0;
 static int8_t debounce_toggle_off_threshold =  0;
 

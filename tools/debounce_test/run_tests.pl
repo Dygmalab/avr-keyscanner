@@ -58,7 +58,7 @@ sub run_debouncer {
 	my $arg = shift;
 
 
-	my @samples = resample($data, 625/$sample_rate);
+	my @samples = resample($data, 2000/$sample_rate);
 	open3(\*CHLD_IN, \*CHLD_OUT, \*CHLD_ERR, "$debouncer $arg") or die "open3() failed $!";
 	my $result;
 
