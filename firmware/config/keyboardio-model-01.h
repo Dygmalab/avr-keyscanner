@@ -38,7 +38,7 @@
 // LOW when we want to read them. This is a pretty traditional scheme. It's less work
 // but, in theory, will not get us reads that are as clean as the other way round.
 
-#define COLS_ARE_OUTPUTS
+//#define COLS_ARE_OUTPUTS
 
 // Actual hardware configuration
 
