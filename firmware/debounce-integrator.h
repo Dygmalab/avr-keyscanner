@@ -9,6 +9,8 @@
 // #define DEBOUNCE_MINIMUM_CYCLES ((DEBOUNCE_MINIMUM_MS/KEYSCAN_TIME)+1)
 
 
+#define LOCK_OUT_CYCLES 8
+
 static int8_t debounce_integrator_ceiling = 8;
 static int8_t debounce_toggle_on_threshold = 2;
 static int8_t debounce_integrator_floor = 0;
@@ -21,6 +23,7 @@ each of these 8 bit variables are storing the state for 8 keys
 */
 typedef struct {
     int8_t counters[8];
+    int8_t key_locked_out[8];
     uint8_t state;  // debounced state
 } debounce_t;
 
@@ -41,21 +44,27 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
     // Scan each pin from the bank
     for(int8_t i=0; i< COUNT_INPUT; i++) {
+	if (debouncer->key_locked_out[i] > 0) {
+		debouncer->key_locked_out[i]--;
+		continue;
+	}
         if (sample & _BV(i)) {
 	    if (debouncer->counters[i] < debounce_integrator_ceiling) {
                 debouncer->counters[i]++;
+            	if (debouncer->counters[i] == debounce_toggle_on_threshold &&	
+	      	    debouncer->state ^ _BV(i) ) {
+            		changes |= _BV(i);
+	    	}
             } 
         } else if ( debouncer->counters[i] > debounce_integrator_floor )  {
             debouncer->counters[i]--;
+            if (debouncer->counters[i] == debounce_toggle_off_threshold &&
+	      	debouncer->state & _BV(i) ) {
+            	changes |= _BV(i);
+		debouncer->key_locked_out[i] = LOCK_OUT_CYCLES;
+	    }
         }
 
-        if (__builtin_expect (
-            (debouncer->counters[i] == debounce_toggle_off_threshold  ||
-             debouncer->counters[i] == debounce_toggle_on_threshold),
-             EXPECT_FALSE)) {
-            // Add bit i to the change list if the sample doesn't match the state for this bit
-            changes |= (( debouncer->state ^ sample) & _BV(i));
-        }
     }
     debouncer->state ^= changes;
 
