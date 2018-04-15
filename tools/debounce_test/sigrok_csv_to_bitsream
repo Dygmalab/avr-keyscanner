@@ -1,0 +1,6 @@
+#!/bin/sh
+echo "#SAMPLES-PER-SECOND: 2000"
+echo "#TITLE: Imported test xxxxxxxxxxxx"
+echo "#PRESSES: 1"
+
+uniq $1 |perl -p -0 -e's/1/2/g; s/0/1/g; s/2/0/g;  s/1,1[\r\n]+0,1/1,1/msg; s/0,1[\n\r]//gsm; s/1,0[\r\n]+1,1/1,1/gms '  |grep ^1| cut -d , -f 2 | grep -P '\d+'
