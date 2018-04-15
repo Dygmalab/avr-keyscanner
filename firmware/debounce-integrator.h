@@ -11,7 +11,7 @@
 
 #define LOCK_OUT_CYCLES 5
 
-static int8_t debounce_integrator_ceiling = 30 ;
+static int8_t debounce_integrator_ceiling = 14 ;
 static int8_t debounce_toggle_on_threshold = 4;
 static int8_t debounce_integrator_floor = 0;
 static int8_t debounce_toggle_off_threshold =  0;
