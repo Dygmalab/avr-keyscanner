@@ -16,12 +16,12 @@ debounce_t db[1];
 uint8_t print_press_count = 0;
 uint8_t verbose = 0;
 uint8_t print_input = 0;
-uint8_t scan_counter =0;
-uint8_t pin_data[4096] = { };
-uint8_t debounced_data[4096] = {};
+uint16_t scan_counter =0;
+uint8_t pin_data[40960] = { };
+uint8_t debounced_data[40960] = {};
 
 
-#define BUFFERSIZE 8192
+#define BUFFERSIZE 81920
 void get_input () {
     char buffer[BUFFERSIZE];
 
@@ -71,7 +71,7 @@ int main(int argc,char *argv[]) {
     memset(db, 0, sizeof(*db) * COUNT_OUTPUT);
 
 
-    for (uint8_t sample = 0; sample < scan_counter; sample++) {
+    for (uint16_t sample = 0; sample < scan_counter; sample++) {
             debounced_changes= debounce(pin_data[sample], db);
 
         if (verbose) {
@@ -111,7 +111,7 @@ int main(int argc,char *argv[]) {
 
     if (verbose || print_input) {
 	printf("Raw input data: ");
-        for(uint8_t i =0; i< scan_counter; i++) {
+        for(uint16_t i =0; i< scan_counter; i++) {
             printf("%d",pin_data[i]);
         }
         printf("\n");
@@ -120,7 +120,7 @@ int main(int argc,char *argv[]) {
     if (verbose || !print_input || !print_press_count) {
 
 	printf("Debounced data: ");
-        for(uint8_t i =0; i< scan_counter; i++) {
+        for(uint16_t i =0; i< scan_counter; i++) {
             printf("%d",debounced_data[i]);
         }
         printf("\n");
