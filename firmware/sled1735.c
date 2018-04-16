@@ -26,7 +26,7 @@ easily receive values from I2C buf and copy to led_buffer
 // functionality
 #define CONST_CURR
 #define SPI_INTS
-#define SELF_TEST
+//#define SELF_TEST
 #define VAF
 #define INIT_PWM 0x00
 
@@ -100,7 +100,7 @@ const uint8_t tabLED_Type3Vaf[64] = {
 
 // pin defs
 #define SHUTDOWN_PIN 6 //shutdown when low
-#define SS_PIN 2
+#define SS_PIN 2 // 7 for matrix test board
 #define DDR_SPI DDRB
 #define DD_MOSI 3
 #define DD_SCK 5
@@ -236,7 +236,6 @@ void setup_spi()
     // turn on the chip
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_NORMAL_MODE);           
     
-
     #ifdef SELF_TEST
     // run the self test to get list of opens and shorts - use this after assembly to aid in checking leds
     self_test();
