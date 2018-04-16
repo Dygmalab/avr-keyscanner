@@ -46,6 +46,10 @@ void self_test();
 #define mskSW_SHUT_DOWN_MODE                    (0x0<<0)
 #define mskSW_NORMAL_MODE                       (0x1<<0)
 
+#define mskSLEW_RATE_CTL_EN                     (0x1<<0)
+#define mskSLEW_RATE_CTL_DIS                    (0x0<<0)
+
+
 #define mskCURRENT_STEP_CONST                   (0x3F<<0)               
 #define CONST_CURRENT_STEP_10mA                 (0x5<<0)
 #define CONST_CURRENT_STEP_15mA                 (0xF<<0)

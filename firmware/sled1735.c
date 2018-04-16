@@ -194,9 +194,9 @@ void setup_spi()
     /* these from the demo code, haven't tested them
     // Setting Staggered Delay                       
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, STAGGERED_DELAY_REG, ((mskSTD4 & CONST_STD_GROUP4)|(mskSTD3 & CONST_STD_GROUP3)|(mskSTD2 & CONST_STD_GROUP2)|(mskSTD1 & CONST_STD_GROUP1)));
+    */
     // Enable Slew Rate control 
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SLEW_RATE_CTL_REG, mskSLEW_RATE_CTL_EN);
-    */
     
     // vaf fixes dim red LEDs that should be off
     #ifdef VAF
