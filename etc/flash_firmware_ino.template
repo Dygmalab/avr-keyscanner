@@ -1,6 +1,8 @@
-#include <util/crc16.h>
+#include "crc16.h"
 #include "Arduino.h"
 #include "Wire.h"
+#include "KeyboardioScanner.h"
+
 
 #define page_size %d
 #define frame_size %d
@@ -18,43 +20,57 @@
 #define ENDTRANS_DATA_NACK 3
 #define ENDTRANS_ERROR 4
 
-#define BRIGHT 50
-#define RED   BRIGHT,0,0
-#define GREEN 0,BRIGHT,0
-#define BLUE  0,0,BRIGHT
-#define OFF   0,0,0
+#define BRIGHT 150
+#define RED   {BRIGHT,0,0}
+#define GREEN {0,BRIGHT,0}
+#define BLUE  {0,0,BRIGHT}
+#define OFF   {0,0,0}
 
 
 uint16_t offsets[pages] = {%s};
-const byte firmware_left[firmware_length] PROGMEM = {%s};
-const byte firmware_right[firmware_length] PROGMEM = {%s};
+byte firmware_left[firmware_length] PROGMEM = {%s};
+byte firmware_right[firmware_length] PROGMEM = {%s};
 
-void huble_led(byte r, byte g, byte b)
+// rgb pwm pin definitions
+int red[3] = { 3, 6, 10, };
+int blu[3] = { 4, 8, 11, };
+int grn[3] = { 5, 9, 12, };
+
+void showAnalogRGB(cRGB rgb, int i)
 {
-  // huble led is just pwm connected
-  analogWrite(9, 255 - r);
-  analogWrite(10, 255 - b);
-  analogWrite(11, 255 - g);
+    // invert as these are common anode, and make sure we reach 65535 to be able to turn fully off.
+    analogWrite(red[i], ((256-pgm_read_byte(&gamma8[rgb.r])) << 8) -1 );
+    analogWrite(grn[i], ((256-pgm_read_byte(&gamma8[rgb.g])) << 8) -1 );
+    analogWrite(blu[i], ((256-pgm_read_byte(&gamma8[rgb.b])) << 8) -1 );
 }
 
+
 void setup() {
-    huble_led(BLUE);
+    analogWriteResolution(16);
+    showAnalogRGB(BLUE, 1);
     delay(1000);
     pinMode(0, OUTPUT);
     pinMode(1, OUTPUT);
+    power_on_left_attiny();
+    power_on_right_attiny();
+
+
+    SerialUSB.begin(115200);
+    while(!SerialUSB)
+    {
+        showAnalogRGB(OFF, 1);
+        delay(100);
+        showAnalogRGB(BLUE, 1);
+        delay(100);
+    }
+
     power_off_left_attiny();
     power_off_right_attiny();
 
-
-    Serial.begin(115200);
     Wire.begin();
-    while(!Serial)
-    {
-        huble_led(OFF);
-        delay(100);
-        huble_led(BLUE);
-        delay(100);
-    }
+    showAnalogRGB(RED, 1);
+    delay(1000);
+
 
 }
 
@@ -62,25 +78,25 @@ int left_written = 0;
 int right_written = 0;
 
 void power_off_left_attiny() {
-    digitalWrite(0, HIGH);
+    digitalWrite(1, LOW);
     //power_off_i2c();
 }
 
 void power_on_left_attiny() {
-    digitalWrite(0, LOW);
+    digitalWrite(1, HIGH);
 }
 
 void power_off_right_attiny() {
-    digitalWrite(1, HIGH);
+    digitalWrite(0, LOW);
     //power_off_i2c();
 }
 void power_on_right_attiny() {
-    digitalWrite(1, LOW);
+    digitalWrite(0, HIGH);
 }
 
 void print_result(byte result) {
-    Serial.print("result = ");
-    Serial.println(result);
+    SerialUSB.print("result = ");
+    SerialUSB.println(result);
 
 }
 
@@ -110,8 +126,8 @@ byte read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, uint
         return result;
     }
     Wire.requestFrom(addr, (uint8_t) 3);
-    Serial.print("Available bytes: ");
-    Serial.println(Wire.available());
+    SerialUSB.print("Available bytes: ");
+    SerialUSB.println(Wire.available());
     if (Wire.available() == 0) {
     }
     byte v = Wire.read();
@@ -135,24 +151,34 @@ byte read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, uint
 void get_version (byte addr) {
 
     byte result = 2;
+    int count = 0;
     while (result != 0) {
-        Serial.print("Reading CRC16...");
+        SerialUSB.print("Reading CRC16...");
+        count ++;
 
         byte version;
         uint16_t crc16;
         result = read_crc16(addr, &version, &crc16, 0, firmware_length);
 
-        Serial.print("result ");
-        Serial.println(result);
+        SerialUSB.print("result ");
+        SerialUSB.println(result);
 
         if (result != 0) {
-            _delay_ms(100);
+            delay(100);
+            if(count == 10) {
+                SerialUSB.println("power cycling");
+                count = 0;
+                power_off_left_attiny();
+                delay(500);
+                power_on_left_attiny();
+                delay(100); // takes 100ms for the bootloader to startup
+            }
             continue;
         }
-        Serial.print("Version: ");
-        Serial.println(version);
-        Serial.print("Existing CRC16 of 0000-1FFF: ");
-        Serial.println(crc16, HEX);
+        SerialUSB.print("Version: ");
+        SerialUSB.println(version);
+        SerialUSB.print("Existing CRC16 of 0000-1FFF: ");
+        SerialUSB.println(crc16, HEX);
     }
 
 }
@@ -161,14 +187,14 @@ void get_version (byte addr) {
 
 int erase_program(byte addr) {
 
-    Serial.println("Erasing");
+    SerialUSB.println("Erasing");
     Wire.beginTransmission(addr);
     Wire.write(0x04); // erase user space
     byte result = Wire.endTransmission();
-    Serial.print("result = ");
-    Serial.println(result);
+    SerialUSB.print("result = ");
+    SerialUSB.println(result);
     if (result != 0) {
-        _delay_ms(1000);
+        delay(1000);
         return -1;
     }
     return 0;
@@ -183,18 +209,18 @@ int write_firmware(byte addr, const byte *firmware ) {
     byte o = 0;
 
     for (uint16_t i = 0; i < firmware_length; i += page_size) {
-        Serial.print("Page ");
-        Serial.print(offsets[o]);
-        Serial.print(" setting address...");
+        SerialUSB.print("Page ");
+        SerialUSB.print(offsets[o]);
+        SerialUSB.print(" setting address...");
         Wire.beginTransmission(addr);
         Wire.write(0x1); // write page addr
         Wire.write(offsets[o] & 0xff); // write page addr
         Wire.write(offsets[o] >> 8);
         result = Wire.endTransmission();
-        _delay_ms(DELAY);
+        delay(DELAY);
         // got something other than ACK. Start over.
         if (result != 0) {
-            Serial.println("Error setting the page address");
+            SerialUSB.println("Error setting the page address");
             return -1;
         }
 
@@ -219,19 +245,19 @@ int write_firmware(byte addr, const byte *firmware ) {
             Wire.write(crc16 >> 8);
             Wire.write(0x00); // dummy end byte
             result = Wire.endTransmission();
-            Serial.print(": frame ");
-            Serial.print(frame);
-            Serial.print(" = ");
-            Serial.print(result);
+            SerialUSB.print(": frame ");
+            SerialUSB.print(frame);
+            SerialUSB.print(" = ");
+            SerialUSB.print(result);
             // got something other than NACK. Start over.
             if (result != 3) {
-                Serial.println("Error: Got something other than NACK");
+                SerialUSB.println("Error: Got something other than NACK");
                 return -1;
             }
             delay(DELAY);
         }
         o++;
-        Serial.println("");
+        SerialUSB.println("");
     }
     return 0;
 }
@@ -240,29 +266,29 @@ int write_firmware(byte addr, const byte *firmware ) {
 int verify_firmware(byte addr, const byte *firmware) {
     byte result = 3;
     // verify firmware
-    Serial.println("## Verifying firmware installation");
+    SerialUSB.println("## Verifying firmware installation");
     while (result != 0) {
-        Serial.print("CRC16: ");
+        SerialUSB.print("CRC16: ");
 
         byte version;
         uint16_t crc16;
         // skip the first 4 bytes, are they were probably overwritten by the reset vector preservation
         result = read_crc16(addr, &version, &crc16, offsets[0] + 4, firmware_length - 4);
 
-        Serial.println(result);
+        SerialUSB.println(result);
 
         if (result != 0) {
-            _delay_ms(100);
+            delay(100);
             continue;
         }
-        Serial.print("Version: ");
-        Serial.println(version);
-        Serial.print("CRC CRC16 of ");
-        Serial.print(offsets[0] + 4, HEX);
-        Serial.print("-");
-        Serial.print(offsets[0] + firmware_length, HEX);
-        Serial.print(": ");
-        Serial.println(crc16, HEX);
+        SerialUSB.print("Version: ");
+        SerialUSB.println(version);
+        SerialUSB.print("CRC CRC16 of ");
+        SerialUSB.print(offsets[0] + 4, HEX);
+        SerialUSB.print("-");
+        SerialUSB.print(offsets[0] + firmware_length, HEX);
+        SerialUSB.print(": ");
+        SerialUSB.println(crc16, HEX);
 
         // calculate our own CRC16
         uint16_t check_crc16 = 0xffff;
@@ -270,17 +296,17 @@ int verify_firmware(byte addr, const byte *firmware) {
             check_crc16 = _crc16_update(check_crc16, pgm_read_byte(&firmware[i]));
         }
         if (crc16 != check_crc16) {
-            Serial.print("CRC does not match ours: ");
-            Serial.println(check_crc16, HEX);
+            SerialUSB.print("CRC does not match ours: ");
+            SerialUSB.println(check_crc16, HEX);
             return -1;
         }
-        Serial.println("CRC check: OK");
+        SerialUSB.println("CRC check: OK");
     }
     return 0;
 }
 
 byte update_attiny(byte addr, byte *firmware) {
-    Serial.println("Communicating");
+    SerialUSB.println("Communicating");
 
     get_version(addr);
 
@@ -288,25 +314,25 @@ byte update_attiny(byte addr, byte *firmware) {
 
     if (erased == -1) {
 
-        Serial.println("Erase failed.");
+        SerialUSB.println("Erase failed.");
         return 0;
     }
 
     int firmware_written = write_firmware(addr, firmware);
     if(firmware_written == -1) {
-        Serial.println("Firmware write failed.");
+        SerialUSB.println("Firmware write failed.");
         return 0;
     }
 
     int firmware_verified = verify_firmware(addr, firmware);
     if(firmware_verified == -1) {
-        Serial.println("Firmware verify failed");
+        SerialUSB.println("Firmware verify failed");
         return 0;
     }
 
-    Serial.println("Resetting ATTiny");
+    SerialUSB.println("Resetting ATTiny");
     int result = run_command(addr, 0x03); // execute app
-    Serial.println("Done!");
+    SerialUSB.println("Done!");
 
     return 1;
 }
@@ -318,48 +344,48 @@ void loop() {
 
     if (left_written > 0 && right_written > 0 ) {
 
-        Serial.println ("Both ATTiny MCUs have been flashed");
-        Serial.println("It is now safe to reflash your keyboard with regular firmware");
-        huble_led(GREEN);
+        SerialUSB.println ("Both ATTiny MCUs have been flashed");
+        SerialUSB.println("It is now safe to reflash your keyboard with regular firmware");
+        showAnalogRGB(GREEN, 1);
         return;
     }
 
-    Serial.println("Starting!");
+    SerialUSB.println("Starting!");
     Wire.begin();
 
     if (left_written > 0) {
-        Serial.println("Already done with the left hand.");
+        SerialUSB.println("Already done with the left hand.");
         // we're done
     } else {
         //reset_left_attiny();
         power_on_left_attiny();
-        huble_led(BLUE);
+        showAnalogRGB(BLUE, 1);
         left_written = update_attiny(LEFT_ADDRESS, firmware_left);
         power_off_left_attiny();
 
         if(left_written)
-            huble_led(GREEN);
+            showAnalogRGB(GREEN, 1);
         else
-            huble_led(RED);
+            showAnalogRGB(RED, 1);
         delay(1000);
 
     }
 
     if (right_written > 0) {
-        Serial.println("Already done with the right hand.");
-        Serial.println(right_written);
+        SerialUSB.println("Already done with the right hand.");
+        SerialUSB.println(right_written);
         // we're done
     } else {
         //reset_right_attiny();
         power_on_right_attiny();
-        huble_led(BLUE);
+        showAnalogRGB(BLUE, 1);
         right_written = update_attiny(RIGHT_ADDRESS, firmware_right);
         power_off_right_attiny();
 
         if(right_written)
-            huble_led(GREEN);
+            showAnalogRGB(GREEN, 1);
         else
-            huble_led(RED);
+            showAnalogRGB(RED, 1);
         delay(1000);
     }
 
