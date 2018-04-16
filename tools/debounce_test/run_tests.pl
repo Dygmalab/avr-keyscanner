@@ -7,7 +7,7 @@ use strict;
 use IPC::Open3;
 
 
-my @testcases = `ls testcases/*`;
+my @testcases = `ls testcases/*/*`;
 
 my @debouncers = `ls ./debounce-*`;
 
@@ -17,10 +17,13 @@ map { chomp} @debouncers;
 my $test_num =1;
 
 my %stats_by_db ;
+my %fails_by_test;
+my %fails_by_db;
 #run_debouncer('Source data', $debouncers[0], $datafile,'i');
 
 for my $debouncer (@debouncers) {
 for my $test (@testcases) {
+	next unless (-f $test);
 	my $presses = -1;
 	my $metadata = `grep  PRESSES: $test`;
 	if ($metadata =~ /PRESSES:\s*(\d*)/ ){
@@ -42,12 +45,15 @@ for my $test (@testcases) {
 	} else {
 		$stats_by_db{$debouncer}{not_ok}++;
 		print "not ok ". $test_num++ ." - $debouncer - $test - $title found $count presses but expected $presses\n";
+		push @{$fails_by_test{$test}},$debouncer;
+		push @{$fails_by_db{$debouncer}},$test;
 	}
 }
 }
 
 for my $db (sort { $stats_by_db{$b}{ok} <=> $stats_by_db{$a}{ok}} keys %stats_by_db){
 	printf("%-40s: OK %-4d FAIL %-4d\n", $db,($stats_by_db{$db}{ok}||0),($stats_by_db{$db}{not_ok}||0));
+	printf("%-40s: Failed: %s\n",$db, join(", ",@{$fails_by_db{$db}})) if ($stats_by_db{$db}{not_ok}||0);
 }
 
 sub run_debouncer {
