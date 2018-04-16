@@ -38,10 +38,10 @@ for my $test (@testcases) {
 	my $count = run_debouncer ($title, $debouncer, $test, $sample_rate, 'c');
 	if ($count == $presses) {
 		$stats_by_db{$debouncer}{ok}++;
-		print "ok ". $test_num++. "     - $title $debouncer found $presses presses\n";
+		print "ok ". $test_num++. "     - $debouncer - $test - $title found $presses presses\n";
 	} else {
 		$stats_by_db{$debouncer}{not_ok}++;
-		print "not ok ". $test_num++ ." - $title $debouncer found $count presses but expected $presses\n";
+		print "not ok ". $test_num++ ." - $debouncer - $test - $title found $count presses but expected $presses\n";
 	}
 }
 }
