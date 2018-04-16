@@ -31,7 +31,7 @@ void get_input () {
     }
 
     while( fgets(buffer, BUFFERSIZE, stdin) ) { /* break with ^D or ^Z */
-        for(uint8_t i = 0; (i< sizeof(buffer) && buffer[i+1] != 0)  ; i++) {
+        for(uint16_t i = 0; (i< sizeof(buffer) && buffer[i+1] != 0)  ; i++) {
             if(buffer[i] == '#') {
                 break;
             } else if(buffer[i] == '0') {
@@ -41,7 +41,7 @@ void get_input () {
                 pin_data[scan_counter++] = 1;
             } else {
                 if (verbose ) {
-                    printf("Bad data ignored %c\n", buffer [i]);
+                    printf("Bad data ignored: %c\n", buffer[i]);
                 }
             }
         }
@@ -71,6 +71,9 @@ int main(int argc,char *argv[]) {
     memset(db, 0, sizeof(*db) * COUNT_OUTPUT);
 
 
+    if (verbose) {
+	printf("Got %d samples\n",scan_counter);
+    }
     for (uint16_t sample = 0; sample < scan_counter; sample++) {
             debounced_changes= debounce(pin_data[sample], db);
 
