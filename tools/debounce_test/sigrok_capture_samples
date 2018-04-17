@@ -4,12 +4,25 @@ KEYBOARD=$1
 KEY=$2
 BASE_FILENAME="testcases/$KEYBOARD/key-$KEY-"
 
+mkdir -p "testcases/$KEYBOARD"
+
 for count in 1 5 10 
+#for count in 10 
 do
 
+
 	for press_speed in slow fast
+	#for press_speed in fast
 	do
 
+
+		if [ $press_speed == 'fast' ]; then
+			time_multiplier=12
+		else
+			time_multiplier=20
+
+		fi
+		capture_time=$(($count * $time_multiplier))
 		FILE="$BASE_FILENAME-$count-presses-$press_speed"
 		RAWFILE="$FILE.raw"
 		OUTFILE="$FILE.data"
@@ -18,7 +31,7 @@ do
 		fi
 		echo "Ready to capture $FILE"
 		read 
-		sigrok-cli --config samplerate="16M" --driver=saleae-logic16 --samples=150M -C 14,15 -O csv -T invert |cut -d , -f 2,3 > $RAWFILE
+		sigrok-cli --config samplerate="16M" --driver=saleae-logic16 --samples=${capture_time}M -C 14,15 -O csv -T invert |cut -d , -f 2,3 > $RAWFILE
 		
 		echo "#SAMPLES-PER-SECOND: 2000" >> $OUTFILE
 		echo "#TITLE: $FILE" >> $OUTFILE
