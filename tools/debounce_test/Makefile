@@ -6,7 +6,7 @@ all: debouncers
 debouncers: $(DEBOUNCERS)
 
 debounce-%:
-	$(CC) debounce_test.c -include debounce_test.h -include ../../firmware/$(@).h -o $(@)
+	$(CC) debounce_test.c -DF_CPU=8000000 -include debounce_test.h -include ../../firmware/$(@).h -o $(@)
 
 clean: 
 	-rm $(DEBOUNCERS)
