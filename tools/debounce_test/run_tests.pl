@@ -24,6 +24,7 @@ my %fails_by_db;
 for my $debouncer (@debouncers) {
 for my $test (@testcases) {
 	next unless (-f $test);
+	next if ($test =~ /\.(raw|bak)$/);
 	my $presses = -1;
 	my $metadata = `grep  PRESSES: $test`;
 	if ($metadata =~ /PRESSES:\s*(\d*)/ ){
@@ -38,13 +39,13 @@ for my $test (@testcases) {
 		$sample_rate = 625; # 1.6ms per sample
 	}
 	chomp($title);
-	my $count = run_debouncer ($title, $debouncer, $test, $sample_rate, 'c');
+	my $count = run_debouncer ($debouncer, $test, $sample_rate, 'c');
 	if ($count == $presses) {
 		$stats_by_db{$debouncer}{ok}++;
-		print "ok ". $test_num++. "     - $debouncer - $test - $title found $presses presses\n";
+		print "ok ". $test_num++. "     - $debouncer $test saw $presses presses\n";
 	} else {
 		$stats_by_db{$debouncer}{not_ok}++;
-		print "not ok ". $test_num++ ." - $debouncer - $test - $title found $count presses but expected $presses\n";
+		print "not ok ". $test_num++ ." - $debouncer $test saw $count presses but expected $presses\n";
 		push @{$fails_by_test{$test}},$debouncer;
 		push @{$fails_by_db{$debouncer}},$test;
 	}
@@ -57,7 +58,6 @@ for my $db (sort { $stats_by_db{$b}{ok} <=> $stats_by_db{$a}{ok}} keys %stats_by
 }
 
 sub run_debouncer {
-	my $title = shift;
 	my $debouncer = shift;
 	my $data = shift;
 	my $sample_rate = shift;
