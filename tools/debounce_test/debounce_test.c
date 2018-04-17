@@ -19,6 +19,13 @@ uint8_t print_input = 0;
 uint16_t scan_counter =0;
 uint8_t pin_data[40960] = { };
 uint8_t debounced_data[40960] = {};
+char comments[40960][80] = {};
+
+uint8_t press_cycle_counts[1024] = {0};
+uint8_t release_cycle_counts[1024] = {0};
+
+uint8_t press_latency_counts[1024] = {0};
+uint8_t release_latency_counts[1024] = {0};
 
 
 #define BUFFERSIZE 81920
@@ -31,6 +38,11 @@ void get_input () {
     }
 
     while( fgets(buffer, BUFFERSIZE, stdin) ) { /* break with ^D or ^Z */
+	if (buffer[0] == '#' ) {
+		strcpy( comments[scan_counter] , buffer+1 ); // Yes, this copies past the possible end of the comment
+		comments[scan_counter+1][79]= '\0';	
+		continue;
+	}
         for(uint16_t i = 0; (i< sizeof(buffer) && buffer[i+1] != 0)  ; i++) {
             if(buffer[i] == '#') {
                 break;
@@ -40,7 +52,7 @@ void get_input () {
 
                 pin_data[scan_counter++] = 1;
             } else {
-                if (verbose ) {
+                if (verbose  && buffer[i] != ' ' && buffer[i] != '\n') {
                     printf("Bad data ignored: %c\n", buffer[i]);
                 }
             }
@@ -64,9 +76,11 @@ int main(int argc,char *argv[]) {
 
     get_input();
 
-    uint8_t presses;
-    uint8_t releases;
-    uint8_t debounced_changes;
+    uint16_t last_input_change = 0;
+    uint16_t last_state_change = 0;
+    uint8_t presses =0;
+    uint8_t releases =0;
+    uint8_t debounced_changes =0;
 
     memset(db, 0, sizeof(*db) * COUNT_OUTPUT);
 
@@ -75,24 +89,42 @@ int main(int argc,char *argv[]) {
 	printf("Got %d samples\n",scan_counter);
     }
     for (uint16_t sample = 0; sample < scan_counter; sample++) {
+	    
             debounced_changes= debounce(pin_data[sample], db);
 
         if (verbose) {
-            printf("Sample %-3d: %d ",sample,pin_data[sample]);
-            printf("-> %d", (db[0].state ));
+	   if (comments[sample][0] != 0) {
+		   printf("# %s", comments[sample]);
+	   }
+            printf("Sample %-3d Input: %d ",sample,pin_data[sample]);
+            printf("State: %d", (db[0].state ));
 
             if (pin_data[sample] != pin_data[sample-1]) {
-                printf(" input changed to %d", pin_data[sample]);
+                printf(" - input changed to %d after %d cycles", pin_data[sample], sample-last_input_change);
+		last_input_change = sample;
             }
         }
         if (debounced_changes) {
-            if (verbose)
-                printf(" output changed to %d", (db[0].state ));
             if (!(db[0].state )) {
+		release_cycle_counts[releases] = sample-last_state_change;
+		release_latency_counts[releases] = sample-last_input_change;
                 releases++;
+	    	if (verbose) {
+			printf(" - release %d ",releases);
+		}
             } else {
+		press_cycle_counts[presses] = sample-last_state_change;
+		press_latency_counts[presses] = sample-last_input_change;
                 presses++;
+	    	if (verbose) {
+			printf(" - press %d ", presses);
+		}
             }
+            
+	    if (verbose) {
+ 	               printf(" - state changed to %d with a latency of %d cycles (old state lasted %d cycles)", db[0].state, sample-last_input_change, sample - last_state_change );
+		last_state_change = sample;
+	    }
 
         }
 
@@ -102,33 +134,69 @@ int main(int argc,char *argv[]) {
             printf("\n");
     }
 
-    if (verbose) {
-        printf("Total presses: %d\nTotal releases: %d\n",presses,releases);
-        printf("\n");
-    }
-    if (print_press_count) {
-	printf("%d\n",presses);
-	exit(presses-releases);
-    }
-
 
     if (verbose || print_input) {
-	printf("Raw input data: ");
+	printf("Raw input data: (40 ms per line)\n");
         for(uint16_t i =0; i< scan_counter; i++) {
             printf("%d",pin_data[i]);
+	    if ((i+1)% 5 ==0) 
+		    printf(" ");
+	    if ((i+1)%80==0) 
+		    printf("\n");
         }
         printf("\n");
     }
 
     if (verbose || !print_input || !print_press_count) {
 
-	printf("Debounced data: ");
+	printf("Debounced data: (40ms per line)\n");
         for(uint16_t i =0; i< scan_counter; i++) {
             printf("%d",debounced_data[i]);
+	    if ((i+1)% 5 ==0) 
+		    printf(" ");
+	    if ((i+1)%80==0) 
+		    printf("\n");
         }
         printf("\n");
     }
 
+
+    if (verbose) {
+        printf("Total presses: %d\nTotal releases: %d\n",presses,releases);
+	printf("Press/release timings:\n");
+	printf("        Counter:");
+	for(uint8_t i = 0; (i< presses||i<releases); i++) {
+		printf("    %4d",i+1);
+	}
+        printf("\n");
+	printf("Release latency:");
+	for(uint8_t i = 0; (i<releases); i++) {
+		printf("    %4d",release_latency_counts[i] );
+	}
+        printf("\n");
+	printf("   Release time:");
+	for(uint8_t i = 0; (i<releases); i++) {
+		printf("    %4d",release_cycle_counts[i] );
+	}
+
+
+        printf("\n");
+	printf("  Press latency:");
+	for(uint8_t i = 0; (i<presses); i++) {
+		printf("    %4d",press_latency_counts[i] );
+	}
+        printf("\n");
+	printf("     Press time:");
+	for(uint8_t i = 0; (i<presses); i++) {
+		printf("    %4d",press_cycle_counts[i] );
+	}
+
+        printf("\n");
+    }
+    if (print_press_count) {
+	printf("%d\n",presses);
+	exit(presses-releases);
+    }
     exit (0);
 }
 
