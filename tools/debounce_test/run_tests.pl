@@ -39,7 +39,7 @@ for my $test (@testcases) {
 		$sample_rate = 625; # 1.6ms per sample
 	}
 	chomp($title);
-	my $count = run_debouncer ($debouncer, $test, $sample_rate, 'c');
+	my ($count,$debug) = run_debouncer ($debouncer, $test, $sample_rate, 'c');
 	if ($count == $presses) {
 		$stats_by_db{$debouncer}{ok}++;
 		print "ok ". $test_num++. "     - $debouncer $test saw $presses presses\n";
@@ -49,6 +49,7 @@ for my $test (@testcases) {
 		push @{$fails_by_test{$test}},$debouncer;
 		push @{$fails_by_db{$debouncer}},$test;
 	}
+	print $debug;
 }
 }
 
@@ -63,19 +64,22 @@ sub run_debouncer {
 	my $sample_rate = shift;
 	my $arg = shift;
 
+	my $stderr='';
 
 	my @samples = resample($data, 2000/$sample_rate);
 	open3(\*CHLD_IN, \*CHLD_OUT, \*CHLD_ERR, "$debouncer $arg") or die "open3() failed $!";
-	my $result;
 
 	for my $line (@samples) {
 		print CHLD_IN $line;
 	}	
 	close(CHLD_IN);
-		$result .= <CHLD_OUT>;
-	chomp($result);
+	my $result =<CHLD_OUT>;
+			chomp($result);
+	while (my $line =<CHLD_OUT>) {
+			$stderr .= $line;
+	}
 	
-	return $result;
+	return $result, $stderr;
 }
 
 
