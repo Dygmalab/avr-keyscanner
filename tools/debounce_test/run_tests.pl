@@ -21,8 +21,8 @@ my %fails_by_test;
 my %fails_by_db;
 #run_debouncer('Source data', $debouncers[0], $datafile,'i');
 
-for my $debouncer (@debouncers) {
 for my $test (@testcases) {
+for my $debouncer (@debouncers) {
 	next unless (-f $test);
 	next if ($test =~ /\.(raw|bak)$/);
 	my $presses = -1;
