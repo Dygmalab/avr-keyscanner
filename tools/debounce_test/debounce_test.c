@@ -180,13 +180,14 @@ int main(int argc,char *argv[]) {
     if (print_press_count) {
         printf("%d\n",presses);
     }
-
-    if (verbose || print_summary) {
+    if (verbose) {
         printf("# Total presses: %d Total releases: %d\n",presses,releases);
         printf("# Press/release timings:\n");
-        printf("#         Counter:");
+    }
+    if (verbose || print_summary) {
+        printf("#           Press:");
         for(uint8_t i = 0; (i<= presses||i<=releases); i++) {
-            printf("    %4d",i);
+            printf("  %4d",i);
         }
         printf("\n");
 
@@ -196,12 +197,12 @@ int main(int argc,char *argv[]) {
 
         printf("#   Press latency:");
         for(uint8_t i = 0; (i<=presses); i++) {
-            printf("    %4d",press_latency_counts[i] );
+            printf("  %4d",press_latency_counts[i] );
         }
         printf("\n");
-        printf("#      Press time:");
+        printf("#        Held for:");
         for(uint8_t i = 0; (i<=presses); i++) {
-            printf("    %4d",press_duration[i] );
+            printf("  %4d",press_duration[i] );
         }
 
         printf("\n");
@@ -213,12 +214,12 @@ int main(int argc,char *argv[]) {
 
 	printf("# Release latency:");
         for(uint8_t i = 0; (i<=releases); i++) {
-            printf("    %4d",release_latency_counts[i] );
+            printf("  %4d",release_latency_counts[i] );
         }
         printf("\n");
-        printf("#    Release time:");
+        printf("#    Released for:");
         for(uint8_t i = 0; (i<=releases); i++) {
-            printf("    %4d",release_duration[i] );
+            printf("  %4d",release_duration[i] );
         }
 
 
