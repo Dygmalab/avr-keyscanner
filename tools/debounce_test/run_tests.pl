@@ -19,6 +19,7 @@ my $test_num =1;
 my %stats_by_db ;
 my %fails_by_test;
 my %fails_by_db;
+my %press_counts_by_test;
 #run_debouncer('Source data', $debouncers[0], $datafile,'i');
 
 for my $test (@testcases) {
@@ -40,6 +41,10 @@ for my $debouncer (@debouncers) {
 	}
 	chomp($title);
 	my ($count,$debug) = run_debouncer ($debouncer, $test, $sample_rate, 'c');
+	
+	$press_counts_by_test{$test}{$debouncer} = $count;
+	$press_counts_by_test{$test}{'SPEC'} = $presses;
+
 	if ($count == $presses) {
 		$stats_by_db{$debouncer}{ok}++;
 		print "ok ". $test_num++. "     - $debouncer $test saw $presses presses\n";
@@ -56,6 +61,44 @@ for my $debouncer (@debouncers) {
 for my $db (sort { $stats_by_db{$b}{ok} <=> $stats_by_db{$a}{ok}} keys %stats_by_db){
 	printf("%-40s: OK %-4d FAIL %-4d\n", $db,($stats_by_db{$db}{ok}||0),($stats_by_db{$db}{not_ok}||0));
 	printf("%-40s: Failed: %s\n",$db, join(", ",@{$fails_by_db{$db}})) if ($stats_by_db{$db}{not_ok}||0);
+}
+
+report_press_counts(\%press_counts_by_test);
+
+
+sub report_press_counts {
+	my $press_counts = shift;
+
+printf ("%40s |","Debouncer:");	
+		for my $db ( sort { length($a) <=> length ($b)} keys %{$press_counts->{'testcases/synthetic/00-simple'}}) {
+			my $display = $db;
+			$display =~ s/^\.\/debounce-//;
+			print $display." | ";
+
+		}
+	print "\n";
+	for my $test_name  (sort { $b cmp $a } keys %$press_counts) {
+		my $display_name = $test_name;
+		$display_name =~ s/^testcases\/(.*?)(?:\.data)?$/$1/;
+		printf("%-40.40s |",$display_name);
+
+		for my $db ( sort { length($a) <=> length($b)} keys %{$press_counts->{$test_name}}) {
+			my $display = $db;
+			$display =~ s/^\.\/debounce-//;
+			if (($db eq 'SPEC' )|| ( $press_counts->{$test_name}{$db} != $press_counts->{$test_name}{'SPEC'})) {
+				my $output = sprintf("%".length($display)."d",$press_counts->{$test_name}{$db});
+				$output =~ s/ /./g;
+				print $output;
+			} else {
+				#	print $display. " | ";
+				print "." x length($display);
+			}
+			print " | ";
+
+		}
+		print "\n";
+	}
+
 }
 
 sub run_debouncer {
