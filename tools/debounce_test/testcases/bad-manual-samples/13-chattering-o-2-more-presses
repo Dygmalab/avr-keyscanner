@@ -1,6 +1,6 @@
 #SAMPLES-PER-SECOND: 2000
-#TITLE: Chattering O from Jay S' keyboard - 4 more presses
-#PRESSES: 4
+#TITLE: Chattering O from Jay S' keyboard - 2 presses and some chatter.
+#PRESSES: 2
 
 # Starting "off" for a while
 00000 00000 00000 00000
