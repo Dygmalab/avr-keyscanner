@@ -13,6 +13,7 @@
 // 'c' as the only argument will print the number of presses and nothing else. Exit code is presses-releases
 debounce_t db[1];
 
+uint8_t print_summary = 0;
 uint8_t print_press_count = 0;
 uint8_t verbose = 0;
 uint8_t print_input = 0;
@@ -66,13 +67,15 @@ void get_input () {
 int main(int argc,char *argv[]) {
     if(argc ==2 && *argv[1] == 'v')  {
         verbose = 1;
-    }
-    else if(argc ==2 && *argv[1] == 'i')  {
+    } else if(argc ==2 && *argv[1] == 'i')  {
         print_input = 1;
     } else if (argc ==2 && *argv[1] =='c') {
-	print_press_count =1;
+        print_press_count =1;
+        print_summary=1;
+    } else if (argc == 2 && *argv[1] == 's') {
+        print_summary=1;
+        print_press_count =1;
     }
-
 
     get_input();
 
@@ -161,13 +164,13 @@ int main(int argc,char *argv[]) {
     }
 
 
-    if (verbose) {
-        printf("Total presses: %d\nTotal releases: %d\n",presses,releases);
-	printf("Press/release timings:\n");
-	printf("        Counter:");
-	for(uint8_t i = 0; (i< presses||i<releases); i++) {
-		printf("    %4d",i+1);
-	}
+    if (verbose || print_summary) {
+        printf("# Total presses: %d Total releases: %d\n",presses,releases);
+        printf("# Press/release timings:\n");
+        printf("#         Counter:");
+        for(uint8_t i = 0; (i< presses||i<releases); i++) {
+            printf("    %4d",i+1);
+        }
         printf("\n");
 	printf("Release latency:");
 	for(uint8_t i = 0; (i<releases); i++) {
