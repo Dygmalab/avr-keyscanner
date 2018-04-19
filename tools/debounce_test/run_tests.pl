@@ -76,6 +76,7 @@ report_press_counts(\%press_counts_by_test);
 sub report_press_counts {
 	my $press_counts = shift;
 
+		print "Number of presses found. (Relative to the number claimed in the test file)\n";
 printf ("%60s |","Debouncer:");	
 		for my $db ( sort { length($a) <=> length ($b)} keys %{$press_counts->{'testcases/synthetic/00-simple'}}) {
 			my $display = $db;
@@ -101,15 +102,18 @@ printf ("%60s |","Debouncer:");
 		for my $db ( sort { length($a) <=> length($b)} keys %{$press_counts->{$test_name}}) {
 			my $display = $db;
 			$display =~ s/^\.\/debounce-//;
-			if (($db eq 'SPEC' )|| ( $press_counts->{$test_name}{$db} != $press_counts->{$test_name}{'SPEC'})) {
-				my $output = sprintf("%".length($display)."d",$press_counts->{$test_name}{$db});
-				$output =~ s/ /./g;
-				print $output;
-			} else {
-				#	print $display. " | ";
-				print "." x length($display);
+			my $output;
+			if ($db eq 'SPEC' ){ 
+				$output = sprintf("%".length($display)."d", $press_counts->{$test_name}{'SPEC'});
 			}
-			print " | ";
+			elsif ( $press_counts->{$test_name}{$db} != $press_counts->{$test_name}{'SPEC'}) {
+				my $delta = $press_counts->{$test_name}{$db} - $press_counts->{$test_name}{'SPEC'};
+				$output = sprintf("%+".length($display)."d", $delta);
+			} else {
+				$output= "." x length($display);
+			}
+			#		$output =~ s/ /./g;
+			print "$output | ";
 
 		}
 		print "\n";
