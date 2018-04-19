@@ -1,0 +1,56 @@
+#!/usr/bin/perl 
+
+use warnings;
+use strict;
+my $header;
+my $output = "";
+
+
+my $filename = shift @ARGV;
+
+open(my $input, "<", $filename);
+
+while (my $line = <$input> ) {
+	if ($line =~ /^#/) {
+		$header .= $line;
+	} else {
+		last;
+	}
+}
+
+my $data = join("", <$input>);
+
+close ($input);
+`mv $filename $filename.bak`;
+
+$data =~ s/0\n/0/gsm;
+$data =~ s/1\n/1/gsm;
+
+$data =~ s/01/0\n1/g;
+$data =~ s/10/1\n0/g;
+
+my @lines = split(/\n/,$data);
+
+for my $line (@lines) {
+	if ($line =~ /0/) {
+		$output .= "\n# Off for ".length($line)." cycles\n";
+	} else {
+		$output .= "\n# On for ".length($line)." cycles\n";
+	}
+	my @chunks = unpack '(a5)*', $line;
+	my $i = 1;
+	for my $chunk (@chunks) {
+		$output .= $chunk;
+	      if($i++ %8 ==0) { 
+			$output .= "\n";
+		} else {
+			$output .= " ";	
+		}
+	}
+}
+
+open (my $outfile, ">", $filename);
+
+print $outfile $header;
+print $outfile $output."\n";
+close ($outfile);
