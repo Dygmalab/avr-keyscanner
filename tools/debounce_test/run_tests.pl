@@ -74,7 +74,7 @@ report_press_counts(\%press_counts_by_test);
 sub report_press_counts {
 	my $press_counts = shift;
 
-printf ("%40s |","Debouncer:");	
+printf ("%60s |","Debouncer:");	
 		for my $db ( sort { length($a) <=> length ($b)} keys %{$press_counts->{'testcases/synthetic/00-simple'}}) {
 			my $display = $db;
 			$display =~ s/^\.\/debounce-//;
@@ -94,7 +94,7 @@ printf ("%40s |","Debouncer:");
 
 		my $display_name = $test_name;
 		$display_name =~ s/^testcases\/(.*?)(?:\.data)?$/$1/;
-		printf("%-40.40s |",$display_name);
+		printf("%-60.60s |",$display_name);
 
 		for my $db ( sort { length($a) <=> length($b)} keys %{$press_counts->{$test_name}}) {
 			my $display = $db;
