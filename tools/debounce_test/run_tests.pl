@@ -13,9 +13,11 @@ my @testcases = `ls testcases/*/*`;
 my @debouncers = `ls ./debounce-*`;
 
 if (@ARGV) {
-	@debouncers = shift @ARGV;
+@debouncers = ();
+while (@ARGV) {
+	push @debouncers, shift @ARGV;
 }
-
+}
 map {chomp} @testcases;
 map { chomp} @debouncers;
 
