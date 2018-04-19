@@ -16,6 +16,7 @@ debounce_t db[1];
 uint8_t print_summary = 0;
 uint8_t print_press_count = 0;
 uint8_t verbose = 0;
+uint8_t extra_verbose = 0;
 uint8_t print_input = 0;
 uint16_t scan_counter =0;
 uint8_t pin_data[40960] = { };
@@ -67,6 +68,9 @@ void get_input () {
 int main(int argc,char *argv[]) {
     if(argc ==2 && *argv[1] == 'v')  {
         verbose = 1;
+    } else if(argc ==2 && *argv[1] == 'd')  { // debug - extra verbosity, show every sample transition
+	    verbose =1;
+	    extra_verbose=1;
     } else if(argc ==2 && *argv[1] == 'i')  {
         print_input = 1;
     } else if (argc ==2 && *argv[1] =='c') {
@@ -94,20 +98,23 @@ int main(int argc,char *argv[]) {
 
     for (uint16_t sample = 0; sample < scan_counter; sample++) {
 
+	uint8_t data_printed = 0;
         debounced_changes= debounce(pin_data[sample], db);
 
         if (verbose) {
             if (comments[sample][0] != 0) {
                 printf("# %s", comments[sample]);
             }
-
+	}
+        if (extra_verbose) {
             printf("Sample %-3d Input: %d ",sample,pin_data[sample]);
             printf("State: %d", (db[0].state ));
-
+	data_printed++;
         }
             if (pin_data[sample] != pin_data[sample-1]) {
                 if (verbose) {
 			printf(" - input changed to %d after %d cycles", pin_data[sample], sample-last_input_change);
+	data_printed++;
 		};
                 last_input_change = sample;
             }
@@ -125,6 +132,7 @@ int main(int argc,char *argv[]) {
 		releases++;
                 if (verbose) {
                     printf(" - release %d ",releases);
+	data_printed++;
                 }
             } else {
                 
@@ -133,12 +141,14 @@ int main(int argc,char *argv[]) {
                 press_latency_counts[presses] = latency;
                 if (verbose) {
                     printf(" - press %d ", presses);
+	data_printed++;
                 }
             }
 
             if (verbose) {
                 printf(" - state changed to %d with a latency of %d cycles (old state lasted %d cycles)", 
 				db[0].state, latency, last_duration);
+	data_printed++;
             }
 
             last_state_change = sample;
@@ -146,7 +156,7 @@ int main(int argc,char *argv[]) {
 
         debounced_data[sample] = ( db[0].state ) ;
 
-        if (verbose)
+        if (verbose && data_printed)
             printf("\n");
     }
 
