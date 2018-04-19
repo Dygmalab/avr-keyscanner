@@ -9,7 +9,12 @@ use IPC::Open3;
 
 my @testcases = `ls testcases/*/*`;
 
+
 my @debouncers = `ls ./debounce-*`;
+
+if (@ARGV) {
+	@debouncers = shift @ARGV;
+}
 
 map {chomp} @testcases;
 map { chomp} @debouncers;
