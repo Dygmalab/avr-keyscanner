@@ -83,6 +83,15 @@ printf ("%40s |","Debouncer:");
 		}
 	print "\n";
 	for my $test_name  (sort { $b cmp $a } keys %$press_counts) {
+		my $all_ok =1;
+		for my $db ( keys %{$press_counts->{$test_name}}) {
+			if ($press_counts->{$test_name}{$db} != $press_counts->{$test_name}{'SPEC'}) {
+				$all_ok = 0;
+			}
+		}
+
+		next if ($all_ok);
+
 		my $display_name = $test_name;
 		$display_name =~ s/^testcases\/(.*?)(?:\.data)?$/$1/;
 		printf("%-40.40s |",$display_name);
