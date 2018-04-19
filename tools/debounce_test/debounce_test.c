@@ -22,11 +22,11 @@ uint8_t pin_data[40960] = { };
 uint8_t debounced_data[40960] = {};
 char comments[40960][80] = {};
 
-uint8_t press_duration[1024] = {0};
-uint8_t release_duration[1024] = {0};
+uint16_t press_duration[1024] = {0};
+uint16_t release_duration[1024] = {0};
 
-uint8_t press_latency_counts[1024] = {0};
-uint8_t release_latency_counts[1024] = {0};
+uint16_t press_latency_counts[1024] = {0};
+uint16_t release_latency_counts[1024] = {0};
 
 
 #define BUFFERSIZE 81920
@@ -115,8 +115,8 @@ int main(int argc,char *argv[]) {
 
 
         if (debounced_changes) {
-		uint8_t latency = sample - last_input_change;
-		uint8_t last_duration = sample - last_state_change;
+		uint16_t latency = sample - last_input_change;
+		uint16_t last_duration = sample - last_state_change;
             if (!(db[0].state )) {
                
 	       
@@ -187,7 +187,7 @@ int main(int argc,char *argv[]) {
     if (verbose || print_summary) {
         printf("#           Press:");
         for(uint8_t i = 0; (i<= presses||i<=releases); i++) {
-            printf("  %4d",i);
+            printf(" %4d",i);
         }
         printf("\n");
 
@@ -197,12 +197,12 @@ int main(int argc,char *argv[]) {
 
         printf("#   Press latency:");
         for(uint8_t i = 0; (i<=presses); i++) {
-            printf("  %4d",press_latency_counts[i] );
+            printf(" %4d",press_latency_counts[i] );
         }
         printf("\n");
         printf("#        Held for:");
         for(uint8_t i = 0; (i<=presses); i++) {
-            printf("  %4d",press_duration[i] );
+            printf(" %4d",press_duration[i] );
         }
 
         printf("\n");
@@ -214,12 +214,12 @@ int main(int argc,char *argv[]) {
 
 	printf("# Release latency:");
         for(uint8_t i = 0; (i<=releases); i++) {
-            printf("  %4d",release_latency_counts[i] );
+            printf(" %4d",release_latency_counts[i] );
         }
         printf("\n");
         printf("#    Released for:");
         for(uint8_t i = 0; (i<=releases); i++) {
-            printf("  %4d",release_duration[i] );
+            printf(" %4d",release_duration[i] );
         }
 
 
