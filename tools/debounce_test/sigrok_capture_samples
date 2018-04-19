@@ -37,8 +37,11 @@ do
 		echo "#TITLE: $FILE" >> $OUTFILE
 		echo "#PRESSES: $count" >> $OUTFILE
 		
-		uniq $RAWFILE |perl -p -0 -e's/1,1[\r\n]+0,1/1,1/msg; s/1,1[\n\r]+0,1/1,1/gsm; s/1,0[\r\n]+1,1/1,1/gms '  |grep ^1| cut -d , -f 2 | grep -P '\d+' >> $OUTFILE
-		
+	
+	uniq $RAWFILE |  perl -p -0 -e's/1,0[\r\n]+1,1/1,1/msg; #slow turn on  \
+		 s/1,1[\r\n]+1,0/1,1/msg; # fast turn off \
+		 s/0,0[\r\n]+0,1/0,0/gsm; # ?? \
+		 s/0,1[\n\r]+0,0/0,0/gsm; #slow turn off  ' |uniq |grep ^1 |cut -d, -f 2|grep -P '\d+' >> $OUTFILE
 		uniq -c $OUTFILE
 	done
 done
