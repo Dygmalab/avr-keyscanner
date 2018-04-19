@@ -1,5 +1,5 @@
 #SAMPLES-PER-SECOND: 2000
-#TITLE: testcases/jays-attiny-detect-logic/key-i-1--1-presses-slow
+#TITLE: 150 ms gap in a single press
 #PRESSES: 1
 
 # Off for 442 cycles
