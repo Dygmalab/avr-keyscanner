@@ -58,8 +58,6 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
     // Scan each pin from the bank
     for(int8_t i=0; i< COUNT_INPUT; i++) {
-	    if(i==0) 
-    //printf("Counter: %3d - ",debouncer->counters[i]);
         if (sample & _BV(i)) {
     	    if (debouncer->counters[i] < debounce_integrator_ceiling) {
                     debouncer->counters[i]++;
