@@ -3,12 +3,19 @@
 #include <stdint.h>
 #include "keyscanner.h"
 
+#define CHATTER_MULTIPLIER 2
+#define TURNING_OFF_CHATTER_WINDOW 10
+#define KEY_ON_CHATTER_WINDOW 30
+#define LOCKED_ON_WINDOW 39
+#define LOCKED_OFF_WINDOW 17
+
 enum { OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF};
 
 typedef struct {
     uint8_t key_states[8];
     uint8_t cycles[8];
     uint8_t per_state_data[8];
+    uint8_t key_chatters[8];
     uint8_t state;  // debounced state
 } debounce_t;
 
@@ -21,6 +28,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     for(int8_t i=0; i< 1; i++) { //COUNT_INPUT; i++) {
         uint8_t is_on=       !! (sample & _BV(i)) ;
         debouncer->cycles[i]++;
+	uint8_t chatter_multiplier = (debouncer->key_chatters[i]+(CHATTER_MULTIPLIER-1));
         switch (debouncer->key_states[i] ) {
         case OFF:
             // if we get a single input sample that's "1", transition to "TURNING_ON".
@@ -43,13 +51,17 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
                 // 	otherwise, transition to "OFF"
                 debouncer->key_states[i]= OFF;
                 debouncer->cycles[i]=0;
+		debouncer->key_chatters[i]=1;
             }
             break;
 
         case LOCKED_ON:
-            // 	do not act on any input for 45 ms
-            if(debouncer->cycles[i] < 78) {
+            // 	do not act on any input while the key is locked on
+            if(debouncer->cycles[i] < (LOCKED_ON_WINDOW * chatter_multiplier)) {
                 // 	TODO: if we get any "0" samples, that implies chatter
+		if (!is_on) {
+			debouncer->key_chatters[i]=1;
+		}
                 break;
             }
             // 	after 45ms transition to "ON"
@@ -62,14 +74,14 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             // 	while any of the last 10ms are "1", stay ON
 
             if (is_on) {
-                debouncer->per_state_data[i]=20;
+                debouncer->per_state_data[i]=(KEY_ON_CHATTER_WINDOW * chatter_multiplier);
                 // 	if all of the last 10ms of samples are "0", transition to "TURNING_OFF"
             } else {
                 debouncer->per_state_data[i]--;
                 if ( debouncer->per_state_data[i] == 0) {
                     debouncer->key_states[i]= TURNING_OFF;
                     debouncer->cycles[i]=0;
-                    debouncer->per_state_data[i]=60;
+                    debouncer->per_state_data[i]=(TURNING_OFF_CHATTER_WINDOW * chatter_multiplier);
                 }
             }
             break;
@@ -80,6 +92,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             if(is_on) {
                 debouncer->key_states[i]= ON;
                 debouncer->cycles[i]=0;
+		debouncer->key_chatters[i]=1;
             }
 
             debouncer->per_state_data[i]--;
@@ -95,9 +108,12 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             break;
 
         case LOCKED_OFF:
-            // 	do not act on any input for 45ms
-            if(debouncer->cycles[i] < 37) {
+            // 	do not act on any input during the locked off window
+            if(debouncer->cycles[i] < (LOCKED_OFF_WINDOW * chatter_multiplier)) {
                 // 	TODO: if we get any "1" samples, that implies chatter
+		if (is_on) {
+			debouncer->key_chatters[i]=1;
+		}
                 break;
             }
             // 	after 45ms transition to "OFF"
