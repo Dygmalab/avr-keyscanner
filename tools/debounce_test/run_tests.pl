@@ -32,6 +32,9 @@ my %press_counts_by_test;
 for my $test (@testcases) {
 for my $debouncer (@debouncers) {
 	next unless (-f $test);
+			next if $debouncer eq './debounce-none';
+			next if $debouncer eq './debounce-counter';
+			next if $debouncer eq './debounce-split-counters-and-lockouts';
 	next if ($test =~ /\.(raw|bak)$/);
 	my $presses = -1;
 	my $metadata = `grep  PRESSES: $test`;
@@ -88,6 +91,7 @@ printf ("%60s |","Debouncer:");
 	for my $test_name  (sort { $b cmp $a } keys %$press_counts) {
 		my $all_ok =1;
 		for my $db ( keys %{$press_counts->{$test_name}}) {
+			next if $db eq './debounce-none';
 			if ($press_counts->{$test_name}{$db} != $press_counts->{$test_name}{'SPEC'}) {
 				$all_ok = 0;
 			}
