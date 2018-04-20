@@ -9,10 +9,10 @@ void setup_adc()
     ADMUX =
         (0 << ADLAR) |     // don't left shift result
         (0 << REFS0) |     // Sets ref. voltage to 1.1v
-        (0 << MUX3)  |     // use ADC6 for input
+        (0 << MUX3)  |     // use PA1 (ADC7) for input
         (1 << MUX2)  |
         (1 << MUX1)  |
-        (0 << MUX0);
+        (1 << MUX0);
 
     ADCSRA = 
         (1 << ADEN)  |     // Enable ADC 

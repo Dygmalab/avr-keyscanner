@@ -100,7 +100,7 @@ const uint8_t tabLED_Type3Vaf[64] = {
 
 // pin defs
 #define SHUTDOWN_PIN 6 //shutdown when low
-#define SS_PIN 2 // 7 for matrix test board
+#define SS_PIN 2 // 7 for matrix test board, 2 for raise
 #define DDR_SPI DDRB
 #define DD_MOSI 3
 #define DD_SCK 5
