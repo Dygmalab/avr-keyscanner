@@ -51,10 +51,12 @@ build:
 	mkdir -p out
 	
 	firmware/gen_map.py left > firmware/map.h
+	mv i2c_addr.h firmware
 	make -C firmware clean all
 	cp firmware/main.hex out/attiny88_keyscanner_left.hex
 	
 	firmware/gen_map.py right > firmware/map.h
+	mv i2c_addr.h firmware
 	make -C firmware clean all
 	cp firmware/main.hex out/attiny88_keyscanner_right.hex
 	
