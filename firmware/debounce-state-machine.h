@@ -18,7 +18,7 @@ typedef struct {
 static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     uint8_t changes = 0;
     // Scan each pin from the bank
-    for(int8_t i=0; i< 1;i++) { //COUNT_INPUT; i++) {
+    for(int8_t i=0; i< 1; i++) { //COUNT_INPUT; i++) {
         uint8_t is_on=       !! (sample & _BV(i)) ;
         debouncer->cycles[i]++;
         switch (debouncer->key_states[i] ) {
@@ -69,43 +69,43 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
                 if ( debouncer->per_state_data[i] == 0) {
                     debouncer->key_states[i]= TURNING_OFF;
                     debouncer->cycles[i]=0;
-                    debouncer->per_state_data[i]=30;
+                    debouncer->per_state_data[i]=60;
                 }
-		}
-                break;
+            }
+            break;
 
-            case TURNING_OFF:
-                // 	listen for 10ms
-                // 	if any samples are "1", transition to "ON"
-                if(is_on) {
-                    debouncer->key_states[i]= ON;
-                    debouncer->cycles[i]=0;
-                }
-
-                debouncer->per_state_data[i]--;
-
-                if(debouncer->per_state_data[i]==0) {
-                    // 	transition to "LOCKED_OFF"
-                    // 		mark the debounced key as "OFF"
-                    debouncer->key_states[i]= LOCKED_OFF;
-                    debouncer->cycles[i]=0;
-                    changes |= _BV(i);
-
-                }
-                break;
-
-            case LOCKED_OFF:
-                // 	do not act on any input for 45ms
-                if(debouncer->cycles[i] < 80) {
-                    // 	TODO: if we get any "1" samples, that implies chatter
-                    break;
-                }
-                // 	after 45ms transition to "OFF"
-                debouncer->key_states[i]=OFF;
+        case TURNING_OFF:
+            // 	listen for 10ms
+            // 	if any samples are "1", transition to "ON"
+            if(is_on) {
+                debouncer->key_states[i]= ON;
                 debouncer->cycles[i]=0;
+            }
 
+            debouncer->per_state_data[i]--;
+
+            if(debouncer->per_state_data[i]==0) {
+                // 	transition to "LOCKED_OFF"
+                // 		mark the debounced key as "OFF"
+                debouncer->key_states[i]= LOCKED_OFF;
+                debouncer->cycles[i]=0;
+                changes |= _BV(i);
+
+            }
+            break;
+
+        case LOCKED_OFF:
+            // 	do not act on any input for 45ms
+            if(debouncer->cycles[i] < 80) {
+                // 	TODO: if we get any "1" samples, that implies chatter
                 break;
-            };
+            }
+            // 	after 45ms transition to "OFF"
+            debouncer->key_states[i]=OFF;
+            debouncer->cycles[i]=0;
+
+            break;
+        };
 
     }
 
