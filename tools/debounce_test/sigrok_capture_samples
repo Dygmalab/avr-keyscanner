@@ -17,9 +17,9 @@ do
 
 
 		if [ $press_speed == 'fast' ]; then
-			time_multiplier=12
+			time_multiplier=15
 		else
-			time_multiplier=20
+			time_multiplier=22
 
 		fi
 		capture_time=$(($count * $time_multiplier))
