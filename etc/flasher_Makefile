@@ -4,4 +4,4 @@ build:
 	${ARDUINO_PATH}/arduino --verify --board arduino:samd:arduino_zero_native attiny_flasher.ino
 
 flash:
-	${ARDUINO_PATH}/arduino --upload --board arduino:samd:arduino_zero_native attiny_flasher.ino --port /dev/ttyACM1
+	${ARDUINO_PATH}/arduino --upload --board arduino:samd:arduino_zero_native attiny_flasher.ino --port ${DEVICE_PORT}
