@@ -78,20 +78,18 @@ int left_written = 0;
 int right_written = 0;
 
 void power_off_left_attiny() {
-    digitalWrite(1, LOW);
-    //power_off_i2c();
+    digitalWrite(0, LOW);
 }
 
 void power_on_left_attiny() {
-    digitalWrite(1, HIGH);
+    digitalWrite(0, HIGH);
 }
 
 void power_off_right_attiny() {
-    digitalWrite(0, LOW);
-    //power_off_i2c();
+    digitalWrite(1, LOW);
 }
 void power_on_right_attiny() {
-    digitalWrite(0, HIGH);
+    digitalWrite(1, HIGH);
 }
 
 void print_result(byte result) {
@@ -168,10 +166,20 @@ void get_version (byte addr) {
             if(count == 10) {
                 SerialUSB.println("power cycling");
                 count = 0;
-                power_off_left_attiny();
-                delay(500);
-                power_on_left_attiny();
-                delay(100); // takes 100ms for the bootloader to startup
+                if(addr == LEFT_ADDRESS)
+                {
+                    power_off_left_attiny();
+                    delay(500);
+                    power_on_left_attiny();
+                    delay(100); // takes 100ms for the bootloader to startup
+                }
+                else
+                {
+                    power_off_right_attiny();
+                    delay(500);
+                    power_on_right_attiny();
+                    delay(100); // takes 100ms for the bootloader to startup
+                }
             }
             continue;
         }
