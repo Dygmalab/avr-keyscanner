@@ -96,7 +96,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         case LOCKED_OFF:
             // 	do not act on any input for 45ms
-            if(debouncer->cycles[i] < 80) {
+            if(debouncer->cycles[i] < 37) {
                 // 	TODO: if we get any "1" samples, that implies chatter
                 break;
             }
