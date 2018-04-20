@@ -43,5 +43,6 @@ do
 		 s/0,0[\r\n]+0,1/0,0/gsm; # ?? \
 		 s/0,1[\n\r]+0,0/0,0/gsm; #slow turn off  ' |uniq |grep ^1 |cut -d, -f 2|grep -P '\d+' >> $OUTFILE
 		uniq -c $OUTFILE
+		./reformat_keypress_data $OUTFILE
 	done
 done
