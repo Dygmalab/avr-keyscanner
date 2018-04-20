@@ -13,7 +13,7 @@
 #define MS_TO_CYCLES(ms)  ((int) ms * (1/F_CPU ) *  KEYSCAN_INTERVAL_DEFAULT * PRESCALER
 
 
-static int8_t debounce_integrator_ceiling = 18 ; // ~4ms - this means that a keypress that's 4ms long needs a 4ms gap afterward
+static int8_t debounce_integrator_ceiling = 58 ; // ~4ms - this means that a keypress that's 4ms long needs a 4ms gap afterward
 static int8_t debounce_toggle_on_threshold = 3; // ~1ms
 static int8_t debounce_integrator_floor = 0;
 static int8_t debounce_toggle_off_threshold =  0;

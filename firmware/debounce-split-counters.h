@@ -68,7 +68,7 @@
 
 
 #define DEBOUNCE_PRESS_DELAY_COUNT 2 
-#define DEBOUNCE_RELEASE_DELAY_COUNT 13
+#define DEBOUNCE_RELEASE_DELAY_COUNT 56
 
 /*
  * like the original debounce-counter, counters are transposed:
