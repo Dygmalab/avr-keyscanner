@@ -58,10 +58,10 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         case LOCKED_ON:
             // 	do not act on any input while the key is locked on
             if(debouncer->cycles[i] < (LOCKED_ON_WINDOW * chatter_multiplier)) {
-                // 	TODO: if we get any "0" samples, that implies chatter
-		if (!is_on) {
-			debouncer->key_chatters[i]=1;
-		}
+                if (!is_on) {
+                    debouncer->key_chatters[i]=1;
+		    debouncer->cycles[i] = 0;
+                }
                 break;
             }
             // 	after 45ms transition to "ON"
@@ -111,9 +111,10 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             // 	do not act on any input during the locked off window
             if(debouncer->cycles[i] < (LOCKED_OFF_WINDOW * chatter_multiplier)) {
                 // 	TODO: if we get any "1" samples, that implies chatter
-		if (is_on) {
-			debouncer->key_chatters[i]=1;
-		}
+                if (is_on) {
+                    debouncer->key_chatters[i]=1;
+		    debouncer->cycles[i] = 0;
+                }
                 break;
             }
             // 	after 45ms transition to "OFF"
