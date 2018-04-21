@@ -76,10 +76,11 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         case LOCKED_ON:
             // 	do not act on any input while the key is locked on
             if(debouncer->cycles[i] < (debouncer->key_chatters[i] ?  BAD_SWITCH_LOCKED_ON_PERIOD : LOCKED_ON_PERIOD ) ){
+		//printf("Locked on for %d of %d\n", debouncer->cycles[i], (debouncer->key_chatters[i] ?  BAD_SWITCH_LOCKED_ON_PERIOD : LOCKED_ON_PERIOD));
                 if (!is_on) {
                     debouncer->key_chatters[i]=1;
                     debug("Chatter detected");
-		    debouncer->cycles[i] = 0;
+	//	    debouncer->cycles[i] = 0;
                 }
                 break;
             }
