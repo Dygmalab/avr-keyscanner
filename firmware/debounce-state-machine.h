@@ -3,11 +3,13 @@
 #include <stdint.h>
 #include "keyscanner.h"
 
+#define TURNING_ON_CHATTER_WINDOW 2 
 #define TURNING_OFF_CHATTER_WINDOW 14
 #define KEY_ON_CHATTER_WINDOW 44
 #define LOCKED_ON_PERIOD 16
 #define LOCKED_OFF_PERIOD 16
 
+# define BAD_SWITCH_TURNING_ON_CHATTER_WINDOW 2
 # define BAD_SWITCH_TURNING_OFF_CHATTER_WINDOW 21
 # define BAD_SWITCH_KEY_ON_CHATTER_WINDOW 66
 # define BAD_SWITCH_LOCKED_ON_PERIOD 24
@@ -44,24 +46,30 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             if (is_on) {
                 debouncer->key_states[i]= TURNING_ON;
                 debouncer->cycles[i]=0;
+                debouncer->per_state_data[i]=(debouncer->key_chatters[i] ? BAD_SWITCH_TURNING_ON_CHATTER_WINDOW : TURNING_ON_CHATTER_WINDOW);
                 debug("OFF to TURNING_ON");
             }
             break;
 
         case TURNING_ON:
-            if (is_on) {
-                debouncer->key_states[i]= LOCKED_ON;
-                debug("TURNING_ON to LOCKED_ON");
-                debouncer->cycles[i]=0;
-// 		mark the debounced key as "ON"
-                changes |= _BV(i);
-            } else {
+	   
+	    if (!is_on)  {
                 // 	otherwise, transition to "OFF"
                 debouncer->key_states[i]= OFF;
                 debug("TURNING_ON to OFF");
                 debouncer->cycles[i]=0;
                 debouncer->key_chatters[i]=1;
                 debug("Chatter detected");
+            } 
+	    
+            debouncer->per_state_data[i]--;
+
+            if(debouncer->per_state_data[i]==0) {
+                debouncer->key_states[i]= LOCKED_ON;
+                debug("TURNING_ON to LOCKED_ON");
+                debouncer->cycles[i]=0;
+// 		mark the debounced key as "ON"
+                changes |= _BV(i);
             }
             break;
 
