@@ -28,7 +28,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     for(int8_t i=0; i< 1; i++) { //COUNT_INPUT; i++) {
         uint8_t is_on=       !! (sample & _BV(i)) ;
         debouncer->cycles[i]++;
-	uint8_t chatter_multiplier = (debouncer->key_chatters[i]+(CHATTER_MULTIPLIER-1));
+        uint8_t chatter_multiplier = (debouncer->key_chatters[i]+(CHATTER_MULTIPLIER-1));
         switch (debouncer->key_states[i] ) {
         case OFF:
             // if we get a single input sample that's "1", transition to "TURNING_ON".
@@ -40,18 +40,16 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             break;
 
         case TURNING_ON:
-// 	if the next input sample is "1"
             if (is_on) {
-// 		transition to "LOCKED_ON"
-// 		mark the debounced key as "ON"
                 debouncer->key_states[i]= LOCKED_ON;
                 debouncer->cycles[i]=0;
+// 		mark the debounced key as "ON"
                 changes |= _BV(i);
             } else {
                 // 	otherwise, transition to "OFF"
                 debouncer->key_states[i]= OFF;
                 debouncer->cycles[i]=0;
-		debouncer->key_chatters[i]=1;
+                debouncer->key_chatters[i]=1;
             }
             break;
 
@@ -64,19 +62,18 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
                 }
                 break;
             }
-            // 	after 45ms transition to "ON"
+
             debouncer->key_states[i]=ON;
             debouncer->cycles[i]=0;
 
             break;
 
         case ON:
-            // 	while any of the last 10ms are "1", stay ON
-
             if (is_on) {
                 debouncer->per_state_data[i]=(KEY_ON_CHATTER_WINDOW * chatter_multiplier);
+            } 
                 // 	if all of the last 10ms of samples are "0", transition to "TURNING_OFF"
-            } else {
+	    else {
                 debouncer->per_state_data[i]--;
                 if ( debouncer->per_state_data[i] == 0) {
                     debouncer->key_states[i]= TURNING_OFF;
@@ -88,17 +85,15 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         case TURNING_OFF:
             // 	listen for 10ms
-            // 	if any samples are "1", transition to "ON"
             if(is_on) {
                 debouncer->key_states[i]= ON;
                 debouncer->cycles[i]=0;
-		debouncer->key_chatters[i]=1;
+                debouncer->key_chatters[i]=1;
             }
 
             debouncer->per_state_data[i]--;
 
             if(debouncer->per_state_data[i]==0) {
-                // 	transition to "LOCKED_OFF"
                 // 		mark the debounced key as "OFF"
                 debouncer->key_states[i]= LOCKED_OFF;
                 debouncer->cycles[i]=0;
