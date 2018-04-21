@@ -6,8 +6,8 @@
 #define CHATTER_MULTIPLIER 3
 #define TURNING_OFF_CHATTER_WINDOW 7
 #define KEY_ON_CHATTER_WINDOW 22
-#define LOCKED_ON_WINDOW 8
-#define LOCKED_OFF_WINDOW 8
+#define LOCKED_ON_PERIOD 8
+#define LOCKED_OFF_PERIOD 8
 
 
 #define debug(x)  //printf(x); printf("\n");
@@ -63,7 +63,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         case LOCKED_ON:
             // 	do not act on any input while the key is locked on
-            if(debouncer->cycles[i] < (LOCKED_ON_WINDOW * chatter_multiplier)) {
+            if(debouncer->cycles[i] < (LOCKED_ON_PERIOD * chatter_multiplier)) {
                 if (!is_on) {
                     debouncer->key_chatters[i]=1;
                     debug("Chatter detected");
@@ -118,7 +118,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         case LOCKED_OFF:
             // 	do not act on any input during the locked off window
-            if(debouncer->cycles[i] < (LOCKED_OFF_WINDOW * chatter_multiplier)) {
+            if(debouncer->cycles[i] < (LOCKED_OFF_PERIOD * chatter_multiplier)) {
                 // 	TODO: if we get any "1" samples, that implies chatter
                 if (is_on) {
                     debouncer->key_chatters[i]=1;
