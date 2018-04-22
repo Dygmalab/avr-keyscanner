@@ -121,9 +121,12 @@ void handle_state_locked_off(uint8_t is_on, uint8_t i, debounce_t *debouncer, ui
 static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     uint8_t changes = 0;
     // Scan each pin from the bank
-    for(int8_t i=0; i< 1; i++) { //COUNT_INPUT; i++) {
+    for(int8_t i=0; i< COUNT_INPUT; i++) {
+
         uint8_t is_on=       !! (sample & _BV(i)) ;
         debouncer->cycles[i]++;
+
+
         switch (debouncer->key_states[i] ) {
         case OFF:
             handle_state_off(is_on, i, debouncer, &changes);
@@ -135,7 +138,6 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         case LOCKED_ON:
             handle_state_locked_on(is_on, i, debouncer, &changes);
-
             break;
 
         case ON:
