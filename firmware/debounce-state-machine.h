@@ -121,7 +121,6 @@ int8_t handle_state_locked_off(uint8_t is_on, uint8_t i, debounce_t *debouncer) 
     // 	do not act on any input during the locked off window
     if (is_on) {
         chatter_detected(debouncer, i);
-        return transition_to_state(debouncer, i, LOCKED_OFF);
     }
 
     // 	after 45ms transition to "OFF"
