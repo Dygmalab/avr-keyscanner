@@ -63,7 +63,7 @@ int8_t handle_state_off (uint8_t is_on, uint8_t i, debounce_t *debouncer) {
     if ( debouncer->cycles[i] > debouncer->per_state_data[i] ) {
         return transition_to_state(debouncer, i, TURNING_ON);
     }
-    return OFF;
+    return debouncer->key_states[i];
 }
 
 int8_t handle_state_on(uint8_t is_on, uint8_t i, debounce_t *debouncer) {
@@ -75,7 +75,7 @@ int8_t handle_state_on(uint8_t is_on, uint8_t i, debounce_t *debouncer) {
     if ( debouncer->cycles[i] > debouncer->per_state_data[i] ) {
         return transition_to_state(debouncer, i, TURNING_OFF);
     }
-    return ON;
+    return debouncer->key_states[i];
 }
 
 int8_t handle_state_turning_on(uint8_t is_on, uint8_t i, debounce_t *debouncer) {
@@ -88,7 +88,7 @@ int8_t handle_state_turning_on(uint8_t is_on, uint8_t i, debounce_t *debouncer) 
     	return transition_to_state(debouncer,i, LOCKED_ON);
     }
 
-    return TURNING_ON;
+    return debouncer->key_states[i];
 }
 
 
@@ -101,7 +101,7 @@ int8_t handle_state_turning_off(uint8_t is_on, uint8_t i, debounce_t *debouncer)
     if( debouncer->cycles[i] > debouncer->per_state_data[i] ) {
         return transition_to_state(debouncer, i, LOCKED_OFF);
     }
-    return TURNING_OFF;
+    return debouncer->key_states[i];
 }
 
 int8_t handle_state_locked_on(uint8_t is_on, uint8_t i, debounce_t *debouncer) {
@@ -113,7 +113,7 @@ int8_t handle_state_locked_on(uint8_t is_on, uint8_t i, debounce_t *debouncer) {
     if(debouncer->cycles[i] > debouncer->per_state_data[i]) {
         return transition_to_state(debouncer,i, ON);
     }
-    return LOCKED_ON;
+    return debouncer->key_states[i];
 }
 
 
@@ -129,7 +129,7 @@ int8_t handle_state_locked_off(uint8_t is_on, uint8_t i, debounce_t *debouncer) 
 	return transition_to_state(debouncer, i, OFF);
     }
 
-    return LOCKED_OFF;
+    return debouncer->key_states[i];
 }
 
 
