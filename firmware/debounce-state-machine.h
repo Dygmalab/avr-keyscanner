@@ -40,10 +40,11 @@ typedef struct {
 
 
 
-void transition_to_state(debounce_t *debouncer, uint8_t i, uint8_t new_state) {
+uint8_t transition_to_state(debounce_t *debouncer, uint8_t i, uint8_t new_state) {
     debouncer->key_states[i]= new_state;
     debouncer->cycles[i]=0;
     debouncer->per_state_data[i]=(debouncer->key_chatters[i] ? chattering_switch_timers[new_state]: regular_timers[new_state] );
+    return new_state;
 }
 
 
@@ -53,79 +54,82 @@ void chatter_detected ( debounce_t *debouncer, uint8_t i) {
 
 }
 
-void handle_state_off (uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
+int8_t handle_state_off (uint8_t is_on, uint8_t i, debounce_t *debouncer) {
     if (!is_on) {
-        transition_to_state(debouncer,i, OFF);
-        return;
+        return transition_to_state(debouncer,i, OFF);
     }
 
     // if we get a single input sample that's "1", transition to "TURNING_ON".
     if ( debouncer->cycles[i] > debouncer->per_state_data[i] ) {
-        transition_to_state(debouncer, i, TURNING_ON);
+        return transition_to_state(debouncer, i, TURNING_ON);
     }
+    return OFF;
 }
 
-void handle_state_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
+int8_t handle_state_on(uint8_t is_on, uint8_t i, debounce_t *debouncer) {
     if (is_on) {
-        transition_to_state(debouncer,i, ON);
-        return;
+        return transition_to_state(debouncer,i, ON);
     }
 
     // 	if all of the last 10ms of samples are "0", transition to "TURNING_OFF"
     if ( debouncer->cycles[i] > debouncer->per_state_data[i] ) {
-        transition_to_state(debouncer, i, TURNING_OFF);
+        return transition_to_state(debouncer, i, TURNING_OFF);
     }
+    return ON;
 }
 
-void handle_state_turning_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
+int8_t handle_state_turning_on(uint8_t is_on, uint8_t i, debounce_t *debouncer) {
     if (!is_on)  {
         chatter_detected(debouncer,i);
-        transition_to_state(debouncer,i, OFF);
-        return;
+        return transition_to_state(debouncer,i, OFF);
     }
 
     if ( debouncer->cycles[i] > debouncer->per_state_data[i] ) {
-    	transition_to_state(debouncer,i, LOCKED_ON);
-    	*changes |= _BV(i);
+    	return transition_to_state(debouncer,i, LOCKED_ON);
     }
+
+    return TURNING_ON;
 }
 
 
-void handle_state_turning_off(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
+int8_t handle_state_turning_off(uint8_t is_on, uint8_t i, debounce_t *debouncer) {
     if(is_on) {
 	chatter_detected(debouncer, i);
-        transition_to_state(debouncer, i, ON);
+        return transition_to_state(debouncer, i, ON);
     }
 
     if( debouncer->cycles[i] > debouncer->per_state_data[i] ) {
-        transition_to_state(debouncer, i, LOCKED_OFF);
-        *changes |= _BV(i);
+        return transition_to_state(debouncer, i, LOCKED_OFF);
     }
+    return TURNING_OFF;
 }
 
-void handle_state_locked_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
+int8_t handle_state_locked_on(uint8_t is_on, uint8_t i, debounce_t *debouncer) {
     if (!is_on) {
 	chatter_detected(debouncer,i);
     }
 
     // 	do not act on any input while the key is locked on
     if(debouncer->cycles[i] > debouncer->per_state_data[i]) {
-        transition_to_state(debouncer,i, ON);
+        return transition_to_state(debouncer,i, ON);
     }
+    return LOCKED_ON;
 }
 
 
-void handle_state_locked_off(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
+int8_t handle_state_locked_off(uint8_t is_on, uint8_t i, debounce_t *debouncer) {
     // 	do not act on any input during the locked off window
     if (is_on) {
         chatter_detected(debouncer, i);
-        transition_to_state(debouncer, i, LOCKED_OFF);
+        return transition_to_state(debouncer, i, LOCKED_OFF);
     }
 
     // 	after 45ms transition to "OFF"
     if(debouncer->cycles[i] > debouncer->per_state_data[i] ) {
-        transition_to_state(debouncer, i, OFF);
+	return transition_to_state(debouncer, i, OFF);
     }
+
+    return LOCKED_OFF;
 }
 
 
@@ -139,27 +143,31 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         switch (debouncer->key_states[i] ) {
         case OFF:
-            handle_state_off(is_on, i, debouncer, &changes);
+            handle_state_off(is_on, i, debouncer);
             break;
 
         case TURNING_ON:
-            handle_state_turning_on(is_on, i, debouncer, &changes);
+            if (handle_state_turning_on(is_on, i, debouncer) == LOCKED_ON) {
+    		changes |= _BV(i);
+	    }
             break;
 
         case LOCKED_ON:
-            handle_state_locked_on(is_on, i, debouncer, &changes);
+            handle_state_locked_on(is_on, i, debouncer);
             break;
 
         case ON:
-            handle_state_on(is_on, i, debouncer, &changes);
+            handle_state_on(is_on, i, debouncer);
             break;
 
         case TURNING_OFF:
-            handle_state_turning_off(is_on, i, debouncer, &changes);
+            if (handle_state_turning_off(is_on, i, debouncer) == LOCKED_OFF) {
+    		changes |= _BV(i);
+	    }
             break;
 
         case LOCKED_OFF:
-            handle_state_locked_off(is_on, i, debouncer, &changes);
+            handle_state_locked_off(is_on, i, debouncer);
             break;
         };
 
