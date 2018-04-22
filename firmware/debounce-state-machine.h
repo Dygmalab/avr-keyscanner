@@ -75,14 +75,14 @@ void handle_state_turning_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, ui
 
 void handle_state_locked_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
     // 	do not act on any input while the key is locked on
-    if(debouncer->cycles[i] < debouncer->per_state_data[i]) {
-        if (!is_on && ! debouncer->key_chatters[i] ) {
-            transition_to_state(debouncer,i, LOCKED_ON, CHATTER_DETECTED);
-        }
+    if(debouncer->cycles[i] >= debouncer->per_state_data[i]) {
+        transition_to_state(debouncer,i, ON, NO_CHATTER_DETECTED);
         return;
     }
 
-    transition_to_state(debouncer,i, ON, NO_CHATTER_DETECTED);
+    if (!is_on && ! debouncer->key_chatters[i] ) {
+        transition_to_state(debouncer,i, LOCKED_ON, CHATTER_DETECTED);
+    }
 }
 
 void handle_state_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
@@ -90,6 +90,7 @@ void handle_state_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *c
         transition_to_state(debouncer,i, ON, NO_CHATTER_DETECTED);
         return;
     }
+
     // 	if all of the last 10ms of samples are "0", transition to "TURNING_OFF"
     debouncer->per_state_data[i]--;
     if ( debouncer->per_state_data[i] == 0) {
@@ -112,15 +113,15 @@ void handle_state_turning_off(uint8_t is_on, uint8_t i, debounce_t *debouncer, u
     }
 }
 void handle_state_locked_off(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
-    // 	do not act on any input during the locked off window
-    if(debouncer->cycles[i] < debouncer->per_state_data[i] ) {
-        if (is_on) {
-            transition_to_state(debouncer, i, LOCKED_OFF, CHATTER_DETECTED);
-        }
+    // 	after 45ms transition to "OFF"
+    if(debouncer->cycles[i] >= debouncer->per_state_data[i] ) {
+        transition_to_state(debouncer, i, OFF, NO_CHATTER_DETECTED);
         return;
     }
-    // 	after 45ms transition to "OFF"
-    transition_to_state(debouncer, i, OFF, NO_CHATTER_DETECTED);
+    // 	do not act on any input during the locked off window
+    if (is_on) {
+        transition_to_state(debouncer, i, LOCKED_OFF, CHATTER_DETECTED);
+    }
 }
 
 
