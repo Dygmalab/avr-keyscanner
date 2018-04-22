@@ -44,7 +44,7 @@ void transition_to_state(debounce_t *debouncer, uint8_t i, uint8_t new_state, ui
     debouncer->key_states[i]= new_state;
     debouncer->cycles[i]=0;
     if (chatter_detected) {
-        debouncer->key_chatters[i] =1;
+        debouncer->key_chatters[i]=1;
     }
     debouncer->per_state_data[i]=(debouncer->key_chatters[i] ? chattering_switch_timers[new_state]: regular_timers[new_state] );
 }
@@ -64,11 +64,13 @@ void handle_state_turning_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, ui
 
     debouncer->per_state_data[i]--;
 
-    if(debouncer->per_state_data[i]==0) {
-        transition_to_state(debouncer,i, LOCKED_ON, NO_CHATTER_DETECTED);
-        *changes |= _BV(i);
+    if(debouncer->per_state_data[i]>0) {
+        return;
     }
 
+    *changes |= _BV(i);
+
+    transition_to_state(debouncer,i, LOCKED_ON, NO_CHATTER_DETECTED);
 }
 
 void handle_state_locked_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
@@ -94,6 +96,8 @@ void handle_state_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *c
         transition_to_state(debouncer, i, TURNING_OFF, NO_CHATTER_DETECTED);
     }
 }
+
+
 void handle_state_turning_off(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
     if(is_on) {
         transition_to_state(debouncer, i, ON, CHATTER_DETECTED);
@@ -111,7 +115,6 @@ void handle_state_locked_off(uint8_t is_on, uint8_t i, debounce_t *debouncer, ui
     // 	do not act on any input during the locked off window
     if(debouncer->cycles[i] < debouncer->per_state_data[i] ) {
         if (is_on) {
-
             transition_to_state(debouncer, i, LOCKED_OFF, CHATTER_DETECTED);
         }
         return;
@@ -127,9 +130,8 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     // Scan each pin from the bank
     for(int8_t i=0; i< COUNT_INPUT; i++) {
 
-        uint8_t is_on=       !! (sample & _BV(i)) ;
+        uint8_t is_on=  !! (sample & _BV(i)) ;
         debouncer->cycles[i]++;
-
 
         switch (debouncer->key_states[i] ) {
         case OFF:
