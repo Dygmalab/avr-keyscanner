@@ -27,8 +27,8 @@ enum { OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF};
 
 // these timers are in the same order as the enum above;
 //
-uint8_t regular_timers[] =           { 0,  2, 11,   5,   3,   34 };
-uint8_t chattering_switch_timers[] = { 0,  2, 35,  10,  38,   50 };
+uint8_t regular_timers[] =           { 0,  1, 7,   10,   6,   30 };
+uint8_t chattering_switch_timers[] = { 0,  2, 35,  65,  27,   50 };
 
 typedef struct {
     uint8_t key_states[8];
