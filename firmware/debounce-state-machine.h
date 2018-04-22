@@ -65,33 +65,6 @@ void handle_state_off (uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t 
     }
 }
 
-void handle_state_turning_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
-    if (!is_on)  {
-        chatter_detected(debouncer,i);
-        transition_to_state(debouncer,i, OFF);
-        return;
-    }
-
-    if ( debouncer->cycles[i] > debouncer->per_state_data[i] ) {
-        return;
-    }
-
-    *changes |= _BV(i);
-    transition_to_state(debouncer,i, LOCKED_ON);
-}
-
-void handle_state_locked_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
-    if (!is_on) {
-	chatter_detected(debouncer,i);
-    }
-
-    // 	do not act on any input while the key is locked on
-    if(debouncer->cycles[i] > debouncer->per_state_data[i]) {
-        transition_to_state(debouncer,i, ON);
-    }
-
-}
-
 void handle_state_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
     if (is_on) {
         transition_to_state(debouncer,i, ON);
@@ -101,6 +74,19 @@ void handle_state_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *c
     // 	if all of the last 10ms of samples are "0", transition to "TURNING_OFF"
     if ( debouncer->cycles[i] > debouncer->per_state_data[i] ) {
         transition_to_state(debouncer, i, TURNING_OFF);
+    }
+}
+
+void handle_state_turning_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
+    if (!is_on)  {
+        chatter_detected(debouncer,i);
+        transition_to_state(debouncer,i, OFF);
+        return;
+    }
+
+    if ( debouncer->cycles[i] > debouncer->per_state_data[i] ) {
+    	transition_to_state(debouncer,i, LOCKED_ON);
+    	*changes |= _BV(i);
     }
 }
 
@@ -116,16 +102,29 @@ void handle_state_turning_off(uint8_t is_on, uint8_t i, debounce_t *debouncer, u
         *changes |= _BV(i);
     }
 }
-void handle_state_locked_off(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
-    // 	after 45ms transition to "OFF"
-    if(debouncer->cycles[i] > debouncer->per_state_data[i] ) {
-        transition_to_state(debouncer, i, OFF);
-        return;
+
+void handle_state_locked_on(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
+    if (!is_on) {
+	chatter_detected(debouncer,i);
     }
+
+    // 	do not act on any input while the key is locked on
+    if(debouncer->cycles[i] > debouncer->per_state_data[i]) {
+        transition_to_state(debouncer,i, ON);
+    }
+}
+
+
+void handle_state_locked_off(uint8_t is_on, uint8_t i, debounce_t *debouncer, uint8_t *changes) {
     // 	do not act on any input during the locked off window
     if (is_on) {
         chatter_detected(debouncer, i);
         transition_to_state(debouncer, i, LOCKED_OFF);
+    }
+
+    // 	after 45ms transition to "OFF"
+    if(debouncer->cycles[i] > debouncer->per_state_data[i] ) {
+        transition_to_state(debouncer, i, OFF);
     }
 }
 
@@ -135,7 +134,6 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     uint8_t changes = 0;
     // Scan each pin from the bank
     for(int8_t i=0; i< COUNT_INPUT; i++) {
-
         uint8_t is_on=  !! (sample & _BV(i)) ;
         debouncer->cycles[i]++;
 
