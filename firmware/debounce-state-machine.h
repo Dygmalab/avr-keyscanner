@@ -67,7 +67,19 @@ void chatter_detected ( key_info_t *key_info) {
 
 }
 
-int8_t handle_state(uint8_t is_on, key_info_t *key_info) { 
+
+
+static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
+    uint8_t changes = 0;
+    // Scan each pin from the bank
+    for(int8_t i=0; i< COUNT_INPUT; i++) {
+        uint8_t is_on=  !! (sample & _BV(i)) ;
+        key_info_t *key_info	= debouncer->key_info+i;
+
+        key_info->ticks++;
+
+	uint8_t old_lifecycle = key_info->lifecycle;
+
 
     // if we get the 'other' value during a locked window, that's gotta be chatter
     if (is_on != expected_data[key_info->lifecycle]) {
@@ -81,26 +93,12 @@ int8_t handle_state(uint8_t is_on, key_info_t *key_info) {
     if(key_info->ticks > key_info->timer) {
         transition_to_state(key_info, next_lifecycle[key_info->lifecycle]);
     }
-    return key_info->lifecycle;
-}
 
 
 
 
-static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
-    uint8_t changes = 0;
-    // Scan each pin from the bank
-    for(int8_t i=0; i< COUNT_INPUT; i++) {
-        uint8_t is_on=  !! (sample & _BV(i)) ;
-        key_info_t *key_info	= debouncer->key_info+i;
-
-        key_info->ticks++;
-
-	uint8_t old_lifecycle = key_info->lifecycle;
-	uint8_t new_lifecycle = handle_state(is_on, key_info);
-
-	if (( old_lifecycle == TURNING_ON && new_lifecycle == LOCKED_ON)  ||
-	    ( old_lifecycle == TURNING_OFF && new_lifecycle == LOCKED_OFF) ) {
+	if (( old_lifecycle == TURNING_ON && key_info->lifecycle == LOCKED_ON)  ||
+	    ( old_lifecycle == TURNING_OFF && key_info->lifecycle == LOCKED_OFF) ) {
 
 
                 changes |= _BV(i);
