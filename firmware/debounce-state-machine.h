@@ -3,22 +3,6 @@
 #include <stdint.h>
 #include "keyscanner.h"
 
-#define TURNING_ON_CHATTER_WINDOW 2
-#define LOCKED_ON_PERIOD 11
-#define KEY_ON_CHATTER_WINDOW  5
-#define TURNING_OFF_CHATTER_WINDOW 3
-#define LOCKED_OFF_PERIOD 34
-
-# define BAD_SWITCH_TURNING_ON_CHATTER_WINDOW 2
-# define BAD_SWITCH_LOCKED_ON_PERIOD 22
-# define BAD_SWITCH_KEY_ON_CHATTER_WINDOW  10
-# define BAD_SWITCH_TURNING_OFF_CHATTER_WINDOW 35
-# define BAD_SWITCH_LOCKED_OFF_PERIOD 50
-
-
-#define CHATTER_DETECTED 1
-#define NO_CHATTER_DETECTED 0
-
 #define debug(x)  //printf(x); printf("\n");
 
 
