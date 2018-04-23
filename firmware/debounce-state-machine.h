@@ -28,6 +28,7 @@
 enum { OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF};
 
 int next_lifecycle[] = { TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF, OFF};
+int expected_data[] = { EXPECTED_ON, EXPECTED_ON, EXPECTED_ON, EXPECTED_OFF, EXPECTED_OFF, EXPECTED_OFF };
 int unexpected_data_is_chatter[] = { 0, 1, 1, 0, 1, 1 };
 int on_unexpected_data[] = { OFF, OFF , -1, ON, ON, -1 }; 
 // these timers are in the same order as the enum above;
@@ -66,10 +67,10 @@ void chatter_detected ( key_info_t *key_info) {
 
 }
 
-int8_t handle_state(uint8_t is_on, uint8_t expected_signal, key_info_t *key_info) { 
+int8_t handle_state(uint8_t is_on, key_info_t *key_info) { 
 
     // if we get the 'other' value during a locked window, that's gotta be chatter
-    if (is_on != expected_signal) {
+    if (is_on != expected_data[key_info->lifecycle]) {
         if (unexpected_data_is_chatter[key_info->lifecycle]) {
 		chatter_detected(key_info);
 	}
@@ -95,35 +96,15 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         key_info->ticks++;
 
-        switch (key_info->lifecycle ) {
-        case OFF:
-            handle_state(is_on, EXPECTED_ON, key_info);
-            break;
+	uint8_t old_lifecycle = key_info->lifecycle;
+	uint8_t new_lifecycle = handle_state(is_on, key_info);
 
-        case TURNING_ON:
-            if (handle_state(is_on, EXPECTED_ON, key_info) == LOCKED_ON) {
+	if (( old_lifecycle == TURNING_ON && new_lifecycle == LOCKED_ON)  ||
+	    ( old_lifecycle == TURNING_OFF && new_lifecycle == LOCKED_OFF) ) {
+
+
                 changes |= _BV(i);
-            }
-            break;
-
-        case LOCKED_ON:
-            handle_state(is_on, EXPECTED_ON, key_info);
-            break;
-
-        case ON:
-            handle_state(is_on, EXPECTED_OFF, key_info);
-            break;
-
-        case TURNING_OFF:
-            if (handle_state(is_on, EXPECTED_OFF, key_info) == LOCKED_OFF) {
-                changes |= _BV(i);
-            }
-            break;
-
-        case LOCKED_OFF:
-            handle_state(is_on, EXPECTED_OFF, key_info);
-            break;
-        };
+	}	
 
     }
 
