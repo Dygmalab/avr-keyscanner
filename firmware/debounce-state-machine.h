@@ -22,7 +22,12 @@
 #define debug(x)  //printf(x); printf("\n");
 
 
+#define EXPECTED_OFF 0
+#define EXPECTED_ON  1
+
 enum { OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF};
+
+int next_lifecycle[] = { TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF, OFF};
 
 
 // these timers are in the same order as the enum above;
@@ -58,78 +63,77 @@ void chatter_detected ( key_info_t *key_info) {
 
 }
 
-int8_t handle_state_off (uint8_t is_on, key_info_t *key_info) {
-    if (!is_on) {
+int8_t handle_state_off (uint8_t is_on, uint8_t expected_signal,  key_info_t *key_info) {
+    if (is_on == expected_signal) {
         return transition_to_state(key_info, OFF);
     }
 
     // if we get a single input sample that's "1", transition to "TURNING_ON".
     if ( key_info->ticks > key_info->timer ) {
-        return transition_to_state(key_info, TURNING_ON);
+        return transition_to_state(key_info, next_lifecycle[key_info->lifecycle]);
     }
     return key_info->lifecycle;
 }
 
-int8_t handle_state_on(uint8_t is_on, key_info_t *key_info) {
-    if (is_on) {
+int8_t handle_state_on(uint8_t is_on, uint8_t expected_signal, key_info_t *key_info) {
+    if (is_on == expected_signal) {
         return transition_to_state(key_info, ON);
     }
 
-    // 	if all of the last 10ms of samples are "0", transition to "TURNING_OFF"
     if ( key_info->ticks > key_info->timer ) {
-        return transition_to_state(key_info,  TURNING_OFF);
+        return transition_to_state(key_info, next_lifecycle[key_info->lifecycle]);
     }
     return key_info->lifecycle;
 }
 
-int8_t handle_state_turning_on(uint8_t is_on, key_info_t *key_info) {
-    if (!is_on)  {
+int8_t handle_state_turning_on(uint8_t is_on, uint8_t expected_signal, key_info_t *key_info) {
+    if (is_on != expected_signal)  {
         chatter_detected(key_info);
         return transition_to_state(key_info, OFF);
     }
 
     if ( key_info->ticks > key_info->timer ) {
-        return transition_to_state(key_info, LOCKED_ON);
+        return transition_to_state(key_info, next_lifecycle[key_info->lifecycle]);
     }
 
     return key_info->lifecycle;
 }
 
 
-int8_t handle_state_turning_off(uint8_t is_on, key_info_t *key_info) {
-    if(is_on) {
+int8_t handle_state_turning_off(uint8_t is_on, uint8_t expected_signal, key_info_t *key_info) {
+    if(is_on != expected_signal) {
         chatter_detected(key_info);
         return transition_to_state(key_info,  ON);
     }
 
     if( key_info->ticks > key_info->timer ) {
-        return transition_to_state(key_info,  LOCKED_OFF);
+        return transition_to_state(key_info,  next_lifecycle[key_info->lifecycle]);
     }
     return key_info->lifecycle;
 }
 
-int8_t handle_state_locked_on(uint8_t is_on, key_info_t *key_info) {
-    if (!is_on) {
+int8_t handle_state_locked_on(uint8_t is_on, uint8_t expected_signal, key_info_t *key_info) {
+    if (is_on != expected_signal) {
         chatter_detected(key_info);
     }
 
     // 	do not act on any input while the key is locked on
     if(key_info->ticks > key_info->timer) {
-        return transition_to_state(key_info, ON);
+        return transition_to_state(key_info, next_lifecycle[key_info->lifecycle]);
     }
     return key_info->lifecycle;
 }
 
 
-int8_t handle_state_locked_off(uint8_t is_on, key_info_t *key_info) {
+int8_t handle_state_locked_off(uint8_t is_on, uint8_t expected_signal, key_info_t *key_info) {
     // 	do not act on any input during the locked off window
-    if (is_on) {
+    if (is_on != expected_signal) {
         chatter_detected(key_info);
     }
 
-    // 	after 45ms transition to "OFF"
+    // 	after the timer expires transition to "OFF"
     if(key_info->ticks > key_info->timer ) {
-        return transition_to_state(key_info, OFF);
+        return transition_to_state(key_info, next_lifecycle[key_info->lifecycle]);
     }
 
     return key_info->lifecycle;
@@ -148,31 +152,31 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         switch (key_info->lifecycle ) {
         case OFF:
-            handle_state_off(is_on, key_info);
+            handle_state_off(is_on, EXPECTED_OFF, key_info);
             break;
 
         case TURNING_ON:
-            if (handle_state_turning_on(is_on, key_info) == LOCKED_ON) {
+            if (handle_state_turning_on(is_on, EXPECTED_ON, key_info) == LOCKED_ON) {
                 changes |= _BV(i);
             }
             break;
 
         case LOCKED_ON:
-            handle_state_locked_on(is_on, key_info);
+            handle_state_locked_on(is_on, EXPECTED_ON, key_info);
             break;
 
         case ON:
-            handle_state_on(is_on,key_info);
+            handle_state_on(is_on, EXPECTED_ON, key_info);
             break;
 
         case TURNING_OFF:
-            if (handle_state_turning_off(is_on, key_info) == LOCKED_OFF) {
+            if (handle_state_turning_off(is_on, EXPECTED_OFF, key_info) == LOCKED_OFF) {
                 changes |= _BV(i);
             }
             break;
 
         case LOCKED_OFF:
-            handle_state_locked_off(is_on, key_info);
+            handle_state_locked_off(is_on, EXPECTED_OFF, key_info);
             break;
         };
 
