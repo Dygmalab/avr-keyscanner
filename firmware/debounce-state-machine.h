@@ -25,16 +25,6 @@
 #define EXPECTED_OFF 0
 #define EXPECTED_ON  1
 
-enum { OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF};
-
-int next_lifecycle[] = { TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF, OFF};
-int expected_data[] = { EXPECTED_ON, EXPECTED_ON, EXPECTED_ON, EXPECTED_OFF, EXPECTED_OFF, EXPECTED_OFF };
-int unexpected_data_is_chatter[] = { 0, 1, 1, 0, 1, 1 };
-int on_unexpected_data[] = { OFF, OFF, -1, ON, ON, -1 };
-// these timers are in the same order as the enum above;
-//
-uint8_t regular_timers[] =           { 0,  1, 7,   10,   6,   30 };
-uint8_t chattering_switch_timers[] = { 0,  2, 35,  65,  27,   50 };
 
 typedef struct {
     uint8_t lifecycle;
@@ -50,20 +40,85 @@ typedef struct {
 
 
 
+enum lifecycle_states { OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF, UNCHANGED};
+
+typedef struct {
+    uint8_t 
+	    next_state: 3,
+	    unexpected_data_state: 3,
+	    expected_data:1,
+            unexpected_data_is_chatter: 1;
+    int8_t regular_timer;
+    int8_t chattering_switch_timer;
+} lifecycle_state_t;
+
+
+
+lifecycle_state_t lifecycle[] = {
+    {
+        .next_state = TURNING_ON,
+        .expected_data = EXPECTED_ON,
+        .unexpected_data_state = OFF,
+        .regular_timer = 0,
+        .unexpected_data_is_chatter = 0,
+        .chattering_switch_timer = 0
+    },
+    {
+        .next_state = LOCKED_ON,
+        .expected_data = EXPECTED_ON,
+        .unexpected_data_state = OFF,
+        .regular_timer = 1,
+        .unexpected_data_is_chatter = 1,
+        .chattering_switch_timer = 2
+    },
+    {
+        .next_state = ON,
+        .expected_data = EXPECTED_ON,
+        .unexpected_data_state = UNCHANGED,
+        .regular_timer = 7,
+        .unexpected_data_is_chatter = 1,
+        .chattering_switch_timer = 35
+    },
+    {
+        .next_state = TURNING_OFF,
+        .expected_data = EXPECTED_OFF,
+        .unexpected_data_state = ON,
+        .regular_timer = 10,
+        .unexpected_data_is_chatter = 0,
+        .chattering_switch_timer = 65
+    },
+    {
+        .next_state = LOCKED_OFF,
+        .expected_data = EXPECTED_OFF,
+        .unexpected_data_state = ON,
+        .regular_timer = 6,
+        .unexpected_data_is_chatter = 1,
+        .chattering_switch_timer = 27
+    },
+    {
+        .next_state = OFF,
+        .expected_data = EXPECTED_OFF,
+        .unexpected_data_state =  UNCHANGED,
+        .regular_timer = 30,
+        .unexpected_data_is_chatter =1,
+        .chattering_switch_timer = 50
+    }
+};
+
 uint8_t transition_to_state(key_info_t *key_info, int8_t new_state) {
-    if (new_state == -1) {
+    if (new_state == UNCHANGED) {
         return key_info->lifecycle;
     }
     key_info->lifecycle= new_state;
     key_info->ticks=0;
-    key_info->timer=(key_info->chatters ? chattering_switch_timers[new_state]: regular_timers[new_state] );
+    key_info->timer=(key_info->chatters ? lifecycle[new_state].chattering_switch_timer: lifecycle[new_state].regular_timer );
     return new_state;
 }
 
 
 void chatter_detected ( key_info_t *key_info) {
     key_info->chatters=1;
-    key_info->timer= chattering_switch_timers[key_info->lifecycle];
+    key_info->timer= lifecycle[key_info->lifecycle].chattering_switch_timer;
 
 }
 
@@ -82,16 +137,16 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
 
         // if we get the 'other' value during a locked window, that's gotta be chatter
-        if (is_on != expected_data[key_info->lifecycle]) {
-            if (unexpected_data_is_chatter[key_info->lifecycle]) {
+        if (is_on != lifecycle[key_info->lifecycle].expected_data) {
+            if ( lifecycle[key_info->lifecycle].unexpected_data_is_chatter ) {
                 chatter_detected(key_info);
             }
-            transition_to_state(key_info, on_unexpected_data[key_info->lifecycle]);
+            transition_to_state(key_info, lifecycle[key_info->lifecycle].unexpected_data_state);
         }
 
         // 	do not act on any input during the locked off window
         if(key_info->ticks > key_info->timer) {
-            transition_to_state(key_info, next_lifecycle[key_info->lifecycle]);
+            transition_to_state(key_info, lifecycle[key_info->lifecycle].next_state);
         }
 
 
