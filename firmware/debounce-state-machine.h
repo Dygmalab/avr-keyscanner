@@ -30,7 +30,7 @@ enum { OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF};
 int next_lifecycle[] = { TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF, OFF};
 int expected_data[] = { EXPECTED_ON, EXPECTED_ON, EXPECTED_ON, EXPECTED_OFF, EXPECTED_OFF, EXPECTED_OFF };
 int unexpected_data_is_chatter[] = { 0, 1, 1, 0, 1, 1 };
-int on_unexpected_data[] = { OFF, OFF , -1, ON, ON, -1 }; 
+int on_unexpected_data[] = { OFF, OFF, -1, ON, ON, -1 };
 // these timers are in the same order as the enum above;
 //
 uint8_t regular_timers[] =           { 0,  1, 7,   10,   6,   30 };
@@ -52,7 +52,7 @@ typedef struct {
 
 uint8_t transition_to_state(key_info_t *key_info, int8_t new_state) {
     if (new_state == -1) {
-	    return key_info->lifecycle;
+        return key_info->lifecycle;
     }
     key_info->lifecycle= new_state;
     key_info->ticks=0;
@@ -78,31 +78,31 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         key_info->ticks++;
 
-	uint8_t old_lifecycle = key_info->lifecycle;
+        uint8_t old_lifecycle = key_info->lifecycle;
 
 
-    // if we get the 'other' value during a locked window, that's gotta be chatter
-    if (is_on != expected_data[key_info->lifecycle]) {
-        if (unexpected_data_is_chatter[key_info->lifecycle]) {
-		chatter_detected(key_info);
-	}
-        transition_to_state(key_info, on_unexpected_data[key_info->lifecycle]);
-    }
+        // if we get the 'other' value during a locked window, that's gotta be chatter
+        if (is_on != expected_data[key_info->lifecycle]) {
+            if (unexpected_data_is_chatter[key_info->lifecycle]) {
+                chatter_detected(key_info);
+            }
+            transition_to_state(key_info, on_unexpected_data[key_info->lifecycle]);
+        }
 
-    // 	do not act on any input during the locked off window
-    if(key_info->ticks > key_info->timer) {
-        transition_to_state(key_info, next_lifecycle[key_info->lifecycle]);
-    }
-
-
+        // 	do not act on any input during the locked off window
+        if(key_info->ticks > key_info->timer) {
+            transition_to_state(key_info, next_lifecycle[key_info->lifecycle]);
+        }
 
 
-	if (( old_lifecycle == TURNING_ON && key_info->lifecycle == LOCKED_ON)  ||
-	    ( old_lifecycle == TURNING_OFF && key_info->lifecycle == LOCKED_OFF) ) {
 
 
-                changes |= _BV(i);
-	}	
+        if (( old_lifecycle == TURNING_ON && key_info->lifecycle == LOCKED_ON)  ||
+                ( old_lifecycle == TURNING_OFF && key_info->lifecycle == LOCKED_OFF) ) {
+
+
+            changes |= _BV(i);
+        }
 
     }
 
