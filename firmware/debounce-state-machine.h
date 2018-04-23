@@ -112,32 +112,20 @@ int8_t handle_state_turning_off(uint8_t is_on, uint8_t expected_signal, key_info
     return key_info->lifecycle;
 }
 
-int8_t handle_state_locked_on(uint8_t is_on, uint8_t expected_signal, key_info_t *key_info) {
+int8_t handle_state_locked(uint8_t is_on, uint8_t expected_signal, key_info_t *key_info) { 
+
+    // if we get the 'other' value during a locked window, that's gotta be chatter
     if (is_on != expected_signal) {
         chatter_detected(key_info);
     }
 
-    // 	do not act on any input while the key is locked on
+    // 	do not act on any input during the locked off window
     if(key_info->ticks > key_info->timer) {
         return transition_to_state(key_info, next_lifecycle[key_info->lifecycle]);
     }
     return key_info->lifecycle;
 }
 
-
-int8_t handle_state_locked_off(uint8_t is_on, uint8_t expected_signal, key_info_t *key_info) {
-    // 	do not act on any input during the locked off window
-    if (is_on != expected_signal) {
-        chatter_detected(key_info);
-    }
-
-    // 	after the timer expires transition to "OFF"
-    if(key_info->ticks > key_info->timer ) {
-        return transition_to_state(key_info, next_lifecycle[key_info->lifecycle]);
-    }
-
-    return key_info->lifecycle;
-}
 
 
 
@@ -162,7 +150,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             break;
 
         case LOCKED_ON:
-            handle_state_locked_on(is_on, EXPECTED_ON, key_info);
+            handle_state_locked(is_on, EXPECTED_ON, key_info);
             break;
 
         case ON:
@@ -176,7 +164,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             break;
 
         case LOCKED_OFF:
-            handle_state_locked_off(is_on, EXPECTED_OFF, key_info);
+            handle_state_locked(is_on, EXPECTED_OFF, key_info);
             break;
         };
 
