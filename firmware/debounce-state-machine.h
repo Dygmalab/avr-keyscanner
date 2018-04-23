@@ -64,7 +64,7 @@ void chatter_detected ( key_info_t *key_info) {
 }
 
 int8_t handle_state_steady(uint8_t is_on, uint8_t expected_signal, key_info_t *key_info) {
-    if (is_on == expected_signal) {
+    if (is_on != expected_signal) {
         return transition_to_state(key_info, key_info->lifecycle);
     }
 
@@ -128,7 +128,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         switch (key_info->lifecycle ) {
         case OFF:
-            handle_state_steady(is_on, EXPECTED_OFF, key_info);
+            handle_state_steady(is_on, EXPECTED_ON, key_info);
             break;
 
         case TURNING_ON:
@@ -142,7 +142,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             break;
 
         case ON:
-            handle_state_steady(is_on, EXPECTED_ON, key_info);
+            handle_state_steady(is_on, EXPECTED_OFF, key_info);
             break;
 
         case TURNING_OFF:
