@@ -69,7 +69,7 @@ lifecycle_state_t lifecycle[] = {
         .unexpected_data_state = ON,
         .regular_timer = 10,
         .unexpected_data_is_chatter = 0,
-        .chattering_switch_timer = 65
+        .chattering_switch_timer = 35
     },
     { // TURNING_OFF
         .next_state = LOCKED_OFF,
