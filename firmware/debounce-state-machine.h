@@ -89,15 +89,11 @@ lifecycle_state_t lifecycle[] = {
     }
 };
 
-uint8_t transition_to_state(key_info_t *key_info, int8_t new_state) {
+void transition_to_state(key_info_t *key_info, int8_t new_state) {
     key_info->timer=(key_info->chatters ? lifecycle[new_state].chattering_switch_timer: lifecycle[new_state].regular_timer );
-    
-   // if (new_state != key_info->lifecycle) {
-    	key_info->lifecycle= new_state;
-    //}
+    key_info->lifecycle= new_state;
     key_info->ticks=0;
 
-    return key_info->lifecycle;
 }
 
 
@@ -116,9 +112,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         // if we get the 'other' value during a locked window, that's gotta be chatter
         if (is_on != lifecycle[key_info->lifecycle].expected_data) {
-            if (lifecycle[key_info->lifecycle].unexpected_data_is_chatter) {
-            	key_info->chatters=1;
-            }
+            key_info->chatters = key_info->chatters || lifecycle[key_info->lifecycle].unexpected_data_is_chatter;
             transition_to_state(key_info, lifecycle[key_info->lifecycle].unexpected_data_state);
         }
 
@@ -127,9 +121,9 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 		continue;
 	}
 
-	uint8_t new_state = transition_to_state(key_info, lifecycle[key_info->lifecycle].next_state);
+	transition_to_state(key_info, lifecycle[key_info->lifecycle].next_state);
 
-        if ( new_state == LOCKED_ON  || new_state == LOCKED_OFF)  {
+        if ( key_info->lifecycle == LOCKED_ON  || key_info->lifecycle == LOCKED_OFF)  {
             changes |= _BV(i);
         }
 
