@@ -46,7 +46,7 @@ lifecycle_phase_t lifecycle[] = {
         .expected_data = 1,
         .unexpected_data_phase = OFF,
         .regular_timer = 1,
-        .unexpected_data_is_chatter = 1,
+        .unexpected_data_is_chatter = 0,
         .chattering_switch_timer = 2
     },
     {
