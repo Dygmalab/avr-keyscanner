@@ -120,7 +120,6 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         if (is_on != lifecycle[key_info->lifecycle].expected_data) {
             if (lifecycle[key_info->lifecycle].unexpected_data_is_chatter) {
             	key_info->chatters=1;
-            	key_info->timer= lifecycle[key_info->lifecycle].chattering_switch_timer;
             }
             transition_to_state(key_info, lifecycle[key_info->lifecycle].unexpected_data_state);
         }
