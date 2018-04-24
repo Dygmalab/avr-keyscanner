@@ -54,34 +54,34 @@ lifecycle_phase_t lifecycle[] = {
         .next_phase = ON,
         .expected_data = 1,
         .unexpected_data_phase = LOCKED_ON,
-        .regular_timer = 10,
+        .regular_timer = 14,
         .unexpected_data_is_chatter = 1,
-        .chattering_switch_timer = 15
+        .chattering_switch_timer = 45
     },
     {
         // ON
         .next_phase = ON,
         .expected_data = 1,
         .unexpected_data_phase = TURNING_OFF,
-        .regular_timer = 6,
+        .regular_timer = 5,
         .unexpected_data_is_chatter = 0,
-        .chattering_switch_timer = 35
+        .chattering_switch_timer =35
     },
     {
         // TURNING_OFF
         .next_phase = LOCKED_OFF,
         .expected_data = 0,
         .unexpected_data_phase = ON,
-        .regular_timer = 4,
+        .regular_timer = 20,
         .unexpected_data_is_chatter = 1,
-        .chattering_switch_timer = 26
+        .chattering_switch_timer = 55
     },
     {
         // LOCKED_OFF
         .next_phase = OFF,
         .expected_data = 0,
         .unexpected_data_phase =  LOCKED_OFF,
-        .regular_timer = 30,
+        .regular_timer = 10,
         .unexpected_data_is_chatter =1,
         .chattering_switch_timer = 30
     }
