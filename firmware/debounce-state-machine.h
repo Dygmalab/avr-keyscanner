@@ -59,7 +59,7 @@ lifecycle_state_t lifecycle[] = {
         .next_state = ON,
         .expected_data = EXPECTED_ON,
         .unexpected_data_state = LOCKED_ON,
-        .regular_timer = 7,
+        .regular_timer = 10,
         .unexpected_data_is_chatter = 1,
         .chattering_switch_timer = 15
     },
@@ -67,7 +67,7 @@ lifecycle_state_t lifecycle[] = {
         .next_state = TURNING_OFF,
         .expected_data = EXPECTED_OFF,
         .unexpected_data_state = ON,
-        .regular_timer = 10,
+        .regular_timer = 6,
         .unexpected_data_is_chatter = 0,
         .chattering_switch_timer = 35
     },
@@ -75,9 +75,9 @@ lifecycle_state_t lifecycle[] = {
         .next_state = LOCKED_OFF,
         .expected_data = EXPECTED_OFF,
         .unexpected_data_state = ON,
-        .regular_timer = 6,
+        .regular_timer = 4,
         .unexpected_data_is_chatter = 1,
-        .chattering_switch_timer = 27
+        .chattering_switch_timer = 26
     },
     { // LOCKED_OFF
         .next_state = OFF,
