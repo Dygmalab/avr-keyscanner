@@ -49,13 +49,13 @@ for my $test (@testcases) {
             $sample_rate = 625;    # 1.6ms per sample
         }
         chomp($title);
-        my ( $count, $debug ) =
+        my ( $count_presses, $count_releases, $debug ) =
           run_debouncer( $debouncer, $test, $sample_rate, 'c' );
 
-        $press_counts_by_test{$test}{$debouncer} = $count;
+        $press_counts_by_test{$test}{$debouncer} = $count_presses;
         $press_counts_by_test{$test}{'SPEC'} = $presses;
 
-        if ( $count == $presses ) {
+        if ( $count_presses == $presses and $count_releases == $presses ) {
             $stats_by_db{$debouncer}{ok}++;
             print "ok "
               . $test_num++
@@ -65,7 +65,7 @@ for my $test (@testcases) {
             $stats_by_db{$debouncer}{not_ok}++;
             print "not ok "
               . $test_num++
-              . " - $debouncer $test saw $count presses but expected $presses\n";
+              . " - $debouncer $test saw $count_presses presses and $count_releases releases but expected $presses\n";
             push @{ $fails_by_test{$test} },    $debouncer;
             push @{ $fails_by_db{$debouncer} }, $test;
         }
@@ -73,8 +73,10 @@ for my $test (@testcases) {
     }
 }
 
-for my $db ( sort { $stats_by_db{$b}{ok} <=> $stats_by_db{$a}{ok} }
-    keys %stats_by_db )
+for my $db (
+    sort { $stats_by_db{$b}{ok} <=> $stats_by_db{$a}{ok} }
+    keys %stats_by_db
+  )
 {
     printf(
         "%-40s: OK %-4d FAIL %-4d\n",
@@ -94,8 +96,10 @@ sub report_press_counts {
     print
 "Number of presses found. (Relative to the number claimed in the test file)\n";
     printf( "%60s |", "Debouncer:" );
-    for my $db ( sort { length($a) <=> length($b) }
-        keys %{ $press_counts->{'testcases/synthetic/00-simple'} } )
+    for my $db (
+        sort { length($a) <=> length($b) }
+        keys %{ $press_counts->{'testcases/synthetic/00-simple'} }
+      )
     {
         my $display = $db;
         $display =~ s/^\.\/debounce-//;
@@ -120,8 +124,10 @@ sub report_press_counts {
         $display_name =~ s/^testcases\/(.*?)(?:\.data)?$/$1/;
         printf( "%-60.60s |", $display_name );
 
-        for my $db ( sort { length($a) <=> length($b) }
-            keys %{ $press_counts->{$test_name} } )
+        for my $db (
+            sort { length($a) <=> length($b) }
+            keys %{ $press_counts->{$test_name} }
+          )
         {
             my $display = $db;
             $display =~ s/^\.\/debounce-//;
@@ -169,13 +175,17 @@ sub run_debouncer {
         print CHLD_IN $line;
     }
     close(CHLD_IN);
-    my $result = <CHLD_OUT>;
-    chomp($result);
+
+    my $presses = <CHLD_OUT>;
+    chomp($presses);
+    my $releases = <CHLD_OUT>;
+    chomp($releases);
+
     while ( my $line = <CHLD_OUT> ) {
         $stderr .= $line;
     }
 
-    return $result, $stderr;
+    return $presses, $releases, $stderr;
 }
 
 my $downsample_averaging = 1;
