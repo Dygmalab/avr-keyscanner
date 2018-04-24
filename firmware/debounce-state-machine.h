@@ -33,9 +33,9 @@ typedef struct {
 lifecycle_phase_t lifecycle[] = {
     {
         // OFF
-        .next_phase = TURNING_ON,
-        .expected_data = 1,
-        .unexpected_data_phase = OFF,
+        .next_phase = OFF,
+        .expected_data = 0,
+        .unexpected_data_phase = TURNING_ON,
         .regular_timer = 0,
         .unexpected_data_is_chatter = 0,
         .chattering_switch_timer = 0
