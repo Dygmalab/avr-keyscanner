@@ -4,12 +4,6 @@
 #include "keyscanner.h"
 
 #define debug(x)  //printf(x); printf("\n");
-
-
-#define EXPECTED_OFF 0
-#define EXPECTED_ON  1
-
-
 typedef struct {
     uint8_t phase;
     uint8_t ticks;
@@ -21,7 +15,6 @@ typedef struct {
     key_info_t key_info[8];
     uint8_t state;  // debounced state
 } debounce_t;
-
 
 
 enum lifecycle_phases { OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF};
@@ -42,7 +35,7 @@ lifecycle_phase_t lifecycle[] = {
     {
         // OFF
         .next_phase = TURNING_ON,
-        .expected_data = EXPECTED_ON,
+        .expected_data = 1,
         .unexpected_data_phase = OFF,
         .regular_timer = 0,
         .unexpected_data_is_chatter = 0,
@@ -51,7 +44,7 @@ lifecycle_phase_t lifecycle[] = {
     {
         // TURNING_ON
         .next_phase = LOCKED_ON,
-        .expected_data = EXPECTED_ON,
+        .expected_data = 1,
         .unexpected_data_phase = OFF,
         .regular_timer = 1,
         .unexpected_data_is_chatter = 1,
@@ -60,7 +53,7 @@ lifecycle_phase_t lifecycle[] = {
     {
         // LOCKED_ON
         .next_phase = ON,
-        .expected_data = EXPECTED_ON,
+        .expected_data = 1,
         .unexpected_data_phase = LOCKED_ON,
         .regular_timer = 10,
         .unexpected_data_is_chatter = 1,
@@ -69,7 +62,7 @@ lifecycle_phase_t lifecycle[] = {
     {
         // ON
         .next_phase = TURNING_OFF,
-        .expected_data = EXPECTED_OFF,
+        .expected_data = 0,
         .unexpected_data_phase = ON,
         .regular_timer = 6,
         .unexpected_data_is_chatter = 0,
@@ -78,7 +71,7 @@ lifecycle_phase_t lifecycle[] = {
     {
         // TURNING_OFF
         .next_phase = LOCKED_OFF,
-        .expected_data = EXPECTED_OFF,
+        .expected_data = 0,
         .unexpected_data_phase = ON,
         .regular_timer = 4,
         .unexpected_data_is_chatter = 1,
@@ -87,7 +80,7 @@ lifecycle_phase_t lifecycle[] = {
     {
         // LOCKED_OFF
         .next_phase = OFF,
-        .expected_data = EXPECTED_OFF,
+        .expected_data = 0,
         .unexpected_data_phase =  LOCKED_OFF,
         .regular_timer = 30,
         .unexpected_data_is_chatter =1,
