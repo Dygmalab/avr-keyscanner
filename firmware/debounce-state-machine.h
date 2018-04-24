@@ -93,7 +93,6 @@ void transition_to_state(key_info_t *key_info, int8_t new_state) {
     key_info->timer=(key_info->chatters ? lifecycle[new_state].chattering_switch_timer: lifecycle[new_state].regular_timer );
     key_info->lifecycle= new_state;
     key_info->ticks=0;
-
 }
 
 
@@ -105,27 +104,23 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     uint8_t changes = 0;
     // Scan each pin from the bank
     for(int8_t i=0; i< COUNT_INPUT; i++) {
-        uint8_t is_on=  !! (sample & _BV(i)) ;
         key_info_t *key_info	= debouncer->key_info+i;
-
         key_info->ticks++;
 
         // if we get the 'other' value during a locked window, that's gotta be chatter
-        if (is_on != lifecycle[key_info->lifecycle].expected_data) {
+        if ((sample & _BV(i)) != lifecycle[key_info->lifecycle].expected_data) {
             key_info->chatters = key_info->chatters || lifecycle[key_info->lifecycle].unexpected_data_is_chatter;
             transition_to_state(key_info, lifecycle[key_info->lifecycle].unexpected_data_state);
         }
 
         // 	do not act on any input during the locked off window
-        if (key_info->ticks <= key_info->timer) {
-		continue;
-	}
+        if (key_info->ticks > key_info->timer) {
 
 	transition_to_state(key_info, lifecycle[key_info->lifecycle].next_state);
 
-        if ( key_info->lifecycle == LOCKED_ON  || key_info->lifecycle == LOCKED_OFF)  {
+        if ( key_info->lifecycle == LOCKED_ON  || key_info->lifecycle == LOCKED_OFF)  
             changes |= _BV(i);
-        }
+	}
 
     }
 
