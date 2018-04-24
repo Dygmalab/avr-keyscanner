@@ -171,9 +171,18 @@ sub run_debouncer {
     open3( \*CHLD_IN, \*CHLD_OUT, \*CHLD_ERR, "$debouncer $arg" )
       or die "open3() failed $!";
 
+
+    print CHLD_IN "# 100 ms of quiet before we start\n";
+    print CHLD_IN "0"x 200;
+
     for my $line (@samples) {
         print CHLD_IN $line;
     }
+    
+    
+    print CHLD_IN "# 100 ms of quiet after we finish to let timers time out\n";
+    print CHLD_IN "0"x 200;
+   
     close(CHLD_IN);
 
     my $presses = <CHLD_OUT>;
