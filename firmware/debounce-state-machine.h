@@ -103,21 +103,19 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     uint8_t changes = 0;
     // Scan each pin from the bank
     for(int8_t i=0; i< COUNT_INPUT; i++) {
-        key_info_t *key_info	= debouncer->key_info+i;
+        key_info_t *key_info = debouncer->key_info+i;
         key_info->ticks++;
 
-	lifecycle_phase_t current_phase = lifecycle[key_info->phase];
+        lifecycle_phase_t current_phase = lifecycle[key_info->phase];
 
-        // if we get the 'other' value during a locked window, that's gotta be chatter
-        if ((sample & _BV(i)) != 
-			current_phase.expected_data) {
+        if ((sample & _BV(i)) != current_phase.expected_data) {
+            // if we get the 'other' value during a locked window, that's gotta be chatter
             key_info->chatters = key_info->chatters || current_phase.unexpected_data_is_chatter;
             transition_to_phase(key_info, current_phase.unexpected_data_phase);
         }
 
-        // 	do not act on any input during the locked off window
+        // do not act on any input during the locked off window
         if (key_info->ticks > key_info->timer) {
-
             transition_to_phase(key_info, current_phase.next_phase);
 
             if ( key_info->phase == LOCKED_ON  || key_info->phase == LOCKED_OFF)
