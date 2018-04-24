@@ -114,9 +114,6 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         key_info->ticks++;
 
-        uint8_t old_lifecycle = key_info->lifecycle;
-
-
         // if we get the 'other' value during a locked window, that's gotta be chatter
         if (is_on != lifecycle[key_info->lifecycle].expected_data) {
             if (lifecycle[key_info->lifecycle].unexpected_data_is_chatter) {
@@ -130,14 +127,9 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 		continue;
 	}
 
+	uint8_t new_state = transition_to_state(key_info, lifecycle[key_info->lifecycle].next_state);
 
-	transition_to_state(key_info, lifecycle[key_info->lifecycle].next_state);
-
-
-        if (( old_lifecycle == TURNING_ON && key_info->lifecycle == LOCKED_ON)  ||
-                ( old_lifecycle == TURNING_OFF && key_info->lifecycle == LOCKED_OFF) ) {
-
-
+        if ( new_state == LOCKED_ON  || new_state == LOCKED_OFF)  {
             changes |= _BV(i);
         }
 
