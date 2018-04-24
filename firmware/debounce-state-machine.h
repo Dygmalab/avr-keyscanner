@@ -24,7 +24,7 @@ typedef struct {
 
 
 
-enum lifecycle_states { OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF, UNCHANGED};
+enum lifecycle_states { OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF};
 
 typedef struct {
     uint8_t 
