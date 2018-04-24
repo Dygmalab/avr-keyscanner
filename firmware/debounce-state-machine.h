@@ -89,8 +89,11 @@ lifecycle_phase_t lifecycle[] = {
 
 void transition_to_phase(key_info_t *key_info, int8_t new_phase) {
     key_info->timer=(key_info->chatters ? lifecycle[new_phase].chattering_switch_timer: lifecycle[new_phase].regular_timer );
-    key_info->phase= new_phase;
+ 
+ if (key_info->phase != new_phase) {
+      	 key_info->phase= new_phase;
     key_info->ticks=0;
+ }
 }
 
 
