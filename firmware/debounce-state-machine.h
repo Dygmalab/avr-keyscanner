@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include "keyscanner.h"
 
-#define debug(x)  //printf(x); printf("\n");
 typedef struct {
     uint8_t phase;
     uint8_t ticks;
