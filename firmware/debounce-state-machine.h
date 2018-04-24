@@ -39,7 +39,7 @@ typedef struct {
 
 
 lifecycle_state_t lifecycle[] = {
-    {
+    { // OFF
         .next_state = TURNING_ON,
         .expected_data = EXPECTED_ON,
         .unexpected_data_state = OFF,
@@ -47,15 +47,15 @@ lifecycle_state_t lifecycle[] = {
         .unexpected_data_is_chatter = 0,
         .chattering_switch_timer = 0
     },
-    {
-        .next_state = LOCKED_ON,
+    { // TURNING_ON
+	.next_state = LOCKED_ON,
         .expected_data = EXPECTED_ON,
         .unexpected_data_state = OFF,
         .regular_timer = 1,
         .unexpected_data_is_chatter = 1,
         .chattering_switch_timer = 2
     },
-    {
+    { // LOCKED_ON
         .next_state = ON,
         .expected_data = EXPECTED_ON,
         .unexpected_data_state = UNCHANGED,
@@ -63,7 +63,7 @@ lifecycle_state_t lifecycle[] = {
         .unexpected_data_is_chatter = 1,
         .chattering_switch_timer = 35
     },
-    {
+    { // ON
         .next_state = TURNING_OFF,
         .expected_data = EXPECTED_OFF,
         .unexpected_data_state = ON,
@@ -71,7 +71,7 @@ lifecycle_state_t lifecycle[] = {
         .unexpected_data_is_chatter = 0,
         .chattering_switch_timer = 65
     },
-    {
+    { // TURNING_OFF
         .next_state = LOCKED_OFF,
         .expected_data = EXPECTED_OFF,
         .unexpected_data_state = ON,
@@ -79,7 +79,7 @@ lifecycle_state_t lifecycle[] = {
         .unexpected_data_is_chatter = 1,
         .chattering_switch_timer = 27
     },
-    {
+    { // LOCKED_OFF
         .next_state = OFF,
         .expected_data = EXPECTED_OFF,
         .unexpected_data_state =  UNCHANGED,
