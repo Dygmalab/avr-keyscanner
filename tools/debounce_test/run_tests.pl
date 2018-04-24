@@ -207,7 +207,10 @@ sub resample {
 
         for my $digit ( split( //, $line ) ) {
             $input_counter++;
-            if ( $output_ratio > 1 ) {
+	    if ($output_ratio == 1) {
+		    push @output, $digit;
+	    }
+            elsif ( $output_ratio > 1 ) {
                 while ( $output_counter < ( $input_counter * $output_ratio ) ) {
                     $output_counter++;
                     push @output,
