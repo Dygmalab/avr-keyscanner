@@ -58,7 +58,7 @@ lifecycle_state_t lifecycle[] = {
     { // LOCKED_ON
         .next_state = ON,
         .expected_data = EXPECTED_ON,
-        .unexpected_data_state = UNCHANGED,
+        .unexpected_data_state = LOCKED_ON,
         .regular_timer = 7,
         .unexpected_data_is_chatter = 1,
         .chattering_switch_timer = 35
@@ -82,21 +82,22 @@ lifecycle_state_t lifecycle[] = {
     { // LOCKED_OFF
         .next_state = OFF,
         .expected_data = EXPECTED_OFF,
-        .unexpected_data_state =  UNCHANGED,
+        .unexpected_data_state =  LOCKED_OFF,
         .regular_timer = 30,
         .unexpected_data_is_chatter =1,
-        .chattering_switch_timer = 50
+        .chattering_switch_timer = 30
     }
 };
 
 uint8_t transition_to_state(key_info_t *key_info, int8_t new_state) {
-    if (new_state == UNCHANGED) {
-        return key_info->lifecycle;
-    }
-    key_info->lifecycle= new_state;
-    key_info->ticks=0;
     key_info->timer=(key_info->chatters ? lifecycle[new_state].chattering_switch_timer: lifecycle[new_state].regular_timer );
-    return new_state;
+    
+   // if (new_state != key_info->lifecycle) {
+    	key_info->lifecycle= new_state;
+    //}
+    key_info->ticks=0;
+
+    return key_info->lifecycle;
 }
 
 
