@@ -27,11 +27,11 @@ typedef struct {
 enum lifecycle_states { OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF};
 
 typedef struct {
-    uint8_t 
-	    next_state: 3,
-	    unexpected_data_state: 3,
-	    expected_data:1,
-            unexpected_data_is_chatter: 1;
+    uint8_t
+    next_state: 3,
+                unexpected_data_state: 3,
+                expected_data:1,
+                unexpected_data_is_chatter: 1;
     int8_t regular_timer;
     int8_t chattering_switch_timer;
 } lifecycle_state_t;
@@ -39,7 +39,8 @@ typedef struct {
 
 
 lifecycle_state_t lifecycle[] = {
-    { // OFF
+    {
+        // OFF
         .next_state = TURNING_ON,
         .expected_data = EXPECTED_ON,
         .unexpected_data_state = OFF,
@@ -47,15 +48,17 @@ lifecycle_state_t lifecycle[] = {
         .unexpected_data_is_chatter = 0,
         .chattering_switch_timer = 0
     },
-    { // TURNING_ON
-	.next_state = LOCKED_ON,
+    {
+        // TURNING_ON
+        .next_state = LOCKED_ON,
         .expected_data = EXPECTED_ON,
         .unexpected_data_state = OFF,
         .regular_timer = 1,
         .unexpected_data_is_chatter = 1,
         .chattering_switch_timer = 2
     },
-    { // LOCKED_ON
+    {
+        // LOCKED_ON
         .next_state = ON,
         .expected_data = EXPECTED_ON,
         .unexpected_data_state = LOCKED_ON,
@@ -63,7 +66,8 @@ lifecycle_state_t lifecycle[] = {
         .unexpected_data_is_chatter = 1,
         .chattering_switch_timer = 15
     },
-    { // ON
+    {
+        // ON
         .next_state = TURNING_OFF,
         .expected_data = EXPECTED_OFF,
         .unexpected_data_state = ON,
@@ -71,7 +75,8 @@ lifecycle_state_t lifecycle[] = {
         .unexpected_data_is_chatter = 0,
         .chattering_switch_timer = 35
     },
-    { // TURNING_OFF
+    {
+        // TURNING_OFF
         .next_state = LOCKED_OFF,
         .expected_data = EXPECTED_OFF,
         .unexpected_data_state = ON,
@@ -79,7 +84,8 @@ lifecycle_state_t lifecycle[] = {
         .unexpected_data_is_chatter = 1,
         .chattering_switch_timer = 26
     },
-    { // LOCKED_OFF
+    {
+        // LOCKED_OFF
         .next_state = OFF,
         .expected_data = EXPECTED_OFF,
         .unexpected_data_state =  LOCKED_OFF,
@@ -116,11 +122,11 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         // 	do not act on any input during the locked off window
         if (key_info->ticks > key_info->timer) {
 
-	transition_to_state(key_info, lifecycle[key_info->lifecycle].next_state);
+            transition_to_state(key_info, lifecycle[key_info->lifecycle].next_state);
 
-        if ( key_info->lifecycle == LOCKED_ON  || key_info->lifecycle == LOCKED_OFF)  
-            changes |= _BV(i);
-	}
+            if ( key_info->lifecycle == LOCKED_ON  || key_info->lifecycle == LOCKED_OFF)
+                changes |= _BV(i);
+        }
 
     }
 
