@@ -88,7 +88,7 @@ lifecycle_phase_t lifecycle[] = {
 };
 
 void transition_to_phase(key_info_t *key_info, int8_t new_phase) {
-    key_info->timer=(key_info->chatters ? lifecycle[new_phase].chattering_switch_timer: lifecycle[new_phase].regular_timer );
+    //key_info->timer=(key_info->chatters ? lifecycle[new_phase].chattering_switch_timer: lifecycle[new_phase].regular_timer );
  
  if (key_info->phase != new_phase) {
       	 key_info->phase= new_phase;
@@ -117,7 +117,8 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         }
 
         // do not act on any input during the locked off window
-        if (key_info->ticks > key_info->timer) {
+        if (key_info->ticks >
+           (key_info->chatters ? lifecycle[key_info->phase].chattering_switch_timer: lifecycle[key_info->phase].regular_timer )) {
             transition_to_phase(key_info, current_phase.next_phase);
 
             if ( key_info->phase == LOCKED_ON  || key_info->phase == LOCKED_OFF)
