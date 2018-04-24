@@ -100,11 +100,7 @@ uint8_t transition_to_state(key_info_t *key_info, int8_t new_state) {
 }
 
 
-void chatter_detected ( key_info_t *key_info) {
-    key_info->chatters=1;
-    key_info->timer= lifecycle[key_info->lifecycle].chattering_switch_timer;
 
-}
 
 
 
@@ -122,18 +118,20 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         // if we get the 'other' value during a locked window, that's gotta be chatter
         if (is_on != lifecycle[key_info->lifecycle].expected_data) {
-            if ( lifecycle[key_info->lifecycle].unexpected_data_is_chatter ) {
-                chatter_detected(key_info);
+            if (lifecycle[key_info->lifecycle].unexpected_data_is_chatter) {
+            	key_info->chatters=1;
+            	key_info->timer= lifecycle[key_info->lifecycle].chattering_switch_timer;
             }
             transition_to_state(key_info, lifecycle[key_info->lifecycle].unexpected_data_state);
         }
 
         // 	do not act on any input during the locked off window
-        if(key_info->ticks > key_info->timer) {
-            transition_to_state(key_info, lifecycle[key_info->lifecycle].next_state);
-        }
+        if (key_info->ticks <= key_info->timer) {
+		continue;
+	}
 
 
+	transition_to_state(key_info, lifecycle[key_info->lifecycle].next_state);
 
 
         if (( old_lifecycle == TURNING_ON && key_info->lifecycle == LOCKED_ON)  ||
