@@ -113,25 +113,25 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         key_info_t *key_info	= debouncer->key_info+i;
         key_info->ticks++;
 
+	lifecycle_state_t current_phase = lifecycle[key_info->lifecycle];
+
         // if we get the 'other' value during a locked window, that's gotta be chatter
-        if ((sample & _BV(i)) != lifecycle[key_info->lifecycle].expected_data) {
-            key_info->chatters = key_info->chatters || lifecycle[key_info->lifecycle].unexpected_data_is_chatter;
-            transition_to_state(key_info, lifecycle[key_info->lifecycle].unexpected_data_state);
+        if ((sample & _BV(i)) != 
+			current_phase.expected_data) {
+            key_info->chatters = key_info->chatters || current_phase.unexpected_data_is_chatter;
+            transition_to_state(key_info, current_phase.unexpected_data_state);
         }
 
         // 	do not act on any input during the locked off window
         if (key_info->ticks > key_info->timer) {
 
-            transition_to_state(key_info, lifecycle[key_info->lifecycle].next_state);
+            transition_to_state(key_info, current_phase.next_state);
 
             if ( key_info->lifecycle == LOCKED_ON  || key_info->lifecycle == LOCKED_OFF)
                 changes |= _BV(i);
         }
-
     }
 
-
     debouncer->state ^= changes;
-
     return changes;
 }
