@@ -60,9 +60,9 @@ lifecycle_phase_t lifecycle[] = {
     },
     {
         // ON
-        .next_phase = TURNING_OFF,
-        .expected_data = 0,
-        .unexpected_data_phase = ON,
+        .next_phase = ON,
+        .expected_data = 1,
+        .unexpected_data_phase = TURNING_OFF,
         .regular_timer = 6,
         .unexpected_data_is_chatter = 0,
         .chattering_switch_timer = 35
