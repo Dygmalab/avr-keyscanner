@@ -15,6 +15,11 @@ typedef struct {
 } debounce_t;
 
 
+// We use a bitmask to determine whether to change the output state on a phase transition
+// because it generates much more efficient code than a branching conditional
+
+#define CHANGE_OUTPUT 0xFF
+
 enum lifecycle_phases {
     OFF, TURNING_ON, LOCKED_ON, ON, TURNING_OFF, LOCKED_OFF,
     NOISY_SWITCH_OFF, NOISY_SWITCH_TURNING_ON, NOISY_SWITCH_LOCKED_ON, NOISY_SWITCH_ON, NOISY_SWITCH_TURNING_OFF, NOISY_SWITCH_LOCKED_OFF
@@ -27,8 +32,9 @@ typedef struct {
     next_phase: 4,
                 unexpected_data_phase: 4;
     uint8_t
-    expected_data:1,
-                  change_output_on_expected_transition:1;
+    expected_data:1;
+    uint8_t
+                  change_output_on_expected_transition;
     uint8_t timer;
 } lifecycle_phase_t;
 
@@ -75,7 +81,7 @@ lifecycle_phase_t lifecycle[] = {
         .next_phase = ON,
         .expected_data = 1,
         .unexpected_data_phase = NOISY_SWITCH_LOCKED_ON,
-        .change_output_on_expected_transition = 1,
+        .change_output_on_expected_transition = CHANGE_OUTPUT,
         .timer = 14,
     },
     {
@@ -115,7 +121,7 @@ lifecycle_phase_t lifecycle[] = {
         .next_phase = OFF,
         .expected_data = 0,
         .unexpected_data_phase =  NOISY_SWITCH_LOCKED_OFF,
-        .change_output_on_expected_transition = 1,
+        .change_output_on_expected_transition = CHANGE_OUTPUT,
         .timer = 10,
     },
     {
@@ -158,7 +164,7 @@ lifecycle_phase_t lifecycle[] = {
         .next_phase = NOISY_SWITCH_ON,
         .expected_data = 1,
         .unexpected_data_phase = NOISY_SWITCH_LOCKED_ON,
-        .change_output_on_expected_transition = 1,
+        .change_output_on_expected_transition = CHANGE_OUTPUT,
         .timer = 45
     },
     {
@@ -198,7 +204,7 @@ lifecycle_phase_t lifecycle[] = {
         .next_phase = NOISY_SWITCH_OFF,
         .expected_data = 0,
         .unexpected_data_phase =  NOISY_SWITCH_LOCKED_OFF,
-        .change_output_on_expected_transition = 1,
+        .change_output_on_expected_transition = CHANGE_OUTPUT,
         .timer = 30
     }
 };
@@ -222,15 +228,10 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         // do not act on any input during the locked off window
         if (key_info->ticks > lifecycle[key_info->phase].timer ) {
-            if (key_info->phase!= current_phase.next_phase) {
-                key_info->ticks=0;
-	    }
+            key_info->ticks= (key_info->phase!= current_phase.next_phase) ?  0 : key_info->ticks;
             key_info->phase= current_phase.next_phase;
+            changes |= _BV(i) & lifecycle[key_info->phase].change_output_on_expected_transition;
 
-            if (lifecycle[key_info->phase].change_output_on_expected_transition ) {
-                changes |= _BV(i);
-
-            }
         }
     }
 
