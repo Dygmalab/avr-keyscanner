@@ -39,7 +39,7 @@ lifecycle_phase_t lifecycle[] = {
         //
         // Our timers are set to 0, but that doesn't matter because in the event that we overflow the timer
         // we just go back to the 'OFF' phase
-	
+
         .next_phase = OFF,
         .expected_data = 0,
         .unexpected_data_phase = TURNING_ON,
@@ -65,13 +65,13 @@ lifecycle_phase_t lifecycle[] = {
         .chattering_switch_timer = 2
     },
     {
-        // LOCKED_ON -- during this phase, the key is on, no matter what value we read from the input 
-	// pin. 
-	//
-	// If we see any 'off' signals, that indicates a short read or chatter.
-	// In the event of unexpected data, stay in the LOCKED_ON phase, but don't reset the timer.
-        
-	.next_phase = ON,
+        // LOCKED_ON -- during this phase, the key is on, no matter what value we read from the input
+        // pin.
+        //
+        // If we see any 'off' signals, that indicates a short read or chatter.
+        // In the event of unexpected data, stay in the LOCKED_ON phase, but don't reset the timer.
+
+        .next_phase = ON,
         .expected_data = 1,
         .unexpected_data_phase = LOCKED_ON,
         .regular_timer = 14,
@@ -111,11 +111,11 @@ lifecycle_phase_t lifecycle[] = {
         .chattering_switch_timer = 92  // release latency
     },
     {
-        // LOCKED_OFF -- during this phase, the key is off, no matter what value we read from the input 
-	// pin. 
-	//
-	// If we see any 'on' signals, that indicates a short read or chatter.
-	// In the event of unexpected data, stay in the LOCKED_OFF phase, but don't reset the timer.
+        // LOCKED_OFF -- during this phase, the key is off, no matter what value we read from the input
+        // pin.
+        //
+        // If we see any 'on' signals, that indicates a short read or chatter.
+        // In the event of unexpected data, stay in the LOCKED_OFF phase, but don't reset the timer.
         .next_phase = OFF,
         .expected_data = 0,
         .unexpected_data_phase =  LOCKED_OFF,
@@ -138,14 +138,14 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             // if we get the 'other' value during a locked window, that's gotta be chatter
             key_info->chatters = key_info->chatters || current_phase.unexpected_data_is_chatter;
             if (key_info->phase != current_phase.unexpected_data_phase) {
-                key_info->phase= current_phase.unexpected_data_phase;
+                key_info->phase = current_phase.unexpected_data_phase;
                 key_info->ticks=0;
             }
         }
 
         // do not act on any input during the locked off window
         if (key_info->ticks > (key_info->chatters ? lifecycle[key_info->phase].chattering_switch_timer: lifecycle[key_info->phase].regular_timer ) ) {
-                key_info->phase= current_phase.next_phase;
+            key_info->phase= current_phase.next_phase;
 
             if ( key_info->phase == LOCKED_ON  || key_info->phase == LOCKED_OFF) {
                 changes |= _BV(i);
