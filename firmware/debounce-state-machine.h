@@ -6,7 +6,6 @@
 typedef struct {
     uint8_t phase;
     uint8_t ticks;
-    uint8_t chatters;
 } key_info_t;
 
 typedef struct {
