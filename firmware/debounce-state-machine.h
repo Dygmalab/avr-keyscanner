@@ -218,7 +218,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         lifecycle_phase_t current_phase = lifecycle[key_info->phase];
 
-        if ((sample & _BV(i)) != current_phase.expected_data) {
+        if (!!(sample & _BV(i)) != current_phase.expected_data) {
             // if we get the 'other' value during a locked window, that's gotta be chatter
             if (key_info->phase != current_phase.unexpected_data_phase) {
                 key_info->phase = current_phase.unexpected_data_phase;
