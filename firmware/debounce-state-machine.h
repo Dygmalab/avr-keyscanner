@@ -74,7 +74,7 @@ lifecycle_phase_t lifecycle[] = {
         .unexpected_data_phase = ON,
         .regular_timer = 20,
         .unexpected_data_is_chatter = 1,
-        .chattering_switch_timer = 55
+        .chattering_switch_timer = 65
     },
     {
         // LOCKED_OFF
