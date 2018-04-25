@@ -31,7 +31,7 @@ typedef struct {
     next_phase: 4,
                 unexpected_data_phase: 4;
     uint8_t
-    expected_data:1;
+    expected_data;
     uint8_t
     change_output_on_expected_transition;
     uint8_t timer;
