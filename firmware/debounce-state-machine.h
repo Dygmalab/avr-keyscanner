@@ -214,7 +214,6 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     // Scan each pin from the bank
     for(int8_t i=0; i< COUNT_INPUT; i++) {
         key_info_t *key_info = debouncer->key_info+i;
-        key_info->ticks++;
 
         lifecycle_phase_t current_phase = lifecycle[key_info->phase];
 
@@ -228,7 +227,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         }
 
         // do not act on any input during the locked off window
-        if (key_info->ticks > lifecycle[key_info->phase].timer ) {
+        if (++key_info->ticks >lifecycle[key_info->phase].timer ) {
             key_info->ticks= (key_info->phase!= current_phase.next_phase) ?  0 : key_info->ticks;
             key_info->phase= current_phase.next_phase;
             changes |= _BV(i) & lifecycle[key_info->phase].change_output_on_expected_transition;
