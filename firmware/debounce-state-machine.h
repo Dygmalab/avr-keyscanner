@@ -24,8 +24,8 @@ typedef struct {
                 unexpected_data_phase: 3,
                 expected_data:1,
                 unexpected_data_is_chatter: 1;
-    int8_t regular_timer;
-    int8_t chattering_switch_timer;
+    uint8_t regular_timer;
+    uint8_t chattering_switch_timer;
 } lifecycle_phase_t;
 
 
