@@ -26,9 +26,9 @@ typedef struct {
     uint8_t
     next_phase: 4,
                 unexpected_data_phase: 4;
-   uint8_t
-                expected_data:1,
-                unexpected_data_is_chatter: 1;
+    uint8_t
+    expected_data:1,
+                  change_output_on_expected_transition:1;
     uint8_t timer;
 } lifecycle_phase_t;
 
@@ -75,6 +75,7 @@ lifecycle_phase_t lifecycle[] = {
         .next_phase = ON,
         .expected_data = 1,
         .unexpected_data_phase = NOISY_SWITCH_LOCKED_ON,
+        .change_output_on_expected_transition = 1,
         .timer = 14,
     },
     {
@@ -114,6 +115,7 @@ lifecycle_phase_t lifecycle[] = {
         .next_phase = OFF,
         .expected_data = 0,
         .unexpected_data_phase =  NOISY_SWITCH_LOCKED_OFF,
+        .change_output_on_expected_transition = 1,
         .timer = 10,
     },
     {
@@ -156,6 +158,7 @@ lifecycle_phase_t lifecycle[] = {
         .next_phase = NOISY_SWITCH_ON,
         .expected_data = 1,
         .unexpected_data_phase = NOISY_SWITCH_LOCKED_ON,
+        .change_output_on_expected_transition = 1,
         .timer = 45
     },
     {
@@ -195,6 +198,7 @@ lifecycle_phase_t lifecycle[] = {
         .next_phase = NOISY_SWITCH_OFF,
         .expected_data = 0,
         .unexpected_data_phase =  NOISY_SWITCH_LOCKED_OFF,
+        .change_output_on_expected_transition = 1,
         .timer = 30
     }
 };
@@ -220,8 +224,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         if (key_info->ticks > lifecycle[key_info->phase].timer ) {
             key_info->phase= current_phase.next_phase;
 
-            if ( key_info->phase == LOCKED_ON  || key_info->phase == LOCKED_OFF ||
-             key_info->phase == NOISY_SWITCH_LOCKED_ON  || key_info->phase == NOISY_SWITCH_LOCKED_OFF) {
+            if (lifecycle[key_info->phase].change_output_on_expected_transition ) {
                 changes |= _BV(i);
 
             }
