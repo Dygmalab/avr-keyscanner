@@ -68,13 +68,20 @@ lifecycle_phase_t lifecycle[] = {
         .chattering_switch_timer =65
     },
     {
-        // TURNING_OFF
+        // TURNING_OFF -- during this phase, we believe that we've detected
+	// a switch being turned off. We're now checking to see if it's 
+	// reading consistently as 'off' or if it was just a spurious "off" signal
+	// as might happen if we saw key chatter
+	//
+	// If it was a spurious connection, mark the switch as noisy and go back to phase ON
+	//
+	// If we get through the timer with no "on" signals, proceed to phase LOCKED_OFF
         .next_phase = LOCKED_OFF,
         .expected_data = 0,
         .unexpected_data_phase = ON,
-        .regular_timer = 20,
+        .regular_timer = 15,  // release latency
         .unexpected_data_is_chatter = 1,
-        .chattering_switch_timer =95
+        .chattering_switch_timer = 92  // release latency
     },
     {
         // LOCKED_OFF
