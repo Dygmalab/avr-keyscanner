@@ -223,6 +223,7 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             if (key_info->phase != current_phase.unexpected_data_phase) {
                 key_info->phase = current_phase.unexpected_data_phase;
                 key_info->ticks=0;
+	    	continue;
             }
         }
 
