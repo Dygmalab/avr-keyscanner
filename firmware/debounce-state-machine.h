@@ -223,16 +223,16 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         }
 
         // do not act on any input during the locked off window
-	if (key->ticks ==0) {
+        if (key->ticks ==0) {
 
-        if (  (key->phase != lifecycle[key->phase].next_phase)) {
-            key->phase = lifecycle[key->phase].next_phase;
-            key->ticks = lifecycle[key->phase].timer;
-            changes |= _BV(i) & lifecycle[key->phase].change_output_on_expected_transition;
-	}
-	} else {
-		key->ticks--;
-	}
+            if (  (key->phase != lifecycle[key->phase].next_phase)) {
+                key->phase = lifecycle[key->phase].next_phase;
+                key->ticks = lifecycle[key->phase].timer;
+                changes |= _BV(i) & lifecycle[key->phase].change_output_on_expected_transition;
+            }
+        } else {
+            key->ticks--;
+        }
     }
 
     debouncer->state ^= changes;
