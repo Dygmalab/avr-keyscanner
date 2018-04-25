@@ -65,17 +65,17 @@ lifecycle_phase_t lifecycle[] = {
         .unexpected_data_phase = TURNING_OFF,
         .regular_timer = 5,
         .unexpected_data_is_chatter = 0,
-        .chattering_switch_timer =65
+        .chattering_switch_timer = 65
     },
     {
         // TURNING_OFF -- during this phase, we believe that we've detected
-	// a switch being turned off. We're now checking to see if it's 
-	// reading consistently as 'off' or if it was just a spurious "off" signal
-	// as might happen if we saw key chatter
-	//
-	// If it was a spurious connection, mark the switch as noisy and go back to phase ON
-	//
-	// If we get through the timer with no "on" signals, proceed to phase LOCKED_OFF
+        // a switch being turned off. We're now checking to see if it's
+        // reading consistently as 'off' or if it was just a spurious "off" signal
+        // as might happen if we saw key chatter
+        //
+        // If it was a spurious connection, mark the switch as noisy and go back to phase ON
+        //
+        // If we get through the timer with no "on" signals, proceed to phase LOCKED_OFF
         .next_phase = LOCKED_OFF,
         .expected_data = 0,
         .unexpected_data_phase = ON,
@@ -96,11 +96,11 @@ lifecycle_phase_t lifecycle[] = {
 
 void transition_to_phase(key_info_t *key_info, int8_t new_phase) {
     //key_info->timer=(key_info->chatters ? lifecycle[new_phase].chattering_switch_timer: lifecycle[new_phase].regular_timer );
- 
- if (key_info->phase != new_phase) {
-      	 key_info->phase= new_phase;
-    key_info->ticks=0;
- }
+
+    if (key_info->phase != new_phase) {
+        key_info->phase= new_phase;
+        key_info->ticks=0;
+    }
 }
 
 
@@ -125,11 +125,16 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
 
         // do not act on any input during the locked off window
         if (key_info->ticks >
-           (key_info->chatters ? lifecycle[key_info->phase].chattering_switch_timer: lifecycle[key_info->phase].regular_timer )) {
+
+                (key_info->chatters ? lifecycle[key_info->phase].chattering_switch_timer: lifecycle[key_info->phase].regular_timer )
+
+           ) {
             transition_to_phase(key_info, current_phase.next_phase);
 
-            if ( key_info->phase == LOCKED_ON  || key_info->phase == LOCKED_OFF)
+            if ( key_info->phase == LOCKED_ON  || key_info->phase == LOCKED_OFF) {
                 changes |= _BV(i);
+
+            }
         }
     }
 
