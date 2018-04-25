@@ -93,20 +93,6 @@ lifecycle_phase_t lifecycle[] = {
     }
 };
 
-void transition_to_phase(key_info_t *key_info, int8_t new_phase) {
-    //key_info->timer=(key_info->chatters ? lifecycle[new_phase].chattering_switch_timer: lifecycle[new_phase].regular_timer );
-
-    if (key_info->phase != new_phase) {
-        key_info->phase= new_phase;
-        key_info->ticks=0;
-    }
-}
-
-
-
-
-
-
 static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
     uint8_t changes = 0;
     // Scan each pin from the bank
@@ -119,16 +105,15 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
         if ((sample & _BV(i)) != current_phase.expected_data) {
             // if we get the 'other' value during a locked window, that's gotta be chatter
             key_info->chatters = key_info->chatters || current_phase.unexpected_data_is_chatter;
-            transition_to_phase(key_info, current_phase.unexpected_data_phase);
+            if (key_info->phase != current_phase.unexpected_data_phase) {
+                key_info->phase= current_phase.unexpected_data_phase;
+                key_info->ticks=0;
+            }
         }
 
         // do not act on any input during the locked off window
-        if (key_info->ticks >
-
-                (key_info->chatters ? lifecycle[key_info->phase].chattering_switch_timer: lifecycle[key_info->phase].regular_timer )
-
-           ) {
-            transition_to_phase(key_info, current_phase.next_phase);
+        if (key_info->ticks > (key_info->chatters ? lifecycle[key_info->phase].chattering_switch_timer: lifecycle[key_info->phase].regular_timer ) ) {
+                key_info->phase= current_phase.next_phase;
 
             if ( key_info->phase == LOCKED_ON  || key_info->phase == LOCKED_OFF) {
                 changes |= _BV(i);
