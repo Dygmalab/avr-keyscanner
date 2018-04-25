@@ -34,7 +34,7 @@ typedef struct {
     uint8_t
     expected_data:1;
     uint8_t
-                  change_output_on_expected_transition;
+    change_output_on_expected_transition;
     uint8_t timer;
 } lifecycle_phase_t;
 
@@ -222,17 +222,18 @@ static uint8_t debounce(uint8_t sample, debounce_t *debouncer) {
             if (key_info->phase != current_phase.unexpected_data_phase) {
                 key_info->phase = current_phase.unexpected_data_phase;
                 key_info->ticks=0;
-	    	continue;
+                continue;
             }
         }
 
         // do not act on any input during the locked off window
         if (++key_info->ticks >lifecycle[key_info->phase].timer ) {
-            key_info->ticks= (key_info->phase!= current_phase.next_phase) ?  0 : key_info->ticks;
-            key_info->phase= current_phase.next_phase;
-            changes |= _BV(i) & lifecycle[key_info->phase].change_output_on_expected_transition;
 
+            key_info->ticks = (key_info->phase != current_phase.next_phase) ?  0 : key_info->ticks;
+            key_info->phase = current_phase.next_phase;
+            changes |= _BV(i) & lifecycle[key_info->phase].change_output_on_expected_transition;
         }
+
     }
 
     debouncer->state ^= changes;
