@@ -58,13 +58,20 @@ lifecycle_phase_t lifecycle[] = {
         .chattering_switch_timer = 45
     },
     {
-        // ON
+        // ON -- during this phase, any 'on' value means that we should keep this key pressed
+        // A single 'off' value means that we should start checking to see if it's really a key release
+        //
+        // IF we get an 'off' value, change the phase to 'TURNING_OFF' to make sure it's not just
+        // chatter
+        //
+        // Our timers are set to 0, but that doesn't matter because in the event that we overflow the timer
+        // we just go back to the 'ON' phase
         .next_phase = ON,
         .expected_data = 1,
         .unexpected_data_phase = TURNING_OFF,
-        .regular_timer = 5,
+        .regular_timer = 0,
         .unexpected_data_is_chatter = 0,
-        .chattering_switch_timer = 65
+        .chattering_switch_timer =0
     },
     {
         // TURNING_OFF -- during this phase, we believe that we've detected
