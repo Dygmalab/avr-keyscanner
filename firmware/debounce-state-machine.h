@@ -31,7 +31,15 @@ typedef struct {
 
 lifecycle_phase_t lifecycle[] = {
     {
-        // OFF
+        // OFF -- during this phase, any 'off' value means that we should keep this key pressed
+        // A single 'on' value means that we should start checking to see if it's really a key press
+        //
+        // IF we get an 'on' value, change the phase to 'TURNING_ON' to make sure it's not just
+        // chatter
+        //
+        // Our timers are set to 0, but that doesn't matter because in the event that we overflow the timer
+        // we just go back to the 'OFF' phase
+	
         .next_phase = OFF,
         .expected_data = 0,
         .unexpected_data_phase = TURNING_ON,
@@ -40,7 +48,15 @@ lifecycle_phase_t lifecycle[] = {
         .chattering_switch_timer = 0
     },
     {
-        // TURNING_ON
+        // TURNING_ON-- during this phase, we believe that we've detected
+        // a switch being turned on. We're now checking to see if it's
+        // reading consistently as 'on' or if it was just a spurious "on" signal
+        // as might happen if we saw key chatter
+        //
+        // If it was a spurious disconnection, mark the switch as noisy and go back to phase OFF
+        //
+        // If we get through the timer with no "off" signals, proceed to phase LOCKED_ON
+
         .next_phase = LOCKED_ON,
         .expected_data = 1,
         .unexpected_data_phase = OFF,
@@ -49,8 +65,13 @@ lifecycle_phase_t lifecycle[] = {
         .chattering_switch_timer = 2
     },
     {
-        // LOCKED_ON
-        .next_phase = ON,
+        // LOCKED_ON -- during this phase, the key is on, no matter what value we read from the input 
+	// pin. 
+	//
+	// If we see any 'off' signals, that indicates a short read or chatter.
+	// In the event of unexpected data, stay in the LOCKED_ON phase, but don't reset the timer.
+        
+	.next_phase = ON,
         .expected_data = 1,
         .unexpected_data_phase = LOCKED_ON,
         .regular_timer = 14,
@@ -90,7 +111,11 @@ lifecycle_phase_t lifecycle[] = {
         .chattering_switch_timer = 92  // release latency
     },
     {
-        // LOCKED_OFF
+        // LOCKED_OFF -- during this phase, the key is off, no matter what value we read from the input 
+	// pin. 
+	//
+	// If we see any 'on' signals, that indicates a short read or chatter.
+	// In the event of unexpected data, stay in the LOCKED_OFF phase, but don't reset the timer.
         .next_phase = OFF,
         .expected_data = 0,
         .unexpected_data_phase =  LOCKED_OFF,
