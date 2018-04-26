@@ -171,9 +171,7 @@ ISR(SPI_STC_vect) {
             SPDR = global_brightness;
         } else {
             SPDR = led_buffer.whole[index++];
-            if(subpixel == 4) {
-                subpixel = 0;
-            }
+            subpixel %= 4; // reset the subpixel once it goes past brightness,r,g,b
         }
 
         if (index == LED_BUFSZ) {
