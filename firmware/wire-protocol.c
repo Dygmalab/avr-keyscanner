@@ -90,6 +90,10 @@ uint8_t key_substate;
 
 void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
     if (__builtin_expect(*bufsiz != 0, EXPECT_TRUE)) {
+
+	// Almost every command has a bufsiz of 1.
+	// populate the default and only set it when we want to change it.
+        *bufsiz=1;
         switch (twi_command) {
         case TWI_CMD_NONE:
             // Keyscanner Status Register
@@ -99,36 +103,30 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 // Jesse is too clueless to figure out how to get I2C to signal
                 // a 'short' response
                 buf[0]=TWI_REPLY_NONE;
-                *bufsiz=1;
             } else {
                 buf[0]=TWI_REPLY_KEYDATA;
-                    ringbuf_pop_to(buf+1, KEY_REPORT_SIZE_BYTES);
+                ringbuf_pop_to(buf+1, KEY_REPORT_SIZE_BYTES);
                 *bufsiz=(KEY_REPORT_SIZE_BYTES+1);
             }
             break;
         case TWI_CMD_VERSION:
             buf[0] = DEVICE_VERSION;
-            *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
 	case TWI_CMD_KEYDATA_SIZE:
 	    buf[0] = KEY_REPORT_SIZE_BYTES;
-	    *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
 	    break;
         case TWI_CMD_KEYSCAN_INTERVAL:
             buf[0] = OCR1A;
-            *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_LED_SPI_FREQUENCY:
             buf[0] = led_spi_frequency;
-            *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
         default:
             buf[0] = 0x01;
-            *bufsiz = 1;
             break;
         }
     }
