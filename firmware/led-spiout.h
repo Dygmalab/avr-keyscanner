@@ -19,6 +19,8 @@ void led_init(void);
 /* Call to change the speed at which we update the LEDs */
 void led_set_spi_frequency(uint8_t frequency);
 
+uint8_t  led_get_spi_frequency(void);
+
 /* Call this when you have new preformatted data for one bank of the LEDs */
 void led_update_bank(uint8_t *buf, const uint8_t bank);
 

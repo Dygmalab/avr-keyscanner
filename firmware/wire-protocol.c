@@ -6,7 +6,6 @@
 #include "led-spiout.h"
 
 
-uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
 
 void twi_init(void) {
 
@@ -52,8 +51,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 
     case TWI_CMD_LED_SPI_FREQUENCY:
         if (bufsiz == 2 ) {
-            led_spi_frequency = buf[1];
-            led_set_spi_frequency(led_spi_frequency);
+            led_set_spi_frequency(buf[1]);
         } else {
             twi_command = TWI_CMD_LED_SPI_FREQUENCY;
         }
@@ -122,7 +120,7 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_LED_SPI_FREQUENCY:
-            buf[0] = led_spi_frequency;
+            buf[0] = led_get_spi_frequency();
             twi_command = TWI_CMD_NONE;
             break;
         default:

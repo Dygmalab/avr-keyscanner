@@ -20,6 +20,8 @@
  */
 
 
+uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
+
 typedef union {
     uint8_t each[NUM_LEDS][LED_DATA_SIZE];
     uint8_t whole[LED_BUFSZ];
@@ -88,7 +90,11 @@ void led_set_all_to( uint8_t *buf) {
 
 }
 
+uint8_t  led_get_spi_frequency() {
+	return led_spi_frequency;
+}
 void led_set_spi_frequency(uint8_t frequency) {
+     led_spi_frequency = frequency;
     /* Enable SPI master, MSB first
      * fOSC/16 speed (512KHz), the default
       Measured at about 300 Hz of LED updates
