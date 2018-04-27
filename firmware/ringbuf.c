@@ -32,13 +32,13 @@ uint8_t ringbuf_pop(void) {
     return result;
 }
 
-void ringbuf_pop_to(uint8_t *bufptr, uint8_t size) {
+void ringbuf_pop_to(uint8_t *bufptr) {
     if (__builtin_expect(_ring.count == 0, EXPECT_FALSE)) {
 	    *bufptr = 0;
     }
 
     *bufptr = _ring.buf[_ring.start];
-    _ring.count-= size;
-    _ring.start+= size;
+    _ring.count--;
+    _ring.start++;
     _ring.start %= sizeof(_ring.buf);
 }
