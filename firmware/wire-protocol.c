@@ -34,53 +34,45 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         return;
     }
 
+    twi_command = buf[0];
+    if (bufsiz > 1) 
+	   twi_command = TWI_CMD_NONE;
+	
     switch (buf[0]) {
     case TWI_CMD_LED_UPDATE_ALL:
 	led_update_all(&buf[1]);
         break;
 
     case TWI_CMD_KEYSCAN_INTERVAL:
-        if (bufsiz == 2 ) {
-            // SET the delay
+        if (bufsiz == 2 ) // SET the delay
             OCR1A = buf[1];
-        } else {
-            // GET configuration
-            twi_command = TWI_CMD_KEYSCAN_INTERVAL;
-        }
         break;
 
     case TWI_CMD_LED_SPI_FREQUENCY:
-        if (bufsiz == 2 ) {
+        if (bufsiz == 2 ) 
             led_set_spi_frequency(buf[1]);
-        } else {
-            twi_command = TWI_CMD_LED_SPI_FREQUENCY;
-        }
         break;
 
 
     case TWI_CMD_LED_SET_ALL_TO:
-        if (bufsiz == 4 ) {
+        if (bufsiz == 4 ) 
             led_set_all_to(&buf[1]);
-        }
+        
         break;
 
     case TWI_CMD_LED_SET_ONE_TO:
-        if (bufsiz == 5 ) {
+        if (bufsiz == 5 ) 
             led_set_one_to(buf[1],&buf[2]);
-        }
         break;
-
-    case TWI_CMD_VERSION:
-        twi_command = TWI_CMD_VERSION;
-        break;
-
-    case TWI_CMD_KEYDATA_SIZE:
-	twi_command = TWI_CMD_KEYDATA_SIZE;
-	break;
 
     case TWI_CMD_LED_GLOBAL_BRIGHTNESS:
 	led_set_global_brightness(buf[1]);
 	break;
+
+    case TWI_CMD_VERSION:
+    case TWI_CMD_KEYDATA_SIZE:
+	break;
+
     }
 }
 
@@ -111,19 +103,15 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             break;
         case TWI_CMD_VERSION:
             buf[0] = DEVICE_VERSION;
-            twi_command = TWI_CMD_NONE;
             break;
 	case TWI_CMD_KEYDATA_SIZE:
 	    buf[0] = KEY_REPORT_SIZE_BYTES;
-            twi_command = TWI_CMD_NONE;
 	    break;
         case TWI_CMD_KEYSCAN_INTERVAL:
             buf[0] = OCR1A;
-            twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_LED_SPI_FREQUENCY:
             buf[0] = led_get_spi_frequency();
-            twi_command = TWI_CMD_NONE;
             break;
         default:
             buf[0] = 0x01;
