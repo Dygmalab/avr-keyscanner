@@ -1,10 +1,14 @@
 #include <util/crc16.h>
 #include "Arduino.h"
-#include "Wire.h"
+extern "C" {
+#include <twi.h>
+};
+
+#define ELEMENTS(arr)  (sizeof(arr) / sizeof((arr)[0]))
+
 
 void setup() {
     delay(5000);
-    Wire.begin();
 }
 
 #define page_size %d
@@ -56,47 +60,46 @@ void print_result(uint8_t result) {
 
 }
 
-int run_command(byte address, byte command) {
+int run_command(uint8_t address, byte command) {
 
-    Wire.beginTransmission(address);
-    Wire.write(command); // erase user space
-    Wire.write(0x00); // dummy end byte
-    byte result = Wire.endTransmission();
+// erase user space, dummy end uint8_t
+  byte data[] = {command, 0x00};
+  uint8_t result = twi_writeTo(address, data, ELEMENTS(data), 1, 0);
+
+
     print_result(result);
     return result;
 }
 
 
 
-byte read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, uint16_t length) {
-    byte result = 2;
+uint8_t read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, uint16_t length) {
+    uint8_t result = 2;
 
-    Wire.beginTransmission(addr);
-    Wire.write(0x06); // get version and CRC16
-    Wire.write(offset & 0xff); // addr (lo)
-    Wire.write(offset >> 8); // addr (hi)
-    Wire.write(length & 0xff); // len (lo)
-    Wire.write(length >> 8); // len (hi)
-    result = Wire.endTransmission();
+
+// get version and CRC16 // addr (lo) // addr (hi) // len (lo) // len (hi)
+  uint8_t data[] = { (0x06), (uint8_t)(offset & 0xff), (uint8_t)(offset >> 8), (uint8_t)(length & 0xff), (uint8_t)(length >> 8) };
+  result = twi_writeTo(addr, data, ELEMENTS(data), 1, 0);
+
+
     if (result != 0) {
         return result;
     }
-    Wire.requestFrom(addr, (uint8_t) 3);
-    if (Wire.available() == 0) {
-    }
-    byte v = Wire.read();
-    *version = v;
-    if (Wire.available() == 0) {
-        return 0xFF;
-    }
-    byte crc16_lo = Wire.read();
-    if (Wire.available() == 0) {
-        return 0xFF;
-    }
-    byte crc16_hi = Wire.read();
-    while (Wire.available()) {
-        byte c = Wire.read();
-    }
+
+ uint8_t rxBuffer[4];
+
+  // perform blocking read into buffer
+  uint8_t read = twi_readFrom(addr, rxBuffer, ELEMENTS(rxBuffer), true);
+  if (read == 0) {
+  }
+  if (read <4) {
+	return 0xFF;
+  }
+  uint8_t v = rxBuffer[0];
+  *version = v;
+    uint8_t crc16_lo = rxBuffer[1];
+    uint8_t crc16_hi = rxBuffer[2];
+    uint8_t c = rxBuffer[3];
     *crc16 = (crc16_hi << 8) | crc16_lo;
     return result;
 }
@@ -129,11 +132,11 @@ void get_version (byte addr) {
 
 
 
-int erase_program(byte addr) {
+int erase_program(uint8_t addr) {
+// erase user space
+  uint8_t data[] = { 0x04 };
+  uint8_t result = twi_writeTo(addr, data, ELEMENTS(data), 1, 0);
 
-    Wire.beginTransmission(addr);
-    Wire.write(0x04); // erase user space
-    byte result = Wire.endTransmission();
     debug_msg(F("Erasing\n"));
     debug_msg(F("result = "));
     debug_msg(result);
@@ -146,20 +149,21 @@ int erase_program(byte addr) {
 }
 
 
-int write_firmware(byte addr ) {
+int write_firmware(uint8_t addr ) {
 
-    byte result = 3;
-    byte o = 0;
+    uint8_t result = 3;
+    uint8_t o = 0;
 
     for (uint16_t i = 0; i < firmware_length; i += page_size) {
         debug_msg(F("Page "));
         debug_msg(offsets[o]);
         debug_msg(F(" setting address..."));
-        Wire.beginTransmission(addr);
-        Wire.write(0x1); // write page addr
-        Wire.write(offsets[o] & 0xff); // write page addr
-        Wire.write(offsets[o] >> 8);
-        result = Wire.endTransmission();
+
+// write page addr
+  uint8_t data[] = { 0x01, (uint8_t)(offsets[o] & 0xff), (uint8_t)(offsets[o] >> 8)};
+  result = twi_writeTo(addr, data, ELEMENTS(data), 1, 0);
+
+
         _delay_ms(DELAY);
         // got something other than ACK. Start over.
         if (result != 0) {
@@ -170,24 +174,26 @@ int write_firmware(byte addr ) {
         // transmit each frame separately
 
         for (uint8_t frame = 0; frame < page_size / frame_size; frame++) {
-            Wire.beginTransmission(addr);
-            Wire.write(0x2); // continue page
+uint8_t data_counter =0;
+  uint8_t data[frame_size +4] = {0};
+		data[data_counter++] = 0x2; // continue page
             uint16_t crc16 = 0xffff;
             for (uint8_t j = frame * frame_size; j < (frame + 1) * frame_size; j++) {
                 if (i + j < firmware_length) {
                     uint8_t b = pgm_read_byte(&firmware[i + j]);
-                    Wire.write(b);
+			data[data_counter++] = b;
                     crc16 = _crc16_update(crc16, b);
                 } else {
-                    Wire.write(blank);
+			data[data_counter++] = blank;
                     crc16 = _crc16_update(crc16, blank);
                 }
             }
             // write the CRC16, little end first
-            Wire.write(crc16 & 0xff);
-            Wire.write(crc16 >> 8);
-            Wire.write(0x00); // dummy end byte
-            result = Wire.endTransmission();
+			data[data_counter++] = (uint8_t)(crc16 & 0xff);
+			data[data_counter++] = (uint8_t)(crc16 >> 8);
+			data[data_counter++] = (0x00); // dummy end uint8_t
+  
+	    result = twi_writeTo(addr, data, ELEMENTS(data), 1, 0);
             debug_msg(F(": frame "));
             debug_msg(frame);
             debug_msg(F(" = "));
