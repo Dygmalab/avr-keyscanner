@@ -137,8 +137,7 @@ int erase_program(uint8_t addr) {
     uint8_t result = twi_writeTo(addr, data, ELEMENTS(data), 1, 0);
 
     debug_msg(F("Erasing\n"));
-    debug_msg(F("result = "));
-    debug_msg(result);
+    print_result(result);
     if (result != 0) {
         _delay_ms(1000);
         return -1;
@@ -195,8 +194,7 @@ int write_firmware(uint8_t addr ) {
             result = twi_writeTo(addr, data, ELEMENTS(data), 1, 0);
             debug_msg(F(": frame "));
             debug_msg(frame);
-            debug_msg(F(" = "));
-            debug_msg(result);
+            print_result(result);
             // got something other than NACK. Start over.
             if (result != 3) {
                 debug_msg(F("Error: Got something other than NACK\n") );
