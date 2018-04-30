@@ -29,7 +29,7 @@ void setup() {
 
 uint16_t offsets[pages] = {%s};
 const byte firmware[firmware_length] PROGMEM = {%s};
-#define debug_msg(...)   Serial.println(__VA_ARGS__)
+#define debug_msg(...)   Serial.print(__VA_ARGS__)
 
 int left_written = 0;
 int right_written = 0;
@@ -65,8 +65,9 @@ int run_command(uint8_t address, byte command) {
     byte data[] = {command, 0x00};
     uint8_t result = twi_writeTo(address, data, ELEMENTS(data), 1, 0);
 
-
+	
     print_result(result);
+    debug_msg("\n");
     return result;
 }
 
@@ -108,15 +109,14 @@ void get_version (byte addr) {
 
     byte result = 2;
     while (result != 0) {
-        debug_msg(F("Reading CRC16..."));
+        debug_msg(F("\nReading CRC16: "));
 
         byte version;
         uint16_t crc16;
         result = read_crc16(addr, &version, &crc16, 0, firmware_length);
 
-        debug_msg(F("\nresult "));
-        debug_msg(result);
-
+        print_result(result);
+	
         if (result != 0) {
             _delay_ms(100);
             continue;
@@ -136,7 +136,7 @@ int erase_program(uint8_t addr) {
     uint8_t data[] = { 0x04 };
     uint8_t result = twi_writeTo(addr, data, ELEMENTS(data), 1, 0);
 
-    debug_msg(F("Erasing\n"));
+    debug_msg(F("\nErasing: "));
     print_result(result);
     if (result != 0) {
         _delay_ms(1000);
@@ -153,9 +153,9 @@ int write_firmware(uint8_t addr ) {
     uint8_t o = 0;
 
     for (uint16_t i = 0; i < firmware_length; i += page_size) {
-        debug_msg(F("Page "));
+        debug_msg(F("\nPage "));
         debug_msg(offsets[o]);
-        debug_msg(F(" setting address..."));
+        debug_msg(F(" setting address: "));
 
 // write page addr
         uint8_t data[] = { 0x01, (uint8_t)(offsets[o] & 0xff), (uint8_t)(offsets[o] >> 8)};
@@ -192,12 +192,13 @@ int write_firmware(uint8_t addr ) {
             data[data_counter++] = (0x00); // dummy end uint8_t
 
             result = twi_writeTo(addr, data, ELEMENTS(data), 1, 0);
-            debug_msg(F(": frame "));
+            debug_msg(F("\nFrame "));
             debug_msg(frame);
+	    debug_msg(F(": "));
             print_result(result);
             // got something other than NACK. Start over.
             if (result != 3) {
-                debug_msg(F("Error: Got something other than NACK\n") );
+                debug_msg(F("\nERROR: Got something other than NACK\n") );
                 return -1;
             }
             delay(DELAY);
@@ -276,7 +277,7 @@ byte update_attiny(byte addr) {
         return 0;
     }
 
-    debug_msg(F("Resetting ATTiny\n"));
+    debug_msg(F("Resetting ATTiny: "));
     int result = run_command(addr, 0x03); // execute app
     debug_msg(F("Done!\n"));
 
