@@ -91,55 +91,54 @@ void led_set_all_to( uint8_t *buf) {
 }
 
 uint8_t  led_get_spi_frequency() {
-	return led_spi_frequency;
+    return led_spi_frequency;
 }
 void led_set_spi_frequency(uint8_t frequency) {
-     led_spi_frequency = frequency;
+    led_spi_frequency = frequency;
     /* Enable SPI master, MSB first
      * fOSC/16 speed (512KHz), the default
-      Measured at about 300 Hz of LED updates
-     */
+      Measured at about 300 Hz of LED updates */
 
+
+
+
+    // This is the default SPI "on" incant
 
     SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE);
+
+    // Which speeds are "double speed"
     switch(frequency) {
     case LED_SPI_OFF:
         SPCR = 0x00;
         break;
-    // fosc/2
+    //
     case LED_SPI_FREQUENCY_4MHZ:
+    case LED_SPI_FREQUENCY_1MHZ:
+    case LED_SPI_FREQUENCY_256KHZ:
+    case LED_SPI_FREQUENCY_128KHZ:
         SPSR |= _BV(SPI2X);
         break;
-    // fosc/4
     case LED_SPI_FREQUENCY_2MHZ:
+    case LED_SPI_FREQUENCY_512KHZ:
+    case LED_SPI_FREQUENCY_64KHZ:
         SPSR ^= _BV(SPI2X);
         break;
-    // fosc/8
+    }
+
+    // Slightly less code to get us the same values for SPI speed
+    switch(frequency) {
     case LED_SPI_FREQUENCY_1MHZ:
+    case LED_SPI_FREQUENCY_512KHZ:
         SPCR |= _BV(SPR0);
-        SPSR |= _BV(SPI2X);
         break;
-    // fosc/32
+
+    case LED_SPI_FREQUENCY_128KHZ:
+    case LED_SPI_FREQUENCY_64KHZ:
+        SPCR |= _BV(SPR0);
+    // No break here. 64KHz and 128KHz both want SPR0 and SPR1 set;
     case LED_SPI_FREQUENCY_256KHZ:
         SPCR |= _BV(SPR1);
-        SPSR |= _BV(SPI2X);
-        break;
-    // fosc/64
-    case LED_SPI_FREQUENCY_128KHZ:
-        SPCR |= _BV(SPR0) | _BV(SPR1);
-        SPSR |= _BV(SPI2X);
-        break;
-    // fosc/128
-    case LED_SPI_FREQUENCY_64KHZ:
-        SPCR |= _BV(SPR0) | _BV(SPR1);
-        SPSR ^= _BV(SPI2X);
-        break;
-    // fosc/16
-    case LED_SPI_FREQUENCY_512KHZ:
-    default:
-        SPCR |= _BV(SPR0);
-        SPSR ^= _BV(SPI2X);
-        break;
+
     }
 }
 
