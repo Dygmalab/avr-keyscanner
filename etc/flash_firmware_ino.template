@@ -297,7 +297,7 @@ void loop() {
 
     debug_msg(F("Starting!\n"));
 
-    debug_msg(F("Updating left side\n");
+    debug_msg(F("Updating left side\n"));
     if (left_written > 0) {
         debug_msg(F("Already done with this side.\n"));
         // we're done
@@ -307,7 +307,7 @@ void loop() {
 
     }
 
-    debug_msg(F("Updating right side\n");
+    debug_msg(F("Updating right side\n"));
     if (right_written > 0) {
         debug_msg(F("Already done with this side.\n"));
         // we're done
