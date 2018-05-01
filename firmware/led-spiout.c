@@ -36,6 +36,7 @@ static volatile enum {
     END_FRAME
 } led_phase;
 
+#define BRIGHTNESS_MASK	0b11100000
 static volatile uint8_t global_brightness = 0xFF;
 
 static volatile uint8_t index; /* next byte to transmit */
@@ -75,10 +76,12 @@ void led_set_one_to(uint8_t led, uint8_t *buf) {
 }
 
 void led_set_global_brightness(uint8_t brightness) {
-	if (brightness > 31) {
-		return;
-	}
-	global_brightness = 0xE0 + brightness;
+	// Legal brightness inputs are 0 to 31.
+	// But the output we want has the 3 high bytes set anyway
+	// So ORing our input with the brightness mask limits 
+	// the input to 31.
+	
+	global_brightness = BRIGHTNESS_MASK | brightness;
 }
 
 void led_set_all_to( uint8_t *buf) {
