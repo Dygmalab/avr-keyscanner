@@ -99,44 +99,45 @@ void led_set_spi_frequency(uint8_t frequency) {
      * fOSC/16 speed (512KHz), the default
       Measured at about 300 Hz of LED updates
      */
+
+
+    SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE);
     switch(frequency) {
     case LED_SPI_OFF:
         SPCR = 0x00;
         break;
     // fosc/2
     case LED_SPI_FREQUENCY_4MHZ:
-        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE);
         SPSR |= _BV(SPI2X);
         break;
     // fosc/4
     case LED_SPI_FREQUENCY_2MHZ:
-        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE);
         SPSR ^= _BV(SPI2X);
         break;
     // fosc/8
     case LED_SPI_FREQUENCY_1MHZ:
-        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE) | _BV(SPR0);
+        SPCR |= _BV(SPR0);
         SPSR |= _BV(SPI2X);
         break;
     // fosc/32
     case LED_SPI_FREQUENCY_256KHZ:
-        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE) | _BV(SPR1);
+        SPCR |= _BV(SPR1);
         SPSR |= _BV(SPI2X);
         break;
     // fosc/64
     case LED_SPI_FREQUENCY_128KHZ:
-        SPCR = _BV(SPE)| _BV(MSTR) | _BV(SPIE) | _BV(SPR0) | _BV(SPR1);
+        SPCR |= _BV(SPR0) | _BV(SPR1);
         SPSR |= _BV(SPI2X);
         break;
     // fosc/128
     case LED_SPI_FREQUENCY_64KHZ:
-        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE) | _BV(SPR0) | _BV(SPR1);
+        SPCR |= _BV(SPR0) | _BV(SPR1);
         SPSR ^= _BV(SPI2X);
         break;
     // fosc/16
     case LED_SPI_FREQUENCY_512KHZ:
     default:
-        SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPIE) | _BV(SPR0);
+        SPCR |= _BV(SPR0);
         SPSR ^= _BV(SPI2X);
         break;
     }
