@@ -93,7 +93,11 @@ void led_set_all_to( uint8_t *buf) {
 
 }
 
-uint8_t  led_get_spi_frequency() {
+void led_set_all_off (void){
+	memset((uint8_t*)led_buffer.whole, 0, sizeof(led_buffer.whole));
+}
+
+inline uint8_t led_get_spi_frequency() {
     return led_spi_frequency;
 }
 void led_set_spi_frequency(uint8_t frequency) {
@@ -149,8 +153,7 @@ void led_set_spi_frequency(uint8_t frequency) {
 void led_init() {
 
     // Make sure all our LEDs start off dark
-    uint8_t off[] = { 0x00,0x00,0x00};
-    led_set_all_to(&off[0]);
+    led_set_all_off();
 
     /* Set MOSI, SCK, SS all to outputs */
     DDRB = _BV(5)|_BV(3)|_BV(2);
