@@ -3,7 +3,7 @@
 static struct {
     uint8_t start;
     uint8_t count;
-    uint8_t buf[64];
+    uint8_t buf[KEY_REPORT_SIZE_BYTES * 16];
 } _ring = { 0, 0, { 0 }};
 
 void ringbuf_append(uint8_t value) {
