@@ -140,10 +140,13 @@ void led_set_spi_frequency(uint8_t frequency) {
         SPCR |= _BV(SPR0);
         break;
 
+    // These values want SPR0 AND SPR1, so 
+    // no break at the end of this case. let it cascade through
     case LED_SPI_FREQUENCY_128KHZ:
     case LED_SPI_FREQUENCY_64KHZ:
         SPCR |= _BV(SPR0);
-    // No break here. 64KHz and 128KHz both want SPR0 and SPR1 set;
+    
+   // This value wants ONLY SPR1 set, not SPR0 
     case LED_SPI_FREQUENCY_256KHZ:
         SPCR |= _BV(SPR1);
 
