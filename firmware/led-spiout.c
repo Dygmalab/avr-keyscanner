@@ -102,11 +102,11 @@ inline uint8_t led_get_spi_frequency() {
 }
 void led_set_spi_frequency(uint8_t frequency) {
     led_spi_frequency = frequency;
+
+
     /* Enable SPI master, MSB first
      * fOSC/16 speed (512KHz), the default
       Measured at about 300 Hz of LED updates */
-
-
 
 
     // This is the default SPI "on" incant
@@ -115,9 +115,6 @@ void led_set_spi_frequency(uint8_t frequency) {
 
     // Which speeds are "double speed"
     switch(frequency) {
-    case LED_SPI_OFF:
-        SPCR = 0x00;
-        break;
     //
     case LED_SPI_FREQUENCY_4MHZ:
     case LED_SPI_FREQUENCY_1MHZ:
@@ -134,6 +131,10 @@ void led_set_spi_frequency(uint8_t frequency) {
 
     // Slightly less code to get us the same values for SPI speed
     switch(frequency) {
+    case LED_SPI_OFF:
+        SPCR = 0x00;
+        break;
+	    // These values want SPR0 but not SPR1
     case LED_SPI_FREQUENCY_1MHZ:
     case LED_SPI_FREQUENCY_512KHZ:
         SPCR |= _BV(SPR0);
