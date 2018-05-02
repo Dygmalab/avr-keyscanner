@@ -3,9 +3,9 @@
 #include "led-spiout.h"
 
 static inline void setup(void) {
+    led_init();
     keyscanner_init();
     twi_init();
-    led_init();
 }
 
 int main(void) {
