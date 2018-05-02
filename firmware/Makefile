@@ -60,7 +60,7 @@ OPTIMIZATION = -O3
 
 
 AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE)
-COMPILE = $(GCC_PATH) -Wall -Wextra $(OPTIMIZATION) -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK) -include "config/$(PRODUCT_ID).h"
+COMPILE = $(GCC_PATH) -Wall -Wextra $(OPTIMIZATION) -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK) -include "config/$(PRODUCT_ID).h" -save-temps -fverbose-asm -g
 
 # symbolic targets:
 all:	$(HEX_FILE_PATH)
@@ -109,7 +109,7 @@ $(HEX_FILE_PATH): $(ELF_FILE_PATH)
 disassemble: disasm
 
 disasm:	$(ELF_FILE_PATH)
-	avr-objdump -d $(ELF_FILE_PATH)
+	avr-objdump -d -S -h $(ELF_FILE_PATH)
 
 size-map: $(ELF_FILE_PATH)
 	avr-nm --size-sort -C -r -l "$(ELF_FILE_PATH)"
