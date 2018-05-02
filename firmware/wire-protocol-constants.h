@@ -22,7 +22,7 @@
 
 // 512KHZ seems to be the sweet spot in early testing
 // so make it the default
-#define LED_SPI_FREQUENCY_DEFAULT LED_SPI_FREQUENCY_512KHZ
+#define LED_SPI_FREQUENCY_DEFAULT LED_SPI_FREQUENCY_1MHZ
 
 
 #define TWI_CMD_LED_UPDATE_ALL 0x79
