@@ -3,6 +3,7 @@
 #include "main.h"
 #include "ringbuf.h"
 #include "twi-slave.h"
+#include "keyscanner.h"
 #include "led-spiout.h"
 
 
@@ -45,7 +46,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 
     case TWI_CMD_KEYSCAN_INTERVAL:
         if (bufsiz == 2 ) // SET the delay
-            OCR1A = buf[1];
+            keyscanner_set_interval(buf[1]);
         break;
 
     case TWI_CMD_LED_SPI_FREQUENCY:
@@ -108,7 +109,7 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
 	    buf[0] = KEY_REPORT_SIZE_BYTES;
 	    break;
         case TWI_CMD_KEYSCAN_INTERVAL:
-            buf[0] = OCR1A;
+            buf[0] = keyscanner_get_interval();
             break;
         case TWI_CMD_LED_SPI_FREQUENCY:
             buf[0] = led_get_spi_frequency();

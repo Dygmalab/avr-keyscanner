@@ -12,6 +12,14 @@ debounce_t db[COUNT_OUTPUT];
 // do_scan gets set any time we should actually do a scan
 volatile uint8_t do_scan = 1;
 
+
+void keyscanner_set_interval(uint8_t interval) {
+	OCR1A = interval;
+}
+uint8_t keyscanner_get_interval(void) {
+	return OCR1A;
+}
+
 void keyscanner_init(void) {
 
     CONFIGURE_OUTPUT_PINS;
@@ -109,7 +117,7 @@ void keyscanner_timer1_init(void) {
     TCNT1 = 0;
 
     // initialize compare value
-    OCR1A = KEYSCAN_INTERVAL_DEFAULT;
+    keyscanner_set_interval(KEYSCAN_INTERVAL_DEFAULT);
 
     // enable compare interrupt
     TIMSK1 |= _BV(OCIE1A);
