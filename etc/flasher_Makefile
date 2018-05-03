@@ -10,11 +10,12 @@ BOARD_HARDWARE_PATH=${ARDUINO_LOCAL_LIB_PATH}/hardware
 BOARD=model01
 MCU=atmega32u4
 FQBN=keyboardio:avr:${BOARD}
-BUILD_PATH := $(shell mktemp -d 2>/dev/null || mktemp -d -t 'build')
+BUILD_PATH := $(abspath ./build )
 
 SKETCH=attiny_flasher.ino
 
 build:
+	mkdir ${BUILD_PATH}
 	${ARDUINO_BUILDER} -compile \
 	            -verbose \
                     -hardware "${ARDUINO_PATH}/hardware" \

@@ -9,7 +9,7 @@ memory_size = 8192
 blank = 0xff
 delay_ms = 1
 
-template = open('etc/flash_firmware_ino.template', 'r').read()
+template = open('etc/flash_firmware_h.template', 'r').read()
 
 Line = namedtuple('Line', ['size', 'offset', 'kind', 'data', 'checksum'])
 

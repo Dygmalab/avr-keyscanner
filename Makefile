@@ -54,7 +54,8 @@ build:
 flashing-tool: build
 	mkdir -p out/attiny_flasher
 	cp etc/flasher_Makefile out/attiny_flasher/Makefile
-	python2.7 ./tools/hex_to_atmega.py out/attiny88_keyscanner.hex > out/attiny_flasher/attiny_flasher.ino
+	cp etc/flash_firmware.ino out/attiny_flasher/attiny_flasher.ino
+	python2.7 ./tools/hex_to_atmega.py out/attiny88_keyscanner.hex > out/attiny_flasher/attiny_flasher.h
 
 
 .PHONY: default all clean install flash fuse

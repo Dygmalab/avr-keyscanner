@@ -4,6 +4,8 @@ extern "C" {
 #include <twi.h>
 };
 
+#include "attiny_flasher.h"
+
 #define ELEMENTS(arr)  (sizeof(arr) / sizeof((arr)[0]))
 
 
@@ -12,15 +14,6 @@ void setup() {
     twi_init();
 }
 
-#define page_size %d
-#define frame_size %d
-#define blank 0x%x
-#define pages %d
-#define firmware_length %d
-#define DELAY %d
-#define LEFT_ADDRESS 0x50
-#define RIGHT_ADDRESS 0x53
-
 
 #define ENDTRANS_SUCCESS 0
 #define ENDTRANS_DATA_TOO_LONG 1
@@ -28,12 +21,8 @@ void setup() {
 #define ENDTRANS_DATA_NACK 3
 #define ENDTRANS_ERROR 4
 
-uint16_t offsets[pages] = {%s};
-const byte firmware[firmware_length] PROGMEM = {%s};
 #define debug_msg(...)   Serial.print(__VA_ARGS__)
 
-int left_written = 0;
-int right_written = 0;
 
 // The LEFT ATTiny has a reset pin directly connected to the ATMega
 void reset_left_attiny() {
@@ -54,6 +43,7 @@ void reset_right_attiny() {
     delay(1000);
     PORTC |= _BV(7); // Turn the ATTiny back on
 }
+
 void print_result(uint8_t result) {
     debug_msg(F("result = "));
     debug_msg(result);
@@ -75,7 +65,7 @@ int run_command(uint8_t address, byte command) {
 
 
 uint8_t read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, uint16_t length) {
-    uint8_t result = 2;
+    uint8_t result = ENDTRANS_ADDR_NACK;
 
 
 // get version and CRC16 // addr (lo) // addr (hi) // len (lo) // len (hi)
@@ -83,7 +73,7 @@ uint8_t read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, u
     result = twi_writeTo(addr, data, ELEMENTS(data), true, true);
 
 
-    if (result != 0) {
+    if (result != ENDTRANS_SUCCESS) {
         return result;
     }
 
@@ -91,9 +81,9 @@ uint8_t read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, u
 
     // perform blocking read into buffer
     uint8_t read = twi_readFrom(addr, rxBuffer, ELEMENTS(rxBuffer), true);
-    if (read == 0) {
+    if (read == ENDTRANS_SUCCESS) {
     }
-    if (read < 3) {
+    if (read < ENDTRANS_DATA_NACK) {
         return 0xFF;
     }
     uint8_t v = rxBuffer[0];
@@ -107,8 +97,8 @@ uint8_t read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, u
 
 void get_version (byte addr) {
 
-    byte result = 2;
-    while (result != 0) {
+    byte result = ENDTRANS_ADDR_NACK;
+    while (result != ENDTRANS_SUCCESS) {
         debug_msg(F("\nReading CRC16: "));
 
         byte version;
@@ -117,7 +107,7 @@ void get_version (byte addr) {
 
         print_result(result);
 	
-        if (result != 0) {
+        if (result != ENDTRANS_SUCCESS) {
             _delay_ms(100);
             continue;
         }
@@ -138,8 +128,9 @@ int erase_program(uint8_t addr) {
 
     debug_msg(F("\nErasing: "));
     print_result(result);
-    if (result != 0) {
+    if (result != ENDTRANS_SUCCESS) {
         _delay_ms(1000);
+        debug_msg(F("failed.\n"));
         return -1;
     }
     return 0;
@@ -149,7 +140,7 @@ int erase_program(uint8_t addr) {
 
 int write_firmware(uint8_t addr ) {
 
-    uint8_t result = 3;
+    uint8_t result = ENDTRANS_DATA_NACK;
     uint8_t o = 0;
 
     for (uint16_t i = 0; i < firmware_length; i += page_size) {
@@ -164,8 +155,8 @@ int write_firmware(uint8_t addr ) {
 
         _delay_ms(DELAY);
         // got something other than ACK. Start over.
-        if (result != 0) {
-            debug_msg(F("Error setting the page address\n"));
+        if (result != ENDTRANS_SUCCESS) {
+            debug_msg(F("Error\n"));
             return -1;
         }
 
@@ -197,7 +188,7 @@ int write_firmware(uint8_t addr ) {
 	    debug_msg(F(": "));
             print_result(result);
             // got something other than NACK. Start over.
-            if (result != 3) {
+            if (result != ENDTRANS_DATA_NACK) {
                 debug_msg(F("\nERROR: Got something other than NACK\n") );
                 return -1;
             }
@@ -210,10 +201,10 @@ int write_firmware(uint8_t addr ) {
 
 
 int verify_firmware(byte addr) {
-    byte result = 3;
+    byte result = ENDTRANS_DATA_NACK;
     // verify firmware
-    debug_msg(F("## Verifying firmware installation\n"));
-    while (result != 0) {
+    debug_msg(F("Verifying install\n"));
+    while (result != ENDTRANS_SUCCESS) {
         debug_msg(F("CRC16: "));
 
         byte version;
@@ -223,11 +214,11 @@ int verify_firmware(byte addr) {
 
         debug_msg(result);
 
-        if (result != 0) {
+        if (result != ENDTRANS_SUCCESS) {
             _delay_ms(100);
             continue;
         }
-        debug_msg(F("Version: "));
+        debug_msg(F("\nVersion: "));
         debug_msg(version);
         debug_msg(F("\nCRC CRC16 of "));
         debug_msg(offsets[0] + 4, HEX);
@@ -242,11 +233,11 @@ int verify_firmware(byte addr) {
             check_crc16 = _crc16_update(check_crc16, pgm_read_byte(&firmware[i]));
         }
         if (crc16 != check_crc16) {
-            debug_msg(F("CRC does not match ours: "));
+            debug_msg(F("does not match: "));
             debug_msg(check_crc16, HEX);
             return -1;
         }
-        debug_msg(F("CRC check: OK\n"));
+        debug_msg(F(": OK\n"));
     }
     return 0;
 }
@@ -260,62 +251,58 @@ byte update_attiny(byte addr) {
 
     if (erased == -1) {
 
-        debug_msg(F("Erase failed.\n"));
         return 0;
     }
 
     int firmware_written = write_firmware(addr);
     if(firmware_written == -1) {
-        debug_msg(F("Firmware write failed.\n"));
+        debug_msg(F("Failed.\n"));
         return 0;
     }
 
     int firmware_verified = verify_firmware(addr);
     if(firmware_verified == -1) {
-        debug_msg(F("Firmware verify failed.\n"));
+        debug_msg(F("Failed.\n"));
         return 0;
     }
 
-    debug_msg(F("Resetting ATTiny: "));
-    int result = run_command(addr, 0x03); // execute app
+    debug_msg(F("Resetting: "));
+    run_command(addr, 0x03); // execute app
     debug_msg(F("Done!\n"));
 
     return 1;
 }
 
 void loop() {
-
     delay(5000);
 
+    int left_written = 0;
+    int right_written = 0;
 
-    if (left_written > 0 && right_written > 0 ) {
 
-        debug_msg (F("Both ATTiny MCUs have been flashed\n"));
-        debug_msg(F("It is now safe to reflash your keyboard with regular firmware\n"));
-        return;
-    }
-
-    debug_msg(F("Starting!\n"));
-
-    debug_msg(F("Updating left side\n"));
     if (left_written > 0) {
-        debug_msg(F("Already done with this side.\n"));
+        debug_msg(F("Done with left side.\n"));
         // we're done
     } else {
+    	debug_msg(F("Updating left side\n"));
         reset_left_attiny();
         left_written = update_attiny(LEFT_ADDRESS);
 
     }
 
-    debug_msg(F("Updating right side\n"));
     if (right_written > 0) {
-        debug_msg(F("Already done with this side.\n"));
+        debug_msg(F("Done with right side.\n"));
         // we're done
     } else {
+    	debug_msg(F("Updating right side\n"));
         reset_right_attiny();
         right_written = update_attiny(RIGHT_ADDRESS);
     }
 
+    if (left_written && right_written  ) {
+        debug_msg (F("Both ATTiny MCUs have been flashed\nIt is now safe to reload the regular firmware\n"));
+        return;
+    }
 
 
 }
