@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "adc.h"
 
-//#define DETECT_ADC
+#define DETECT_ADC
 
 uint8_t red[3] = { 255, 0, 0 };
 uint8_t grn[3] = { 0, 255, 0 };
@@ -19,15 +19,12 @@ static inline void setup(void) {
 
     #ifdef DETECT_ADC
     setup_adc();
-    while(true)
+
+    // 360mv (70ADC) if dpf is providing power to us
+    // think I have adc wrong, as it works up to about 300count.
+    while(read_adc() > 150)
     {
-        // 360mv (70ADC) if dpf is providing power to us
-        // think I have adc wrong, as it works up to about 300count.
-        if(read_adc() > 150)
-            led_set_one_to(56, red); 
-        else
-            led_set_one_to(56, grn);
-            //led_set_all_to( grn );
+        led_set_all_to(red); 
         _delay_ms(100);
     }
     #endif
