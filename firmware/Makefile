@@ -29,7 +29,7 @@ CLOCK      ?= 8000000
 # Add something like this to Makefile.local if you haven't yet set up ~/.avrduderc with a default programmer.
 # PROGRAMMER = -c usbtiny -P usb
 #PROGRAMMER = -c dragon_isp 
-PROGRAMMER = -c stk500v2 -P /dev/ttyACM2
+PROGRAMMER = -c stk500v2 -P /dev/ttyACM1
 
 # Add more objects for each .c file here
 OBJECTS    = main.o sled1735.o wire-protocol.o twi-slave.o ringbuf.o keyscanner.o adc.o
