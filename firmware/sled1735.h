@@ -49,6 +49,18 @@ void self_test();
 #define mskSLEW_RATE_CTL_EN                     (0x1<<0)
 #define mskSLEW_RATE_CTL_DIS                    (0x0<<0)
 
+/*--------Function Register: address 0DH Staggered Delay Reg------------*/      
+#define mskSTD1                                 (0x3<<0)        
+#define mskSTD2                                 (0x3<<2)
+#define mskSTD3                                 (0x3<<4)        
+#define mskSTD4                                 (0x3<<6)
+
+#define CONST_STD_GROUP1                        0x00            
+#define CONST_STD_GROUP2                        0x55    
+#define CONST_STD_GROUP3                        0xAA            
+#define CONST_STD_GROUP4                        0xFF            
+
+
 
 #define mskCURRENT_STEP_CONST                   (0x3F<<0)               
 #define CONST_CURRENT_STEP_10mA                 (0x5<<0)
