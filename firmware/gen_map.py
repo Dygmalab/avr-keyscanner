@@ -25,8 +25,12 @@ LUT_banks = 2
 num_rgbs = 70 # max for sled1735 with common anode
 all_map = range(num_rgbs)
 
-# reverse leds for low profile
-led_rev = [] #[ 60, 61 ]
+# first 34 for reverse leds keys
+led_rev = range(34)
+
+# reverse for last 2 (low profile)
+led_rev += [68, 69] 
+
 print("//generating map for %d rgbs (%d leds)" % (num_rgbs, num_rgbs*3))
 
 # sled driver has blank patches distributed through the matrix that can't be used for leds
@@ -62,6 +66,8 @@ for led_num in range(num_rgbs):
     #led_pos = all_map[led_num]
     # each led has its RGB legs tied to subsequent rows
     if led_num in led_rev:
+        #led_map[y:y+3, x:x+1] = [[led_pos * 3],[led_pos * 3 + 1],[led_pos * 3 + 2]]
+        # new reverse LEDs are same as front
         led_map[y:y+3, x:x+1] = [[led_pos * 3],[led_pos * 3 + 1],[led_pos * 3 + 2]]
     else: # swap g & b
         led_map[y:y+3, x:x+1] = [[led_pos * 3],[led_pos * 3 + 2],[led_pos * 3 + 1]]
