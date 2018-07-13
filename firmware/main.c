@@ -3,40 +3,38 @@
 #include "wire-protocol.h"
 #include <stdint.h>
 
-#define DETECT_ADC
-
-uint8_t red[3] = { 255, 0, 0 };
-uint8_t grn[3] = { 0, 255, 0 };
-uint8_t off[3] = { 0, 0, 0 };
-
-
 static inline void setup(void) {
-    setup_spi(); // setup sled 1735 driver chip
-    keyscanner_init();
-
-    #ifdef DETECT_ADC
-    setup_adc();
-
-    // 360mv (70ADC) if dpf is providing power to us
-    // think I have adc wrong, as it works up to about 300count.
-    while(read_adc() > 150)
-    {
-        led_set_all_to(red); 
-        _delay_ms(100);
-    }
-    #endif
     twi_init();
 
-    // joint detect setup
-    SET_INPUT(DDRA,JOINT_PIN);
-    HIGH(PORTA,JOINT_PIN);
+}
+
+void sig_pin(bool set)
+{
+    if(set)
+    {
+    // pull down to 0
+    SET_OUTPUT(DDRB,0);
+    LOW(PORTB,0);
+
+    }
+    else
+    {
+    // let float
+    SET_INPUT(DDRB,0);
+    LOW(PORTB,0);
+    }
 }
 
 int main(void) {
     setup();
 
     while(1) {
-        keyscanner_main();
+    /*
+    sig_pin(true);
+    _delay_ms(1000);
+    sig_pin(false);
+    _delay_ms(1000);
+    */
     }
     __builtin_unreachable();
 }

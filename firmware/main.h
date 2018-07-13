@@ -18,6 +18,9 @@
 #define HIGH(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #define LOW(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 
+
+void sig_pin(bool set);
+
 #define DISABLE_INTERRUPTS(code) do{ \
     cli(); \
     { \
