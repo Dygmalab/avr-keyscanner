@@ -1,10 +1,7 @@
-#include "sled1735.h"
 #include <util/delay.h>
 #include "main.h"
-#include "keyscanner.h"
 #include "wire-protocol.h"
 #include <stdint.h>
-#include "adc.h"
 
 #define DETECT_ADC
 
