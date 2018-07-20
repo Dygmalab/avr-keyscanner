@@ -20,6 +20,7 @@
 
 
 void sig_pin(bool set);
+bool get_pin();
 
 #define DISABLE_INTERRUPTS(code) do{ \
     cli(); \

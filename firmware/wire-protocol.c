@@ -68,6 +68,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 
     case TWI_CMD_VERSION:
         twi_command = TWI_CMD_VERSION;
+        //sig_pin(true); // set it, which pulls pin low
         break;
 
     case TWI_CMD_SLED_STATUS:
@@ -91,14 +92,20 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 }
 
 uint8_t key_substate;
+bool state = true;
 
 void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
     if (__builtin_expect(*bufsiz != 0, 1)) {
         switch (twi_command) {
         case TWI_CMD_NONE:
             // Keyscanner Status Register
-            buf[0]=TWI_REPLY_NONE;
-            *bufsiz=1;
+            buf[0]=TWI_REPLY_KEYDATA;
+            buf[1]=get_pin();
+            buf[2]=0;
+            buf[3]=0;
+            buf[4]=0;
+            buf[5]=0;
+            *bufsiz=6;
             break;
         case TWI_CMD_VERSION:
             buf[0] = DEVICE_VERSION;
