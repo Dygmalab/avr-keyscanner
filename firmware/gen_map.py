@@ -68,7 +68,7 @@ for led_num in range(num_rgbs):
     if led_num in led_rev:
         #led_map[y:y+3, x:x+1] = [[led_pos * 3],[led_pos * 3 + 1],[led_pos * 3 + 2]]
         # new reverse LEDs are same as front
-        led_map[y:y+3, x:x+1] = [[led_pos * 3],[led_pos * 3 + 1],[led_pos * 3 + 2]]
+        led_map[y:y+3, x:x+1] = [[led_pos * 3],[led_pos * 3 + 2],[led_pos * 3 + 1]]
     else: # swap g & b
         led_map[y:y+3, x:x+1] = [[led_pos * 3],[led_pos * 3 + 2],[led_pos * 3 + 1]]
 
