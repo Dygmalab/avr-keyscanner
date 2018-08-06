@@ -218,18 +218,18 @@ void setup_spi()
 
     #ifdef INIT_PWM
     // initialise pwm to our default value
-    for(int i=TYPE3_PWM_FRAME_FIRST_ADDR; i<TYPE3_PWM_FRAME_LAST_ADDR; i++)
+    for(int i=TYPE3_PWM_FRAME_FIRST_ADDR; i<=TYPE3_PWM_FRAME_LAST_ADDR; i++)
         SPI_W_3BYTE(SPI_FRAME_ONE_PAGE, i, INIT_PWM);           
 
-    for(int i=TYPE3_PWM_FRAME_FIRST_ADDR; i<TYPE3_PWM_FRAME_LAST_ADDR; i++)
+    for(int i=TYPE3_PWM_FRAME_FIRST_ADDR; i<=TYPE3_PWM_FRAME_LAST_ADDR; i++)
         SPI_W_3BYTE(SPI_FRAME_TWO_PAGE, i, INIT_PWM);           
     #endif
 
     // turn on all leds - alternative is to only turn on those that are set in the LUT
-    for(int i=TYPE3_LED_FRAME_FIRST_ADDR; i<TYPE3_LED_FRAME_LAST_ADDR; i++)
+    for(int i=TYPE3_LED_FRAME_FIRST_ADDR; i<=TYPE3_LED_FRAME_LAST_ADDR; i++)
         SPI_W_3BYTE(SPI_FRAME_ONE_PAGE, i, 0xFF);           
 
-    for(int i=TYPE3_LED_FRAME_FIRST_ADDR; i<TYPE3_LED_FRAME_LAST_ADDR; i++)
+    for(int i=TYPE3_LED_FRAME_FIRST_ADDR; i<=TYPE3_LED_FRAME_LAST_ADDR; i++)
         SPI_W_3BYTE(SPI_FRAME_TWO_PAGE, i, 0xFF);           
 
     // turn on the chip
