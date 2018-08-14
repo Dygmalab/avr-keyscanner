@@ -31,10 +31,8 @@ PROGRAMMER ?= -c stk500v2 -P /dev/ttyACM2
 
 AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE) -v
 
-flash-left:	all
-	$(AVRDUDE) -B 1 -U flash:w:out/factory_left.hex:i
-flash-right:	all
-	$(AVRDUDE) -B 1 -U flash:w:out/factory_right.hex:i
+flash:	all
+	$(AVRDUDE) -B 1 -U flash:w:out/factory.hex:i
 
 fuse:
 	$(AVRDUDE) -B 100 $(FUSES)
@@ -49,26 +47,17 @@ all: build flashing-tool
 
 build:
 	mkdir -p out
-	
-	firmware/gen_map.py left > firmware/map.h
-	mv i2c_addr.h firmware
 	make -C firmware clean all
-	cp firmware/main.hex out/attiny88_keyscanner_left.hex
-	
-	firmware/gen_map.py right > firmware/map.h
-	mv i2c_addr.h firmware
-	make -C firmware clean all
-	cp firmware/main.hex out/attiny88_keyscanner_right.hex
+	cp firmware/main.hex out/attiny88_keyscanner.hex
 	
 	# stitch bootloader and hex into one file for programming
-	./tools/make_factory_firmware.py out/attiny88_keyscanner_left.hex out/factory_left.hex
-	./tools/make_factory_firmware.py out/attiny88_keyscanner_right.hex out/factory_right.hex
+	./tools/make_factory_firmware.py out/attiny88_keyscanner.hex out/factory.hex
 
 flashing-tool: build
 	# make a flashing firmware for the huble to flash the left and right sides
 	mkdir -p out/attiny_flasher
 	cp etc/flasher_Makefile out/attiny_flasher/Makefile
-	python2.7 ./tools/hex_to_atmega.py out/attiny88_keyscanner_left.hex out/attiny88_keyscanner_right.hex > out/attiny_flasher/attiny_flasher.ino
+	python2.7 ./tools/hex_to_atmega.py out/attiny88_keyscanner.hex > out/attiny_flasher/attiny_flasher.ino
 
 
 .PHONY: default all clean install flash fuse
