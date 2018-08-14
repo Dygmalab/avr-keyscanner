@@ -182,7 +182,7 @@ void setup_spi()
     // shutdown - chip must be shutdown to do a lot of the setup
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
 
-    // get the chip's ID - this is fetchable over I2C interface
+    // get the chip's ID - this is fetchable over I2C interface - should return decimal 114
     sled1735_status = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CHIP_ID_REG);
 
     // enable picture mode, disable ADC
