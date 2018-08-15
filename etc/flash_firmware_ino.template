@@ -32,8 +32,8 @@ byte firmware[firmware_length] PROGMEM = {%s};
 
 // led PWM pins pa9, pa8, pa15
 #define PWM_R 3
-#define PWM_G 4
-#define PWM_B 5
+#define PWM_G 5
+#define PWM_B 4
 
 void showAnalogRGB(cRGB rgb)
 {
@@ -50,7 +50,6 @@ void setup() {
     delay(1000);
     pinMode(1, OUTPUT);
     power_on_attiny();
-    power_on_attiny();
 
 
     SerialUSB.begin(115200);
@@ -62,7 +61,6 @@ void setup() {
         delay(100);
     }
 
-    power_off_attiny();
     power_off_attiny();
 
     Wire.begin();
@@ -80,6 +78,7 @@ void power_off_attiny() {
 }
 void power_on_attiny() {
     digitalWrite(1, HIGH);
+    delay(10); // give it a chance to start up and configure i2c address pins
 }
 
 void print_result(byte result) {
@@ -114,8 +113,8 @@ byte read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, uint
         return result;
     }
     Wire.requestFrom(addr, (uint8_t) 3);
-    SerialUSB.print("Available bytes: ");
-    SerialUSB.println(Wire.available());
+    //SerialUSB.print("Available bytes: ");
+    //SerialUSB.println(Wire.available());
     if (Wire.available() == 0) {
     }
     byte v = Wire.read();
@@ -139,12 +138,8 @@ byte read_crc16(byte addr, byte *version, uint16_t *crc16, uint16_t offset, uint
 void get_version (byte addr) {
 
     byte result = 2;
-    int count = 0;
     while (result != 0) {
-        SerialUSB.print("I2C Addr: ");
-        SerialUSB.println(addr,HEX);
         SerialUSB.print("Reading CRC16...");
-        count ++;
 
         byte version;
         uint16_t crc16;
@@ -153,14 +148,16 @@ void get_version (byte addr) {
         SerialUSB.print("result ");
         SerialUSB.println(result);
 
+        if (result != 0) {
+            delay(10);
+            continue;
+        }
         SerialUSB.print("Version: ");
         SerialUSB.println(version);
         SerialUSB.print("Existing CRC16 of 0000-1FFF: ");
         SerialUSB.println(crc16, HEX);
     }
-
 }
-
 
 
 int erase_program(byte addr) {
@@ -338,6 +335,7 @@ void loop() {
         //reset_attiny();
         power_on_attiny();
         showAnalogRGB(BLUE);
+        SerialUSB.println("left hand");
         left_written = update_attiny(LEFT_ADDRESS, firmware);
         power_off_attiny();
 
@@ -345,7 +343,7 @@ void loop() {
             showAnalogRGB(GREEN);
         else
             showAnalogRGB(RED);
-        delay(1000);
+        delay(5000);
     }
 
     if (right_written > 0) {
@@ -356,6 +354,7 @@ void loop() {
         //reset_attiny();
         power_on_attiny();
         showAnalogRGB(BLUE);
+        SerialUSB.println("right hand");
         right_written = update_attiny(RIGHT_ADDRESS, firmware);
         power_off_attiny();
 
@@ -363,7 +362,7 @@ void loop() {
             showAnalogRGB(GREEN);
         else
             showAnalogRGB(RED);
-        delay(1000);
+        delay(5000);
     }
 
 

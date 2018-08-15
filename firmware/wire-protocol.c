@@ -18,9 +18,7 @@ void twi_init(void) {
     DDRB |= _BV(0) | _BV(1);
 
     SET_INPUT(DDRB,0);
-    SET_INPUT(DDRB,1);
     LOW(PORTB,0);
-    LOW(PORTB,1);
 
     TWI_Slave_Initialise(TWI_BASE_ADDRESS | AD01());
     sei();
