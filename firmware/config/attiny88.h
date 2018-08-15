@@ -30,6 +30,3 @@
 
 // AD01: lower bit of device address
 #define AD01() (PINB & _BV(0))
-
-#define JOINT_PIN 1
-#define JOINT() ((PINA & _BV(JOINT_PIN)))
