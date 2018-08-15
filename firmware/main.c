@@ -18,21 +18,16 @@ static inline void setup(void) {
     keyscanner_init();
 
     #ifdef DETECT_ADC
-    setup_adc();
 
-    // 360mv (70ADC) if dpf is providing power to us
-    // think I have adc wrong, as it works up to about 300count.
-    while(read_adc() > 150)
+    // if dpf is providing power to us
+    while(read_adc(ADC_CC) > 40)
     {
         led_set_all_to(red); 
         _delay_ms(100);
     }
+    led_set_all_to(off); 
     #endif
     twi_init();
-
-    // joint detect setup
-    SET_INPUT(DDRA,JOINT_PIN);
-    HIGH(PORTA,JOINT_PIN);
 }
 
 int main(void) {

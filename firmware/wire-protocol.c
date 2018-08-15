@@ -1,6 +1,7 @@
 #include "wire-protocol.h"
 #include <string.h>
 #include "main.h"
+#include "adc.h"
 #include "ringbuf.h"
 #include "twi-slave.h"
 #include "sled1735.h"
@@ -153,7 +154,7 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_JOINED:
-            buf[0] = JOINT();
+            buf[0] = read_adc(ADC_HALL) - ADC_HALL_OFFSET;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
