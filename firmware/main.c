@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "adc.h"
 
-#define DETECT_ADC
+//#define DETECT_ADC
 
 uint8_t red[3] = { 255, 0, 0 };
 uint8_t grn[3] = { 0, 255, 0 };
@@ -39,6 +39,7 @@ static inline void setup(void) {
             break;
     }
     #endif
+    read_adc(ADC_HALL);
     twi_init();
 }
 
@@ -46,7 +47,9 @@ int main(void) {
     setup();
 
     while(1) {
-        keyscanner_main();
+        if(keyscanner_main())
+            // every time the keyscan is run, check the ADC
+            joint = read_adc(ADC_HALL);
     }
     __builtin_unreachable();
 }
