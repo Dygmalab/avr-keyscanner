@@ -8,6 +8,7 @@
 
 
 uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
+uint16_t adc = 0;
 
 void twi_init(void) {
 
@@ -71,6 +72,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 
     case TWI_CMD_JOINED:
         twi_command = TWI_CMD_JOINED;
+        adc = read_adc(ADC_HALL);
         break;
 
     case TWI_CMD_VERSION:
@@ -153,7 +155,6 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             break;
         case TWI_CMD_JOINED:
         {
-            uint16_t adc = read_adc(ADC_HALL);
             // send low byte
             buf[0] = adc & 0x00FF;
             // then high byte
