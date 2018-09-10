@@ -152,10 +152,16 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_JOINED:
-            buf[0] = read_adc(ADC_HALL) - ADC_HALL_OFFSET;
-            *bufsiz = 1;
+        {
+            uint16_t adc = read_adc(ADC_HALL);
+            // send low byte
+            buf[0] = adc & 0x00FF;
+            // then high byte
+            buf[1] = adc >> 8;
+            *bufsiz = 2;
             twi_command = TWI_CMD_NONE;
             break;
+        }
         default:
             buf[0] = 0x01;
             *bufsiz = 1;
