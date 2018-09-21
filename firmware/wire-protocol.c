@@ -13,15 +13,12 @@ void twi_init(void) {
     TWI_Rx_Data_Callback = twi_data_received;
     TWI_Tx_Data_Callback = twi_data_requested;
 
-    // TODO: set TWI_Tx_Data_Callback and TWI_Rx_Data_Callback
-    DDRB |= _BV(0) | _BV(1);
-
+    // i2c address set by combining TWI_BASE_ADDRESS with the value on PORTB0 (pin 12)
     SET_INPUT(DDRB,0);
     LOW(PORTB,0);
 
     TWI_Slave_Initialise(TWI_BASE_ADDRESS | AD01());
     sei();
-    DDRC |= _BV(1); // PC1 is pin 24
 }
 
 static uint8_t twi_command = TWI_CMD_NONE;
