@@ -39,7 +39,16 @@ static inline void setup(void) {
             break;
     }
     #endif
-    read_adc(ADC_HALL);
+
+    // ansi iso reading
+    // set input
+    SET_INPUT(DDRB,1);
+    // pull down
+    LOW(PORTB,1);
+    // read it: 0 = ISO, 1 = ANSI
+    ansi_iso = PINB & _BV(1);
+    
+    // initialise twi
     twi_init();
 }
 
