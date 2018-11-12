@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "adc.h"
 
-//#define DETECT_ADC
+#define DETECT_ADC
 
 uint8_t red[3] = { 255, 0, 0 };
 uint8_t grn[3] = { 0, 255, 0 };
@@ -52,13 +52,25 @@ static inline void setup(void) {
     twi_init();
 }
 
+float filtered_joint = 0;
+float LPF_Beta = 0.025; // 0<ß<1
+
+// exponential filter on the hall effect input, gets a bit of noise from the
+// LED switching
+void read_joint() {
+    int raw_joint = read_adc(ADC_HALL);
+    filtered_joint = filtered_joint - (LPF_Beta * (filtered_joint - raw_joint));
+    // update global - gets read over I2C by huble
+    joint = (int)filtered_joint;
+}
+
 int main(void) {
     setup();
 
     while(1) {
         if(keyscanner_main())
             // every time the keyscan is run, check the ADC
-            joint = read_adc(ADC_HALL);
+            read_joint();
     }
     __builtin_unreachable();
 }
