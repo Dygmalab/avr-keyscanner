@@ -7,6 +7,7 @@ void setup_vaf();
 uint8_t led_open_status[32];
 uint8_t led_short_status[32];
 uint8_t sled1735_status;
+uint8_t sled1735_const_current;
 
 
 /* Call to begin transmitting LED data */

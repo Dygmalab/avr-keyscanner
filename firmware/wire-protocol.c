@@ -81,6 +81,10 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         twi_command = TWI_CMD_SLED_STATUS;
         break;
 
+    case TWI_CMD_SLED_CURRENT:
+        twi_command = TWI_CMD_SLED_CURRENT;
+        break;
+
     case TWI_CMD_LED_OPEN:
         twi_command = TWI_CMD_LED_OPEN;
         break;
@@ -138,6 +142,11 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             break;
         case TWI_CMD_SLED_STATUS:
             buf[0] = sled1735_status;
+            *bufsiz = 1;
+            twi_command = TWI_CMD_NONE;
+            break;
+        case TWI_CMD_SLED_CURRENT:
+            buf[0] = sled1735_const_current;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
