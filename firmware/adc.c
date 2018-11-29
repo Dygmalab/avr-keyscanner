@@ -35,3 +35,21 @@ uint16_t read_adc(uint8_t mux)
     result += low;
     return result;
 }
+
+uint16_t middle_of_3(uint16_t a, uint16_t b, uint16_t c)
+{
+    uint16_t middle;
+    if ((a <= b) && (a <= c))
+    {
+        middle = (b <= c) ? b : c;
+    }
+    else if ((b <= a) && (b <= c))
+    {
+        middle = (a <= c) ? a : c;
+    }
+    else
+    {
+        middle = (a <= b) ? a : b;
+    }
+    return middle;
+}
