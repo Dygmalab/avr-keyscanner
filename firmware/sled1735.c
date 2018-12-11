@@ -213,10 +213,10 @@ void setup_spi()
     #endif 
 
     #ifdef CONST_CURR
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG, (mskCURRENT_CTL_EN|(mskCURRENT_STEP_CONST|CONST_CURRENT_STEP_40mA)));
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG, (mskCURRENT_CTL_EN|(mskCURRENT_STEP_CONST & CONST_CURRENT_STEP_40mA)));
     #endif
 
-    // get the constant current reg - this is fetchable over I2C interface - should return decimal 114
+    // get the constant current reg - this is fetchable over I2C interface
     sled1735_const_current = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG);
 
     #ifdef INIT_PWM
