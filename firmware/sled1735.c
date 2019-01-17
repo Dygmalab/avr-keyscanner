@@ -26,7 +26,8 @@ easily receive values from I2C buf and copy to led_buffer
 // functionality
 #define CONST_CURR
 #define SPI_INTS
-//#define SELF_TEST
+// self test will flash all the leds, so only use this in the factory for testing leds
+//#define SELF_TEST_AT_START
 #define VAF
 #define INIT_PWM 0x00
 
@@ -238,9 +239,9 @@ void setup_spi()
     // turn on the chip
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_NORMAL_MODE);           
     
-    #ifdef SELF_TEST
+    #ifdef SELF_TEST_AT_START
     // run the self test to get list of opens and shorts - use this after assembly to aid in checking leds
-    self_test();
+    self_test(1);
     #endif
 
     #ifdef SPI_INTS
@@ -250,18 +251,18 @@ void setup_spi()
     #endif
 }
 
-void self_test()
+void self_test(uint8_t OSDD)
 {
-    // make sure test results are off to start with
+    // disable spi interrupts
+    SPCR &= ~(1<<SPIE);
+    // make sure test results are off to start with: 2B, 11, 00
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
 
     // OSDD = open short detection duty - don't know how it works. At 63 and 3 I get bad results for leds B1 through P3. At 1 I get the results I expect.
-    uint8_t osdd = 0x01;
+    // start open test: 2B, 10, 80 + OSDD
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG, mskOPEN_DETECT_START + OSDD);           
 
-    // start open test
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG, mskOPEN_DETECT_START + osdd);           
-
-    // wait for test to run
+    // wait for test to run: AB, 11, 00
     while(SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2) != mskOPEN_DETECT_INT)
         _delay_ms(1);
 
@@ -278,7 +279,7 @@ void self_test()
 
     // start short circuit test, set results to 0 again
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG, mskSHORT_DETECT_START + osdd);
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG, mskSHORT_DETECT_START + OSDD);
 
     // wait for test to run
     while(SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2) != mskSHORT_DETECT_INT)
@@ -297,6 +298,9 @@ void self_test()
 
     // this shouldn't be necessary, but otherwise chip never responds again
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
+
+    // reenable spi interrupts
+    SPCR |= (1<<SPIE);
 }
 
 

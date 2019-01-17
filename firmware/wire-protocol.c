@@ -93,6 +93,11 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         twi_command = TWI_CMD_LED_SHORT;
         break;
 
+    case TWI_CMD_SLED_SELF_TEST:
+        if(bufsiz == 2)
+            self_test(buf[1]);
+        break;
+
         /*
     case TWI_CMD_LED_GLOBAL_BRIGHTNESS:
 	led_set_global_brightness(buf[1]);

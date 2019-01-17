@@ -3,6 +3,7 @@
 void sled_test();
 void setup_spi();
 void setup_vaf();
+void self_test(uint8_t osdd);
 
 uint8_t led_open_status[32];
 uint8_t led_short_status[32];
@@ -30,7 +31,6 @@ void led_set_all_to(uint8_t * led_data);
 /* Call this with a value between 0 and 31 to set the LED's global brightness */
 //void led_set_global_brightness(uint8_t global_brightness);
 
-void self_test();
 
 //check masks -depend on package?
 #define	mskVAF1									(0x7<<0) 		
