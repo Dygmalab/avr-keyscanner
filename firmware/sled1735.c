@@ -251,6 +251,12 @@ void setup_spi()
     #endif
 }
 
+void set_current(uint8_t current)
+{
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG, (mskCURRENT_CTL_EN|(mskCURRENT_STEP_CONST & current)));
+    sled1735_const_current = mskCURRENT_STEP_CONST & SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG);
+}
+
 void self_test(uint8_t OSDD)
 {
     // disable spi interrupts

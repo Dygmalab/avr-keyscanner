@@ -98,6 +98,11 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
             self_test(buf[1]);
         break;
 
+    case TWI_CMD_SET_SLED_CURRENT:
+        if(bufsiz == 2)
+            set_current(buf[1]);
+        break;
+
         /*
     case TWI_CMD_LED_GLOBAL_BRIGHTNESS:
 	led_set_global_brightness(buf[1]);

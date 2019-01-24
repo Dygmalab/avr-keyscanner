@@ -4,6 +4,7 @@ void sled_test();
 void setup_spi();
 void setup_vaf();
 void self_test(uint8_t osdd);
+void set_current(uint8_t current);
 
 uint8_t led_open_status[32];
 uint8_t led_short_status[32];
