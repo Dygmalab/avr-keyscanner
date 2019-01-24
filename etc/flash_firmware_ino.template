@@ -224,6 +224,8 @@ int write_firmware(byte addr, const byte *firmware ) {
             SerialUSB.print(frame);
             SerialUSB.print(" = ");
             SerialUSB.print(result);
+            SerialUSB.print("cksum = ");
+            SerialUSB.print(crc16, HEX);
             // got something other than NACK. Start over.
             if (result != 3) {
                 SerialUSB.println("Error: Got something other than NACK");
