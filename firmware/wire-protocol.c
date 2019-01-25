@@ -42,16 +42,13 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
             twi_command = TWI_CMD_KEYSCAN_INTERVAL;
         }
         break;
-/*
-    case TWI_CMD_LED_SPI_FREQUENCY:
-        if (bufsiz == 2 ) {
-            led_spi_frequency = buf[1];
-            led_set_spi_frequency(led_spi_frequency);
-        } else {
-            twi_command = TWI_CMD_LED_SPI_FREQUENCY;
-        }
+
+    case TWI_CMD_SLED_CURRENT:
+        if(bufsiz == 2)
+            set_current(buf[1]);
+        else
+            twi_command = TWI_CMD_SLED_CURRENT;
         break;
-    */
 
     case TWI_CMD_LED_SET_ALL_TO:
         if (bufsiz == 4 ) {
@@ -81,10 +78,6 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         twi_command = TWI_CMD_SLED_STATUS;
         break;
 
-    case TWI_CMD_SLED_CURRENT:
-        twi_command = TWI_CMD_SLED_CURRENT;
-        break;
-
     case TWI_CMD_LED_OPEN:
         twi_command = TWI_CMD_LED_OPEN;
         break;
@@ -97,17 +90,6 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         if(bufsiz == 2)
             self_test(buf[1]);
         break;
-
-    case TWI_CMD_SET_SLED_CURRENT:
-        if(bufsiz == 2)
-            set_current(buf[1]);
-        break;
-
-        /*
-    case TWI_CMD_LED_GLOBAL_BRIGHTNESS:
-	led_set_global_brightness(buf[1]);
-	break;
-    */
     }
 }
 
