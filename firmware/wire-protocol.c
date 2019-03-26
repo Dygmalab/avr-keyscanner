@@ -44,10 +44,9 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         break;
 
     case TWI_CMD_SLED_CURRENT:
+        twi_command = TWI_CMD_SLED_CURRENT;
         if(bufsiz == 2)
             set_current(buf[1]);
-        else
-            twi_command = TWI_CMD_SLED_CURRENT;
         break;
 
     case TWI_CMD_LED_SET_ALL_TO:
