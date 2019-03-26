@@ -250,8 +250,23 @@ void setup_spi()
 
 void set_current(uint8_t current)
 {
+    // disable spi interrupts
+    SPCR &= ~(1<<SPIE);
+
+    // turn off
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
+
+    // set new current
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG, (mskCURRENT_CTL_EN|(mskCURRENT_STEP_CONST & current)));
+
+    // update global
     sled1735_const_current = mskCURRENT_STEP_CONST & SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG);
+
+    // turn on the chip
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_NORMAL_MODE);           
+
+    // reenable spi interrupts
+    SPCR |= (1<<SPIE);
 }
 
 void self_test(uint8_t OSDD)
