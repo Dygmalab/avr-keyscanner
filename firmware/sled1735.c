@@ -185,6 +185,8 @@ void setup_spi()
 
     // get the chip's ID - this is fetchable over I2C interface - should return decimal 114
     sled1735_status = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CHIP_ID_REG);
+    // thermal detect flag, couldn't get this to return correct values after LED update has started
+    sled1735_sys_temp = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, SYS_TEMP);
 
     // enable picture mode, disable ADC
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CONFIGURATION_REG, 0x00);           
@@ -241,12 +243,14 @@ void setup_spi()
     self_test(1);
     #endif
 
+
     #ifdef SPI_INTS
     // turn on spi interrupts to start automatic update of sled1735's led ram.
     SPCR |= (1<<SPIE);
     sei();
     #endif
 }
+
 
 void set_current(uint8_t current)
 {

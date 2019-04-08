@@ -10,6 +10,7 @@ uint8_t led_open_status[32];
 uint8_t led_short_status[32];
 uint8_t sled1735_status;
 uint8_t sled1735_const_current;
+uint8_t sled1735_sys_temp;
 
 
 /* Call to begin transmitting LED data */
@@ -116,6 +117,7 @@ void led_set_all_to(uint8_t * led_data);
 #define OPEN_SHORT_REG2                         0x11                    
 #define VAF_CTL_REG                             0x14                        
 #define VAF_CTL_REG2                            0x15       
+#define SYS_TEMP                                0x17     
 #define TYPE4_VAF_REG1                          0x18     
 #define TYPE4_VAF_REG2                          0x19
 #define TYPE4_VAF_REG3                          0x1A

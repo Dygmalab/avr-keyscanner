@@ -61,6 +61,10 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         }
         break;
 
+    case TWI_CMD_SLED_SYS_TEMP:
+        twi_command = TWI_CMD_SLED_SYS_TEMP;
+        break;
+
     case TWI_CMD_JOINED:
         twi_command = TWI_CMD_JOINED;
         break;
@@ -153,6 +157,11 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             break;
         case TWI_CMD_ANSI_ISO:
             buf[0] = ansi_iso;
+            *bufsiz = 1;
+            twi_command = TWI_CMD_NONE;
+            break;
+        case TWI_CMD_SLED_SYS_TEMP:
+            buf[0] = sled1735_sys_temp;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
