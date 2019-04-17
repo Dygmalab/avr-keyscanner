@@ -11,7 +11,6 @@ static inline void setup(void) {
 
 void sig_pin(bool set)
 {
-/*
     if(set)
     {
     // pull down to 0
@@ -25,7 +24,6 @@ void sig_pin(bool set)
     SET_INPUT(DDRB,0);
     LOW(PORTB,0);
     }
-    */
 }
 
 bool get_pin()

@@ -2,7 +2,7 @@
 #include <string.h>
 #include "main.h"
 #include "twi-slave.h"
-#include "i2c_addr.h"
+#define I2C_ADDRESS 0x58
 
 
 uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
@@ -52,7 +52,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     case TWI_CMD_LED_SET_ALL_TO:
         if (bufsiz == 4 ) {
             //led_set_all_to(&buf[1]);
-            sig_pin(buf[1]);
+            //sig_pin(buf[1]);
         }
         break;
 
@@ -65,6 +65,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     case TWI_CMD_JOINED:
         twi_command = TWI_CMD_JOINED;
         break;
+
 
     case TWI_CMD_VERSION:
         twi_command = TWI_CMD_VERSION;
@@ -98,14 +99,20 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
     if (__builtin_expect(*bufsiz != 0, 1)) {
         switch (twi_command) {
         case TWI_CMD_NONE:
-            // Keyscanner Status Register
-            buf[0]=TWI_REPLY_KEYDATA;
-            buf[1]=get_pin();
-            buf[2]=0;
-            buf[3]=0;
-            buf[4]=0;
-            buf[5]=0;
-            *bufsiz=6;
+                // if no external signal, reply no keys
+                if (!get_pin()) {
+                    buf[0]=TWI_REPLY_NONE;
+                    *bufsiz=1;
+                } else {
+                // reply special key pressed
+                    buf[0]= TWI_REPLY_KEYDATA;
+                    buf[1] = 1;
+                    buf[2] = 0;
+                    buf[3] = 0;
+                    buf[4] = 0;
+                    buf[5] = 0;
+                    *bufsiz=6;
+                }
             break;
         case TWI_CMD_VERSION:
             buf[0] = DEVICE_VERSION;
@@ -135,11 +142,6 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
         case TWI_CMD_LED_SHORT:
             //memcpy(buf, led_short_status, 32);
             *bufsiz = 32;
-            twi_command = TWI_CMD_NONE;
-            break;
-        case TWI_CMD_JOINED:
-            buf[0] = JOINT();
-            *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
         default:
