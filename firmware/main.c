@@ -45,8 +45,8 @@ static inline void setup(void) {
     SET_INPUT(DDRB,1);
     // pull down
     LOW(PORTB,1);
-    // read it: 0 = ISO, 1 = ANSI
-    ansi_iso = PINB & _BV(1);
+    // read it: 0 = ISO, 2 = ANSI
+    ansi_iso = (PINB & _BV(1)) == 2 ? ANSI : ISO;
     
     // initialise twi
     twi_init();
