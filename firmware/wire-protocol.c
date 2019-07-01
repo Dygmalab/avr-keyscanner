@@ -4,6 +4,7 @@
 #include "ringbuf.h"
 #include "twi-slave.h"
 #include "sled1735.h"
+#include <util/crc16.h>
 
 
 uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
@@ -24,6 +25,23 @@ void twi_init(void) {
 static uint8_t twi_command = TWI_CMD_NONE;
 
 void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
+
+    if(bufsiz < 2) // must be more than 2 to have a cksum
+        return;
+    uint16_t crc16 = 0xffff;
+    uint16_t rx_cksum = (buf[bufsiz - 2] << 8) + buf[bufsiz - 1];
+    uint8_t *bufferPtr;
+    bufferPtr = buf;
+
+    for (uint8_t i = 0; i < bufsiz - 2; i++) {
+        crc16 = _crc16_update(crc16, *bufferPtr);
+        bufferPtr++;
+    }
+
+    // check received CRC16
+    if (crc16 != rx_cksum)
+        return;
+
     // if the upper four bits of the byte say this is an LED cmd
     // this is the most common case. It's also the only case where
     // we can't just compare buf[0] to a static value
@@ -31,6 +49,8 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         led_update_bank(&buf[1], buf[0] & 0x0f); // the lowest four bits are the bank #
         return;
     }
+
+    bufsiz -= 2; // set bufsiz to what it was before cksum was added
 
     switch (buf[0]) {
     case TWI_CMD_KEYSCAN_INTERVAL:
@@ -105,11 +125,13 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             // Keyscanner Status Register
             if (ringbuf_empty()) {
                 // Nothing in the ring buffer is the same thing as all keys released
-                // Really, we _should_ be able to return a single byte here, but
-                // Jesse is too clueless to figure out how to get I2C to signal
-                // a 'short' response
                 buf[0]=TWI_REPLY_NONE;
-                *bufsiz=1;
+                buf[1] = 0;
+                buf[2] = 0;
+                buf[3] = 0;
+                buf[4] = 0;
+                buf[5] = 0;
+                *bufsiz=6;
             } else {
                 buf[0]=TWI_REPLY_KEYDATA;
                 buf[1] = ringbuf_pop();
@@ -180,5 +202,19 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             *bufsiz = 1;
             break;
         }
+        
+        // calc cksum
+        uint16_t crc16 = 0xffff;
+        uint8_t *bufferPtr;
+        bufferPtr = buf;
+        for (uint8_t i = 0; i < *bufsiz; i++) {
+            crc16 = _crc16_update(crc16, *bufferPtr);
+            bufferPtr++;
+        }
+        
+        // append cksum high byte and low byte
+        buf[*bufsiz] = crc16 >> 8;
+        buf[*bufsiz + 1] = crc16;
+        *bufsiz += 2; 
     }
 }
