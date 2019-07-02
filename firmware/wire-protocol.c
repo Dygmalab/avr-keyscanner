@@ -41,7 +41,8 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     bufferPtr = buf;
 
     for (uint8_t i = 0; i < bufsiz - 2; i++) {
-        crc16 = _crc16_update(crc16, *bufferPtr);
+//        crc16 = _crc16_update(crc16, *bufferPtr);
+        crc16 = _crc_ccitt_update(crc16, *bufferPtr);
         bufferPtr++;
     }
 
@@ -210,7 +211,8 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
         uint8_t *bufferPtr;
         bufferPtr = buf;
         for (uint8_t i = 0; i < *bufsiz; i++) {
-            crc16 = _crc16_update(crc16, *bufferPtr);
+            //crc16 = _crc16_update(crc16, *bufferPtr);
+            crc16 = _crc_ccitt_update(crc16, *bufferPtr);
             bufferPtr++;
         }
         
