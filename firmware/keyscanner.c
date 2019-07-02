@@ -88,15 +88,6 @@ bool keyscanner_main(void) {
     // Run this with interrupts off to make sure that
     // when we read from the ringbuffer, we always get 
     // five bytes representing a single keyboard state.
-    /*
-    DISABLE_INTERRUPTS({
-        ringbuf_append( db[0].state ^ 0xff );
-        ringbuf_append( db[1].state ^ 0xff );
-        ringbuf_append( db[2].state ^ 0xff );
-        ringbuf_append( db[3].state ^ 0xff );
-        ringbuf_append( db[4].state ^ 0xff );
-    });
-    */
     DISABLE_INTERRUPTS({
     key_state[0] = db[0].state ^ 0xff;
     key_state[1] = db[1].state ^ 0xff;
