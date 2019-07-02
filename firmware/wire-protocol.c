@@ -25,6 +25,14 @@ static uint8_t twi_command = TWI_CMD_NONE;
 
 void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
 
+    // if the upper four bits of the byte say this is an LED cmd
+    // this is the most common case. It's also the only case where
+    // we can't just compare buf[0] to a static value
+    if (__builtin_expect( ((buf[0] & 0xf0) == TWI_CMD_LED_BASE),1))  {
+        led_update_bank(&buf[1], buf[0] & 0x0f); // the lowest four bits are the bank #
+        return;
+    }
+
     if(bufsiz < 2) // must be more than 2 to have a cksum
         return;
     uint16_t crc16 = 0xffff;
@@ -41,13 +49,6 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
     if (crc16 != rx_cksum)
         return;
 
-    // if the upper four bits of the byte say this is an LED cmd
-    // this is the most common case. It's also the only case where
-    // we can't just compare buf[0] to a static value
-    if (__builtin_expect( ((buf[0] & 0xf0) == TWI_CMD_LED_BASE),1))  {
-        led_update_bank(&buf[1], buf[0] & 0x0f); // the lowest four bits are the bank #
-        return;
-    }
 
     bufsiz -= 2; // set bufsiz to what it was before cksum was added
 
