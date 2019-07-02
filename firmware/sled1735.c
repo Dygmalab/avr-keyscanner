@@ -118,9 +118,9 @@ void SPI_MasterInit(void)
     _delay_ms(1); // wait for chip to be ready
 
     // sled1735 latches data at clock rising edge, max freq is 2.4MHz
-    // attiny clock is 8MHz, so can divide by 4 and run at 2MHz
-    /* Enable SPI, Master, set clock rate fck/16 */
-    SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0)|(1<<SPR1);
+    // attiny clock is 8MHz, so feasible to divide by 4 and run at 2MHz
+    // set divider to 16, run at 500k
+    SPCR = (1<<SPE)|(1<<MSTR)|(0<<SPR1)|(1<<SPR0);
     SPSR ^= _BV(SPI2X);
 }
 
