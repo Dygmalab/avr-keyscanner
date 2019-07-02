@@ -3,8 +3,10 @@
 #include "debounce.h"
 #include "wire-protocol.h"
 #include "main.h"
-#include "ringbuf.h"
 #include "keyscanner.h"
+
+volatile uint8_t new_key_state = 0;
+volatile uint8_t key_state[5] = {0,0,0,0,0};
 
 debounce_t db[] = {
     {0x00, 0x00, 0xFF},
@@ -86,12 +88,22 @@ bool keyscanner_main(void) {
     // Run this with interrupts off to make sure that
     // when we read from the ringbuffer, we always get 
     // five bytes representing a single keyboard state.
+    /*
     DISABLE_INTERRUPTS({
         ringbuf_append( db[0].state ^ 0xff );
         ringbuf_append( db[1].state ^ 0xff );
         ringbuf_append( db[2].state ^ 0xff );
         ringbuf_append( db[3].state ^ 0xff );
         ringbuf_append( db[4].state ^ 0xff );
+    });
+    */
+    DISABLE_INTERRUPTS({
+    key_state[0] = db[0].state ^ 0xff;
+    key_state[1] = db[1].state ^ 0xff;
+    key_state[2] = db[2].state ^ 0xff;
+    key_state[3] = db[3].state ^ 0xff;
+    key_state[4] = db[4].state ^ 0xff;
+    new_key_state = true;
     });
     return true;
 }

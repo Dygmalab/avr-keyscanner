@@ -1,11 +1,10 @@
 #include "wire-protocol.h"
 #include <string.h>
 #include "main.h"
-#include "ringbuf.h"
 #include "twi-slave.h"
 #include "sled1735.h"
 #include <util/crc16.h>
-
+#include "keyscanner.h"
 
 uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
 
@@ -123,7 +122,7 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
         switch (twi_command) {
         case TWI_CMD_NONE:
             // Keyscanner Status Register
-            if (ringbuf_empty()) {
+            if (!new_key_state) {
                 // Nothing in the ring buffer is the same thing as all keys released
                 buf[0]=TWI_REPLY_NONE;
                 buf[1] = 0;
@@ -134,11 +133,13 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
                 *bufsiz=6;
             } else {
                 buf[0]=TWI_REPLY_KEYDATA;
-                buf[1] = ringbuf_pop();
-                buf[2] = ringbuf_pop();
-                buf[3] = ringbuf_pop();
-                buf[4] = ringbuf_pop();
-                buf[5] = ringbuf_pop();
+                buf[1] = key_state[0];
+                buf[2] = key_state[1];
+                buf[3] = key_state[2];
+                buf[4] = key_state[3];
+                buf[5] = key_state[4];
+                new_key_state = false;
+
                 *bufsiz=6;
             }
             break;
