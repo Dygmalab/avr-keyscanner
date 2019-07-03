@@ -5,6 +5,7 @@
 #include "wire-protocol.h"
 #include <stdint.h>
 #include "adc.h"
+#include <avr/wdt.h>
 
 //#define DETECT_ADC
 
@@ -52,6 +53,9 @@ static inline void setup(void) {
     asm("nop");
     // then read: 0 = ISO, 2 = ANSI
     ansi_iso = (PINB & _BV(1)) == 2 ? ANSI : ISO;
+
+    // setup watchdog
+    wdt_enable(WDTO_250MS);
     
     // initialise twi
     twi_init();
@@ -76,6 +80,7 @@ int main(void) {
         if(keyscanner_main())
             // every time the keyscan is run, check the ADC
             read_joint();
+        wdt_reset();
     }
     __builtin_unreachable();
 }

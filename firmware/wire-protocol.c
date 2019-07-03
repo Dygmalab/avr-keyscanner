@@ -111,6 +111,7 @@ void twi_data_received(uint8_t *buf, uint8_t bufsiz) {
         break;
 
     case TWI_CMD_SLED_SELF_TEST:
+        // how long does this take? with WDT might trigger a reset
         if(bufsiz == 2)
             self_test(buf[1]);
         break;
