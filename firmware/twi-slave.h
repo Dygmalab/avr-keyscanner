@@ -16,7 +16,7 @@
   TWI Status/Control register definitions
 ****************************************************************************/
 
-#define TWI_BUFFER_SIZE 32      // Reserves memory for the drivers transceiver buffer
+#define TWI_BUFFER_SIZE 36      // Reserves memory for the drivers transceiver buffer
 // 32 is the same as arduino's TX buffer for
 // TWI
 
