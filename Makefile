@@ -16,7 +16,7 @@ default: all
 #                   default_serial = "usb";
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
 
-DEVICE     ?= attiny88
+DEVICE     ?= attiny48
 
 # 8Mhz
 CLOCK      ?= 8000000
@@ -48,16 +48,16 @@ all: build flashing-tool
 build:
 	mkdir -p out
 	make -C firmware clean all
-	cp firmware/main.hex out/attiny88_keyscanner.hex
+	cp firmware/main.hex out/attiny48_keyscanner.hex
 	
 	# stitch bootloader and hex into one file for programming
-	./tools/make_factory_firmware.py out/attiny88_keyscanner.hex out/factory.hex
+	./tools/make_factory_firmware.py out/attiny48_keyscanner.hex out/factory.hex
 
 flashing-tool: build
 	# make a flashing firmware for the huble to flash the left and right sides
 	mkdir -p out/attiny_flasher
 	cp etc/flasher_Makefile out/attiny_flasher/Makefile
-	python2.7 ./tools/hex_to_atmega.py out/attiny88_keyscanner.hex > out/attiny_flasher/attiny_flasher.ino
+	python2.7 ./tools/hex_to_atmega.py out/attiny48_keyscanner.hex > out/attiny_flasher/attiny_flasher.ino
 
 
 .PHONY: default all clean install flash fuse

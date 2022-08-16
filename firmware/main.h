@@ -11,10 +11,10 @@ uint8_t ansi_iso;
 #define ANSI 1
 #define ISO 0
 
-#if defined (__AVR_ATtiny48__) || defined (__AVR_ATtiny88__)
-# include "config/attiny88.h"
+#if defined(__AVR_ATtiny48__) || defined(__AVR_attiny48__)
+#include "config/attiny48.h"
 #else
-# error No port configuration found for hardware
+#error No port configuration found for hardware
 #endif
 #include "config/validate.h"
 
@@ -24,10 +24,10 @@ uint8_t ansi_iso;
 #define HIGH(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #define LOW(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 
-#define DISABLE_INTERRUPTS(code) do{ \
-    cli(); \
-    { \
-        code \
-    } \
-    sei(); \
-}while(0)
+#define DISABLE_INTERRUPTS(code) \
+    do                           \
+    {                            \
+        cli();                   \
+        {                        \
+            code} sei();         \
+    } while (0)
