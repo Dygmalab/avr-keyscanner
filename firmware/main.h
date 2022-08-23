@@ -5,14 +5,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-uint16_t joint;
-uint8_t ansi_iso;
+// uint16_t joint;
+// uint8_t ansi_iso;
 
 #define ANSI 1
 #define ISO 0
 
-#if defined(__AVR_ATtiny48__) || defined(__AVR_attiny48__)
-#include "config/attiny48.h"
+#if defined(__AVR_ATtiny88__) || defined(__AVR_attiny88__) || defined(__AVR_ATtiny48__) || defined(__AVR_attiny48__)
+#include "config/attiny88.h"
 #else
 #error No port configuration found for hardware
 #endif

@@ -16,7 +16,7 @@
   TWI Status/Control register definitions
 ****************************************************************************/
 
-#define TWI_BUFFER_SIZE 36      // Reserves memory for the drivers transceiver buffer
+#define TWI_BUFFER_SIZE 28 // Reserves memory for the drivers transceiver buffer
 // 32 is the same as arduino's TX buffer for
 // TWI
 
@@ -25,13 +25,13 @@
 ****************************************************************************/
 
 // Called to solicit data for transmission
-extern void (*TWI_Tx_Data_Callback)( unsigned char * , unsigned char * );
+extern void (*TWI_Tx_Data_Callback)(unsigned char *, unsigned char *);
 
 // Called to provide received data
-extern void (*TWI_Rx_Data_Callback)( unsigned char * , unsigned char );
+extern void (*TWI_Rx_Data_Callback)(unsigned char *, unsigned char);
 
 /****************************************************************************
   Function definitions
 ****************************************************************************/
 
-void TWI_Slave_Initialise( unsigned char );
+void TWI_Slave_Initialise(unsigned char);

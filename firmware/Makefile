@@ -28,16 +28,16 @@ CLOCK      ?= 8000000
 
 # Add something like this to Makefile.local if you haven't yet set up ~/.avrduderc with a default programmer.
 # PROGRAMMER = -c usbtiny -P usb
-#PROGRAMMER = -c dragon_isp 
+#PROGRAMMER = -c dragon_isp
 PROGRAMMER = -c stk500v2 -P /dev/ttyACM1
 
 # Add more objects for each .c file here
-OBJECTS    = main.o sled1735.o wire-protocol.o twi-slave.o keyscanner.o adc.o
+OBJECTS    = main.o sled1735.o wire-protocol.o twi-slave.o keyscanner.o
 
 # For computing fuse byte values for other devices and options see
 # the fuse bit calculator at http://www.engbedded.com/fusecalc/
 FUSES      = -U lfuse:w:0xee:m -U hfuse:w:0xdd:m -U efuse:w:0xfe:m
-FUSESDEBUG = -U lfuse:w:0xee:m -U hfuse:w:0x9d:m -U efuse:w:0xfe:m 
+FUSESDEBUG = -U lfuse:w:0xee:m -U hfuse:w:0x9d:m -U efuse:w:0xfe:m
 
 AVRDUDE_PATH ?= avrdude
 GCC_PATH ?= avr-gcc
@@ -48,7 +48,7 @@ OPTIMIZATION = -O2
 #DEBUG = -ggdb
 
 # Optimize, but focus on keeping code size small
-OPTIMIZATION = -Os
+# OPTIMIZATION = -Os
 
 AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE)
 COMPILE = $(GCC_PATH) -Wall -Wextra $(OPTIMIZATION) $(DEBUG) -std=gnu11 -flto -mmcu=$(DEVICE) -DF_CPU=$(CLOCK)

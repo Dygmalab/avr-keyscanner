@@ -16,7 +16,12 @@ default: all
 #                   default_serial = "usb";
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
 
+
+PRODUCT_ID ?= dygma-raise-mp4
+
 DEVICE     ?= attiny48
+
+OUTPUT_DIR ?= $(PRODUCT_ID)-flash-$(DEVICE)
 
 # 8Mhz
 CLOCK      ?= 8000000
@@ -31,8 +36,10 @@ PROGRAMMER ?= -c stk500v2 -P /dev/ttyACM2
 
 AVRDUDE = $(AVRDUDE_PATH) $(PROGRAMMER) -p $(DEVICE) -v
 
+PYTHON = python3
+
 flash:	all
-	$(AVRDUDE) -B 1 -U flash:w:out/factory.hex:i
+	$(AVRDUDE) -B 1 -U flash:w:out/$(OUTPUT_DIR)/$(DEVICE)_factory.hex:i
 
 fuse:
 	$(AVRDUDE) -B 100 $(FUSES)
@@ -41,23 +48,26 @@ fuse:
 install: all fuse flash
 
 clean:
+	make -C firmware clean
 	rm -fr out/*
 
 all: build flashing-tool
 
 build:
-	mkdir -p out
-	make -C firmware clean all
-	cp firmware/main.hex out/attiny48_keyscanner.hex
-	
-	# stitch bootloader and hex into one file for programming
-	./tools/make_factory_firmware.py out/attiny48_keyscanner.hex out/factory.hex
+	make -C firmware PRODUCT_ID=$(PRODUCT_ID)
+	mkdir -p out/$(OUTPUT_DIR)
+	cp firmware/main.hex out/$(OUTPUT_DIR)/$(DEVICE)_keyscanner.hex
+	cp etc/bootloaders/$(PRODUCT_ID).hex firmware/bootloader.hex
+	./tools/make_factory_firmware.py > out/$(OUTPUT_DIR)/$(DEVICE)_factory.hex
+	cp etc/bootloaders/$(PRODUCT_ID).hex out/$(OUTPUT_DIR)/$(DEVICE)_bootloader.hex
 
 flashing-tool: build
-	# make a flashing firmware for the huble to flash the left and right sides
-	mkdir -p out/attiny_flasher
-	cp etc/flasher_Makefile out/attiny_flasher/Makefile
-	python2.7 ./tools/hex_to_atmega.py out/attiny48_keyscanner.hex > out/attiny_flasher/attiny_flasher.ino
+	mkdir -p out/$(OUTPUT_DIR)/$(DEVICE)_flasher
+	cp etc/flasher_Makefile out/$(OUTPUT_DIR)/$(DEVICE)_flasher/Makefile
+	cp etc/flash_firmware.ino out/$(OUTPUT_DIR)/$(DEVICE)_flasher/$(DEVICE)_flasher.ino
+	$(PYTHON) ./tools/hex_to_atmega.py out/$(OUTPUT_DIR)/$(DEVICE)_keyscanner.hex > out/$(OUTPUT_DIR)/$(DEVICE)_flasher/$(DEVICE)_flasher.h
+	mkdir -p out/dist
+	cd out && tar czf dist/$(DEVICE)_firmware-`git describe`.tar.gz $(OUTPUT_DIR)
 
 
 .PHONY: default all clean install flash fuse

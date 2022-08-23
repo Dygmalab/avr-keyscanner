@@ -1,0 +1,15 @@
+#pragma once
+
+
+#define page_size %d
+#define frame_size %d
+#define blank 0x%x
+#define pages %d
+#define firmware_length %d
+#define DELAY %d
+
+#define LEFT_ADDRESS 0x50
+#define RIGHT_ADDRESS 0x53
+
+uint16_t offsets[pages] = {%s};
+const byte firmware[firmware_length] PROGMEM = {%s};
