@@ -5,8 +5,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// uint16_t joint;
-// uint8_t ansi_iso;
+uint16_t joint;
+uint8_t ansi_iso;
 
 #define ANSI 1
 #define ISO 0

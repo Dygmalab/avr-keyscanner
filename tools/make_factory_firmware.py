@@ -4,7 +4,7 @@ import sys
 from intelhex import IntelHex
 
 USER_FIRMWARE = 'firmware/main.hex'
-BOOTLOADER_FIRMWARE = 'firmware/bootloader.hex'
+BOOTLOADER_FIRMWARE = 'etc/bootloaders/dygma-raise-mp4.hex'
 
 try:
     user_hex = IntelHex(USER_FIRMWARE)
