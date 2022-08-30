@@ -6,13 +6,14 @@ void setup_vaf();
 void self_test(uint8_t osdd);
 void set_current(uint8_t current);
 
-// uint8_t led_open_status[32];
+uint8_t led_open_status[32];
 // uint8_t led_short_status[32];
-// uint8_t sled1735_status;
-// uint8_t sled1735_const_current;
-// uint8_t sled1735_sys_temp;
+uint8_t sled1735_status;
+uint8_t sled1735_const_current;
+uint8_t sled1735_sys_temp;
 
-typedef struct {
+typedef struct
+{
     uint8_t bank[24];
     uint8_t bank_num;
     uint8_t update;
@@ -24,6 +25,8 @@ extern led_bank_t led_bank;
 
 // void led_init(void);
 // void led_update(void);
+
+void led_send_bank(void);
 
 /* Call to change the speed at which we update the LEDs */
 // void led_set_spi_frequency(uint8_t frequency);
