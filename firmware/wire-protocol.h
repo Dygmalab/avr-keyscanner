@@ -18,9 +18,7 @@ typedef union {
 #define DEVICE_VERSION 5
 
 
-
-
-extern uint8_t led_spi_frequency;
+// extern uint8_t led_spi_frequency;
 
 // Default to a minimum of 1.6ms between reads
 #define KEYSCAN_INTERVAL_DEFAULT 15

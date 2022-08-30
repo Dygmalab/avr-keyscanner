@@ -6,8 +6,6 @@
 #include <util/crc16.h>
 #include "keyscanner.h"
 
-uint8_t led_spi_frequency = LED_SPI_FREQUENCY_DEFAULT;
-
 void twi_init(void) {
 
     TWI_Rx_Data_Callback = twi_data_received;
@@ -157,28 +155,18 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_LED_SPI_FREQUENCY:
-            buf[0] = led_spi_frequency;
+            buf[0] = 0x05;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_SLED_STATUS:
-            buf[0] = sled1735_status;
+            buf[0] = 0xFF;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_SLED_CURRENT:
-            buf[0] = sled1735_const_current;
+            buf[0] = 63;
             *bufsiz = 1;
-            twi_command = TWI_CMD_NONE;
-            break;
-        case TWI_CMD_LED_OPEN:
-            memcpy(buf, led_open_status, 32);
-            *bufsiz = 32;
-            twi_command = TWI_CMD_NONE;
-            break;
-        case TWI_CMD_LED_SHORT:
-            memcpy(buf, led_short_status, 32);
-            *bufsiz = 32;
             twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_ANSI_ISO:
@@ -187,7 +175,7 @@ void twi_data_requested(uint8_t *buf, uint8_t *bufsiz) {
             twi_command = TWI_CMD_NONE;
             break;
         case TWI_CMD_SLED_SYS_TEMP:
-            buf[0] = sled1735_sys_temp;
+            buf[0] = 63;
             *bufsiz = 1;
             twi_command = TWI_CMD_NONE;
             break;

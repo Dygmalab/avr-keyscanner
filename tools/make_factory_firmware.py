@@ -13,7 +13,7 @@ try:
 except IndexError:
     exit("must provide input file and output file as arguments")
 
-BOOTLOADER_FIRMWARE = 'etc/bootloader.hex'
+BOOTLOADER_FIRMWARE = 'firmware/bootloader.hex'
 
 def parse_line(line):
     """Parses an Intel HEX line into a Line tuple"""

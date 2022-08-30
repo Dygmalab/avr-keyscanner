@@ -9,7 +9,7 @@ easily write them all to SPI:
 
 easily receive values from I2C buf and copy to led_buffer
     memcpy((uint8_t *)led_buffer.bank[bank], buf, LED_BANK_SIZE);
-    
+
 * data comes in RGB, RGB .... RGB blocks of 8 x 3 bytes = 24 bytes
 * store data in natural matrix format
 * spi output uses a LUT to put the data out in the correct order
@@ -27,38 +27,47 @@ easily receive values from I2C buf and copy to led_buffer
 #define CONST_CURR
 #define SPI_INTS
 // self test will flash all the leds, so only use this in the factory for testing leds
-//#define SELF_TEST_AT_START
+#define SELF_TEST_AT_START
 #define VAF
 #define INIT_PWM 0x00
 
 #define LED_DATA_SIZE 3
 #define NUM_LEDS_PER_BANK 8
 
-#define NUM_LEDS 72 
+#define NUM_LEDS 72
 #define NUM_LED_BANKS 9
-#define LED_BANK_SIZE (LED_DATA_SIZE*NUM_LEDS_PER_BANK)
+#define LED_BANK_SIZE (LED_DATA_SIZE * NUM_LEDS_PER_BANK)
 
 #define FRAME_SIZE 128
 #define NUM_FRAMES 2
 
-typedef struct {
+typedef struct
+{
     uint8_t g;
     uint8_t r;
     uint8_t b;
 } led_t;
 
-typedef union {
+typedef union
+{
     uint8_t whole[NUM_LEDS * LED_DATA_SIZE];
     led_t weach[NUM_LEDS];
     uint8_t bank[NUM_LED_BANKS][LED_BANK_SIZE];
-} led_buffer_t ;
+} led_buffer_t;
+
+led_bank_t led_bank;
 
 // state machine variables for SPI update of sled1735 LED buffer
 uint8_t volatile led_num = 0;
 uint8_t volatile led_frame = 0;
 uint8_t volatile led_pos = 0;
-static volatile enum { BANK, REG, DATA, END } led_state;
-
+uint8_t volatile led_color;
+uint8_t volatile led_num_bank = -1;
+uint8_t volatile led_point;
+static volatile enum { BANK,
+                       REG,
+                       DATA,
+                       END } led_state;
 
 #define LED1 0, 0, 0
 #define LED4 LED1, LED1, LED1, LED1
@@ -68,40 +77,43 @@ static volatile enum { BANK, REG, DATA, END } led_state;
 #define LED64 LED32, LED32
 #define LED128 LED64, LED64
 
-led_buffer_t led_buffer = { LED64, LED8 };
+// led_buffer_t led_buffer = {LED64, LED8};
+
+PROGMEM const uint8_t bnks[9] = {8, 8, 8, 6, 7, 7, 7, 7, 7};
+PROGMEM const uint8_t bnksAcc[9] = {0, 8, 16, 24, 29, 36, 43, 51, 58};
 
 #ifdef VAF
-//Reference SLED1735 Datasheet Type3 Circuit Map
-const uint8_t tabLED_Type3Vaf[64] = { 
-  //Frame  1
-  //DCBA  HGFE  LKJI  PONM
-    0x50, 0x55, 0x55, 0x55, //C1-A ~ C1-P
-    0x00, 0x00, 0x00, 0x00, //C2-A ~ C2-P ,
-    0x00, 0x00, 0x00, 0x00, //C3-A ~ C3-P  
+// Reference SLED1735 Datasheet Type3 Circuit Map
+PROGMEM const uint8_t tabLED_Type3Vaf[64] = {
+    // Frame  1
+    // DCBA  HGFE  LKJI  PONM
+    0x50, 0x55, 0x55, 0x55, // C1-A ~ C1-P
+    0x00, 0x00, 0x00, 0x00, // C2-A ~ C2-P ,
+    0x00, 0x00, 0x00, 0x00, // C3-A ~ C3-P
 
-    0x15, 0x54, 0x55, 0x55, //C4-A ~ C4-P 
-    0x00, 0x00, 0x00, 0x00, //C5-A ~ C5-P  
-    0x00, 0x00, 0x00, 0x00, //C6-A ~ C6-P 
+    0x15, 0x54, 0x55, 0x55, // C4-A ~ C4-P
+    0x00, 0x00, 0x00, 0x00, // C5-A ~ C5-P
+    0x00, 0x00, 0x00, 0x00, // C6-A ~ C6-P
 
-    0x55, 0x05, 0x55, 0x55, //C7-A ~ C7-P  
-    0x00, 0x00, 0x00, 0x00, //C8-A ~ C8-P
-    //Frame 2
-    0x00, 0x00, 0x00, 0x00, //C9-A ~ C9-P 
+    0x55, 0x05, 0x55, 0x55, // C7-A ~ C7-P
+    0x00, 0x00, 0x00, 0x00, // C8-A ~ C8-P
+    // Frame 2
+    0x00, 0x00, 0x00, 0x00, // C9-A ~ C9-P
 
-    0x55, 0x55, 0x41, 0x55, //C10-A ~ C10-P 
-    0x00, 0x00, 0x00, 0x00, //C11-A ~ C11-P  
-    0x00, 0x00, 0x00, 0x00, //C12-A ~ C12-P 
+    0x55, 0x55, 0x41, 0x55, // C10-A ~ C10-P
+    0x00, 0x00, 0x00, 0x00, // C11-A ~ C11-P
+    0x00, 0x00, 0x00, 0x00, // C12-A ~ C12-P
 
-    0x55, 0x55, 0x55, 0x50, //C13-A ~ C13-P  
-    0x00, 0x00, 0x00, 0x00, //C14-A ~ C14-P 
-    0x00, 0x00, 0x00, 0x00, //C15-A ~ C15-P 
-    0x00, 0x00, 0x00, 0x00, //C16-A ~ C16-P 
+    0x55, 0x55, 0x55, 0x50, // C13-A ~ C13-P
+    0x00, 0x00, 0x00, 0x00, // C14-A ~ C14-P
+    0x00, 0x00, 0x00, 0x00, // C15-A ~ C15-P
+    0x00, 0x00, 0x00, 0x00, // C16-A ~ C16-P
 };
 #endif
 
 // pin defs
-#define SHUTDOWN_PIN 6 //shutdown when low
-#define SS_PIN 2 // 7 for matrix test board, 2 for raise
+#define SHUTDOWN_PIN 6 // shutdown when low
+#define SS_PIN 2       // 7 for matrix test board, 2 for raise
 #define DDR_SPI DDRB
 #define DD_MOSI 3
 #define DD_SCK 5
@@ -110,17 +122,17 @@ const uint8_t tabLED_Type3Vaf[64] = {
 void SPI_MasterInit(void)
 {
     /* Set MOSI and SCK output, all others input */
-    DDR_SPI = (1<<DD_MOSI)|(1<<DD_SCK)|(1<<SS_PIN)|(1<<SHUTDOWN_PIN)|(1<<SS_PIN_2);
+    DDR_SPI = (1 << DD_MOSI) | (1 << DD_SCK) | (1 << SS_PIN) | (1 << SHUTDOWN_PIN) | (1 << SS_PIN_2);
 
-    HIGH(PORTB,SHUTDOWN_PIN); // shutdown pin high to enable sled
-    HIGH(PORTB,SS_PIN);
-    HIGH(PORTB,SS_PIN_2); // ss pin must be a high output for SPI to work correctly as master
-    _delay_ms(1); // wait for chip to be ready
+    HIGH(PORTB, SHUTDOWN_PIN); // shutdown pin high to enable sled
+    HIGH(PORTB, SS_PIN);
+    HIGH(PORTB, SS_PIN_2); // ss pin must be a high output for SPI to work correctly as master
+    _delay_ms(1);          // wait for chip to be ready
 
     // sled1735 latches data at clock rising edge, max freq is 2.4MHz
     // attiny clock is 8MHz, so feasible to divide by 4 and run at 2MHz
     // set divider to 16, run at 500k
-    SPCR = (1<<SPE)|(1<<MSTR)|(0<<SPR1)|(1<<SPR0);
+    SPCR = (1 << SPE) | (1 << MSTR) | (0 << SPR1) | (1 << SPR0);
     SPSR ^= _BV(SPI2X);
 }
 
@@ -129,7 +141,8 @@ void SPI_MasterTransmit(char cData)
     /* Start transmission */
     SPDR = cData;
     /* Wait for transmission complete */
-    while(!(SPSR & (1<<SPIF)));
+    while (!(SPSR & (1 << SPIF)))
+        ;
 }
 
 // when writing to sled1735:
@@ -138,235 +151,459 @@ void SPI_MasterTransmit(char cData)
 // 2nd byte is the register to write/read
 void SPI_W_3BYTE(uint8_t page, uint8_t reg, uint8_t data)
 {
-    LOW(PORTB,SS_PIN);
+    LOW(PORTB, SS_PIN);
     SPI_MasterTransmit(0x20 + page);
     SPI_MasterTransmit(reg);
     SPI_MasterTransmit(data);
-    HIGH(PORTB,SS_PIN);
+    HIGH(PORTB, SS_PIN);
 }
 
 uint8_t SPI_R_3BYTE(uint8_t page, uint8_t reg)
 {
-    LOW(PORTB,SS_PIN);
+    LOW(PORTB, SS_PIN);
     SPI_MasterTransmit(0xA0 + page);
     SPI_MasterTransmit(reg);
     SPI_MasterTransmit(0x00); // dummy byte
-    HIGH(PORTB,SS_PIN);
+    HIGH(PORTB, SS_PIN);
     return SPDR;
 }
 
-void led_update_bank(uint8_t *buf, const uint8_t bank) 
-{
+// void led_send_bank(void)
+// {
+//     for (size_t i = 0; i < LED_BANK_SIZE; i++)
+//     {
+//         uint8_t pos = pgm_read_byte_near(&led_RES[led_bank.bank_num * LED_BANK_SIZE + i]);
+//         if (pos == 0xFF)
+//             continue;
+//         uint8_t frame = pos / 128;
+//         pos = pos % 128;
+//         DISABLE_INTERRUPTS({
+//             SPI_W_3BYTE(frame, 0x20 + pos, led_bank.bank[i]);
+//         });
+//     }
+//     led_bank.update = 0;
+// }
 
-    memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
+void led_update_bank(uint8_t *buf, const uint8_t bank)
+{
+    led_bank.bank_num = bank;
+    memcpy(&led_bank.bank, buf, LED_BANK_SIZE);
+    // memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
+    // uint8_t ansi_iso = (PINB & _BV(1)) == 2 ? ANSI : ISO;
+    // memcpy(&led_buffer.weach[pgm_read_byte_near(&bnksAcc[bank])], buf, pgm_read_byte_near(&bnks[bank]));
 }
 
-void led_set_one_to(uint8_t led, uint8_t *buf) 
+void led_set_one_to(uint8_t led, uint8_t *buf)
 {
-    //overflow possible here
-    memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
+    // disable spi interrupts
+    SPCR &= ~(1 << SPIE);
+
+    uint8_t pos = pgm_read_byte_near(&led_RES[led * 3]);
+    uint8_t frame = pos / 128;
+    pos = pos % 128;
+    uint8_t pos2 = pgm_read_byte_near(&led_RES[led * 3 + 1]);
+    uint8_t frame2 = pos2 / 128;
+    pos2 = pos2 % 128;
+    uint8_t pos3 = pgm_read_byte_near(&led_RES[led * 3 + 2]);
+    uint8_t frame3 = pos3 / 128;
+    pos3 = pos3 % 128;
+    SPI_W_3BYTE(frame, 0x20 + pos, buf[0]);
+    SPI_W_3BYTE(frame2, 0x20 + pos2, buf[1]);
+    SPI_W_3BYTE(frame3, 0x20 + pos3, buf[2]);
+    // overflow possible here
+    // memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
+
+    // reenable spi interrupts
+    SPCR |= (1 << SPIE);
 }
 
-void led_set_all_to( uint8_t *buf) 
+void led_set_all_to(uint8_t *buf)
 {
-    for(uint8_t led=0; led <NUM_LEDS; led++) 
+    // disable spi interrupts
+    SPCR &= ~(1 << SPIE);
+
+    for (uint8_t led = 0; led < NUM_LEDS; led++)
     {
-        memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
+        uint8_t pos = pgm_read_byte_near(&led_RES[led * 3]);
+        uint8_t frame = pos / 128;
+        pos = pos % 128;
+        uint8_t pos2 = pgm_read_byte_near(&led_RES[led * 3 + 1]);
+        uint8_t frame2 = pos2 / 128;
+        pos2 = pos2 % 128;
+        uint8_t pos3 = pgm_read_byte_near(&led_RES[led * 3 + 2]);
+        uint8_t frame3 = pos3 / 128;
+        pos3 = pos3 % 128;
+        SPI_W_3BYTE(frame, 0x20 + pos, buf[0]);
+        SPI_W_3BYTE(frame2, 0x20 + pos2, buf[1]);
+        SPI_W_3BYTE(frame3, 0x20 + pos3, buf[2]);
     }
-}
+    // for (uint8_t led = 0; led < NUM_LEDS; led++)
+    // {
+    //     memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
+    // }
 
+    // reenable spi interrupts
+    SPCR |= (1 << SPIE);
+}
 
 void setup_spi()
 {
-    SPI_MasterInit(); 
+    SPI_MasterInit();
 
     // shutdown - chip must be shutdown to do a lot of the setup
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);
 
     // get the chip's ID - this is fetchable over I2C interface - should return decimal 114
-    sled1735_status = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CHIP_ID_REG);
+    // sled1735_status = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CHIP_ID_REG);
     // thermal detect flag, couldn't get this to return correct values after LED update has started
-    sled1735_sys_temp = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, SYS_TEMP);
+    // sled1735_sys_temp = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, SYS_TEMP);
 
     // enable picture mode, disable ADC
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CONFIGURATION_REG, 0x00);           
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CONFIGURATION_REG, 0x00);
 
     // matrix type 3 - 70 RGB common anode
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, PICTURE_DISPLAY_REG, mskMATRIX_TYPE_TYPE3);           
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, PICTURE_DISPLAY_REG, mskMATRIX_TYPE_TYPE3);
 
     // Setting Staggered Delay - no noticable effect
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, STAGGERED_DELAY_REG, ((mskSTD4 & CONST_STD_GROUP4)|(mskSTD3 & CONST_STD_GROUP3)|(mskSTD2 & CONST_STD_GROUP2)|(mskSTD1 & CONST_STD_GROUP1)));
-    
-    // Enable Slew Rate control 
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, STAGGERED_DELAY_REG, ((mskSTD4 & CONST_STD_GROUP4) | (mskSTD3 & CONST_STD_GROUP3) | (mskSTD2 & CONST_STD_GROUP2) | (mskSTD1 & CONST_STD_GROUP1)));
+
+    // Enable Slew Rate control
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SLEW_RATE_CTL_REG, mskSLEW_RATE_CTL_EN);
-    
-    // vaf fixes dim red LEDs that should be off
-    #ifdef VAF
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG, (mskVAF2|mskVAF1));
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG2, (mskFORCEVAFCTL_VAFTIMECTL|(mskFORCEVAFTIME_CONST & 0x01)|mskVAF3));
+
+// vaf fixes dim red LEDs that should be off
+#ifdef VAF
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG, (mskVAF2 | mskVAF1));
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, VAF_CTL_REG2, (mskFORCEVAFCTL_VAFTIMECTL | (mskFORCEVAFTIME_CONST & 0x01) | mskVAF3));
 
     // vaf is set to vaf2 by default
     // this part doesn't seem to make any visible difference, only visible on the scope
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0x20 + SPI_FRAME_LED_VAF_PAGE); 
-    SPI_MasterTransmit(TYPE3_VAF_FRAME_FIRST_ADDR); 
-    for( int i = 0; i< TYPE3_VAF_FRAME_LENGTH ; i++)
-        SPI_MasterTransmit(tabLED_Type3Vaf[i]); 
-    HIGH(PORTB,SS_PIN);
-    #endif 
+    LOW(PORTB, SS_PIN);
+    SPI_MasterTransmit(0x20 + SPI_FRAME_LED_VAF_PAGE);
+    SPI_MasterTransmit(TYPE3_VAF_FRAME_FIRST_ADDR);
+    for (int i = 0; i < TYPE3_VAF_FRAME_LENGTH; i++)
+        SPI_MasterTransmit(pgm_read_byte_near(&tabLED_Type3Vaf[i]));
+    HIGH(PORTB, SS_PIN);
+#endif
 
-    #ifdef CONST_CURR
+#ifdef CONST_CURR
     set_current(CONST_CURRENT_STEP_40mA);
-    #endif
+#endif
 
-    #ifdef INIT_PWM
+#ifdef INIT_PWM
     // initialise pwm to our default value
-    for(int i=TYPE3_PWM_FRAME_FIRST_ADDR; i<=TYPE3_PWM_FRAME_LAST_ADDR; i++)
-        SPI_W_3BYTE(SPI_FRAME_ONE_PAGE, i, INIT_PWM);           
+    for (int i = TYPE3_PWM_FRAME_FIRST_ADDR; i <= TYPE3_PWM_FRAME_LAST_ADDR; i++)
+        SPI_W_3BYTE(SPI_FRAME_ONE_PAGE, i, INIT_PWM);
 
-    for(int i=TYPE3_PWM_FRAME_FIRST_ADDR; i<=TYPE3_PWM_FRAME_LAST_ADDR; i++)
-        SPI_W_3BYTE(SPI_FRAME_TWO_PAGE, i, INIT_PWM);           
-    #endif
+    for (int i = TYPE3_PWM_FRAME_FIRST_ADDR; i <= TYPE3_PWM_FRAME_LAST_ADDR; i++)
+        SPI_W_3BYTE(SPI_FRAME_TWO_PAGE, i, INIT_PWM);
+#endif
 
     // turn on all leds - alternative is to only turn on those that are set in the LUT
-    for(int i=TYPE3_LED_FRAME_FIRST_ADDR; i<=TYPE3_LED_FRAME_LAST_ADDR; i++)
-        SPI_W_3BYTE(SPI_FRAME_ONE_PAGE, i, 0xFF);           
+    for (int i = TYPE3_LED_FRAME_FIRST_ADDR; i <= TYPE3_LED_FRAME_LAST_ADDR; i++)
+        SPI_W_3BYTE(SPI_FRAME_ONE_PAGE, i, 0xFF);
 
-    for(int i=TYPE3_LED_FRAME_FIRST_ADDR; i<=TYPE3_LED_FRAME_LAST_ADDR; i++)
-        SPI_W_3BYTE(SPI_FRAME_TWO_PAGE, i, 0xFF);           
+    for (int i = TYPE3_LED_FRAME_FIRST_ADDR; i <= TYPE3_LED_FRAME_LAST_ADDR; i++)
+        SPI_W_3BYTE(SPI_FRAME_TWO_PAGE, i, 0xFF);
 
     // turn on the chip
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_NORMAL_MODE);           
-    
-    #ifdef SELF_TEST_AT_START
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_NORMAL_MODE);
+
+#ifdef SELF_TEST_AT_START
     // run the self test to get list of opens and shorts - use this after assembly to aid in checking leds
     self_test(1);
-    #endif
+#endif
 
-
-    #ifdef SPI_INTS
+#ifdef SPI_INTS
     // turn on spi interrupts to start automatic update of sled1735's led ram.
-    SPCR |= (1<<SPIE);
+    SPCR |= (1 << SPIE);
     sei();
-    #endif
+#endif
 }
-
 
 void set_current(uint8_t current)
 {
     // disable spi interrupts
-    SPCR &= ~(1<<SPIE);
+    SPCR &= ~(1 << SPIE);
 
     // turn off
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);
 
     // set new current
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG, (mskCURRENT_CTL_EN|(mskCURRENT_STEP_CONST & current)));
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG, (mskCURRENT_CTL_EN | (mskCURRENT_STEP_CONST & current)));
 
     // update global
-    sled1735_const_current = mskCURRENT_STEP_CONST & SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG);
+    // sled1735_const_current = mskCURRENT_STEP_CONST & SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG);
 
     // turn on the chip
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_NORMAL_MODE);           
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_NORMAL_MODE);
 
     // reenable spi interrupts
-    SPCR |= (1<<SPIE);
+    SPCR |= (1 << SPIE);
 }
 
 void self_test(uint8_t OSDD)
 {
     // disable spi interrupts
-    SPCR &= ~(1<<SPIE);
+    SPCR &= ~(1 << SPIE);
     // make sure test results are off to start with: 2B, 11, 00
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);
 
     // OSDD = open short detection duty - don't know how it works. At 63 and 3 I get bad results for leds B1 through P3. At 1 I get the results I expect.
     // start open test: 2B, 10, 80 + OSDD
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG, mskOPEN_DETECT_START + OSDD);           
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG, mskOPEN_DETECT_START + OSDD);
 
     // wait for test to run: AB, 11, 00
-    while(SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2) != mskOPEN_DETECT_INT)
+    while (SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2) != mskOPEN_DETECT_INT)
         _delay_ms(1);
 
     // read all open registers
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xA0 + SPI_FRAME_DETECTION_PAGE);
-    SPI_MasterTransmit(0x00);  // start at first address
-    for(int i=0x0; i<0x20; i++)
-    {
-        SPI_MasterTransmit(0x00);  // dummy byte
-        led_open_status[i] = SPDR;
-    }
-    HIGH(PORTB,SS_PIN);
+    // LOW(PORTB, SS_PIN);
+    // SPI_MasterTransmit(0xA0 + SPI_FRAME_DETECTION_PAGE);
+    // SPI_MasterTransmit(0x00); // start at first address
+    // for (int i = 0x0; i < 0x20; i++)
+    // {
+    //     SPI_MasterTransmit(0x00); // dummy byte
+    //     led_open_status[i] = SPDR;
+    // }
+    // HIGH(PORTB, SS_PIN);
 
     // start short circuit test, set results to 0 again
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG, mskSHORT_DETECT_START + OSDD);
 
     // wait for test to run
-    while(SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2) != mskSHORT_DETECT_INT)
+    while (SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2) != mskSHORT_DETECT_INT)
         _delay_ms(1);
 
     // read the short registers
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xA0 + SPI_FRAME_DETECTION_PAGE);
-    SPI_MasterTransmit(0x20);  // start at first address
-    for(int i=0x0; i<0x20; i++)
-    {
-        SPI_MasterTransmit(0x00);  // dummy byte
-        led_short_status[i] = SPDR;
-    }
-    HIGH(PORTB,SS_PIN);
+    // LOW(PORTB, SS_PIN);
+    // SPI_MasterTransmit(0xA0 + SPI_FRAME_DETECTION_PAGE);
+    // SPI_MasterTransmit(0x20); // start at first address
+    // for (int i = 0x0; i < 0x20; i++)
+    // {
+    //     SPI_MasterTransmit(0x00); // dummy byte
+    //     led_short_status[i] = SPDR;
+    // }
+    // HIGH(PORTB, SS_PIN);
 
     // this shouldn't be necessary, but otherwise chip never responds again
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
+    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);
 
     // reenable spi interrupts
-    SPCR |= (1<<SPIE);
+    SPCR |= (1 << SPIE);
 }
 
-
 // continuously transmit the contents of the led_buffer
-ISR(SPI_STC_vect) {
-    switch(led_state) {
+// ISR(SPI_STC_vect) {
+//     if(led_buffer.sent == true) return;
+//     switch(led_state) {
+//     case BANK:
+//         LOW(PORTB,SS_PIN);
+//         asm("nop");
+//         if(led_buffer.mode == ALL){
+//             SPDR = 0x20 + led_frame;  // select the correct frame
+//         }
+//         if(led_buffer.mode != BNK){
+//             uint8_t aux = led_buffer.led_lut_frame;
+//             SPDR = 0x20 + aux;  // select the correct frame
+//         }
+//         if(led_buffer.mode != LED){
+//             SPDR = 0x20 + led_buffer.led_lut_frame;  // select the correct frame
+//         }
+//         led_state = REG;
+//         break;
+//     case REG:
+//         if(led_buffer.mode == ALL){
+//             // pwm reg
+//             SPDR = 0x20;  // pwm data starts at 0x20
+//             led_state = DATA_ALL;
+//         }
+//         if(led_buffer.mode == BNK){
+//             // pwm reg
+//             led_frame = led_buffer.led_lut_frame;
+//             led_num = led_buffer.led_lut_led;
+//             led_bnk_count = 0;
+//             SPDR = 0x20 + led_buffer.led_lut_led;  // pwm data starts at 0x20
+//             led_state = DATA_BANK;
+//         }
+//         if(led_buffer.mode == LED){
+//             // pwm reg
+//             SPDR = 0x20 + led_buffer.led_lut_led;  // pwm data starts at 0x20
+//             led_state = DATA_LED;
+//         }
+//         break;
+//     case DATA_ALL:
+//     {
+//         led_pos = pgm_read_byte_near(&led_LUT[led_frame][led_num]);
+//         if(led_pos == 0xFF) // if not a valid led
+//             SPDR = 0;
+//         else
+//             SPDR = led_buffer.color;
+//         led_num ++;
+//         if( led_num == FRAME_SIZE )
+//         {
+//             led_state = END;
+//             led_num = 0;
+
+//             led_frame ++;
+//             if(led_frame == NUM_FRAMES)
+//                 led_frame = 0;
+//                 led_buffer.sent = true;
+//         }
+//         break;
+
+//     }
+//     case DATA_BANK:
+//     {
+//         led_pos = pgm_read_byte_near(&led_LUT[led_frame][led_num]);
+//         if(led_pos == 0xFF) // if not a valid led
+//             SPDR = 0;
+//         else
+//             SPDR = led_buffer.bank[led_pos];
+//         led_num ++;
+//         led_bnk_count ++;
+//         if(led_bnk_count == NUM_LEDS_PER_BANK){
+//             led_state = END;
+//             led_num = 0;
+//             led_frame = 0;
+//             led_buffer.sent = true;
+//             break;
+//         }
+//         if( led_num == FRAME_SIZE )
+//         {
+//             led_state = END;
+//             led_num = 0;
+
+//             led_frame ++;
+//             if(led_frame == NUM_FRAMES)
+//                 led_frame = 0;
+//                 led_buffer.sent = true;
+//         }
+//         break;
+
+//     }
+//     case DATA_LED:
+//     {
+//         led_pos = pgm_read_byte_near(&led_LUT[led_buffer.led_lut_frame][led_buffer.led_lut_led]);
+//         if(led_pos == 0xFF) // if not a valid led
+//             SPDR = 0;
+//         else
+//             SPDR = led_buffer.color;
+//         led_state = END;
+//         led_buffer.sent = true;
+//         break;
+
+//     }
+//     case END:
+//         SPDR = 0;
+//         HIGH(PORTB,SS_PIN);
+//         led_state = BANK;
+//         break;
+
+//     default:
+//     led_state = BANK;
+//     }
+// }
+
+ISR(SPI_STC_vect)
+{
+    switch (led_state)
+    {
     case BANK:
-        LOW(PORTB,SS_PIN);
+        if (led_num_bank != led_bank.bank_num)
+        {
+            led_num_bank = led_bank.bank_num;
+            led_point = 0;
+            led_color = led_bank.bank[0];
+        }
+        else
+        {
+            if (led_point < LED_BANK_SIZE)
+            {
+                led_point++;
+                led_color = led_bank.bank[led_point];
+            }
+            else
+            {
+                led_point = 0;
+                led_color = led_bank.bank[0];
+            }
+        }
+        led_num = pgm_read_byte_near(&led_RES[led_num_bank * LED_BANK_SIZE + led_point]);
+        led_frame = led_num / 128;
+        led_num = led_num % 128;
+        LOW(PORTB, SS_PIN);
         asm("nop");
-        SPDR = 0x20 + led_frame;  // select the correct frame
+        SPDR = 0x20 + led_frame; // select the correct frame
         led_state = REG;
         break;
     case REG:
         // pwm reg
-        SPDR = 0x20;  // pwm data starts at 0x20
+        SPDR = 0x20 + led_num; // pwm data starts at 0x20
         led_state = DATA;
         break;
     case DATA:
     {
-        led_pos = pgm_read_byte_near(&led_LUT[led_frame][led_num]);
-        if(led_pos == 0xFF) // if not a valid led
-            SPDR = 0;
-        else
-            SPDR = led_buffer.whole[led_pos];
-        led_num ++;
-        if( led_num == FRAME_SIZE )
-        {
-            led_state = END;
-            led_num = 0;
-            
-            led_frame ++;
-            if(led_frame == NUM_FRAMES)
-                led_frame = 0;
-        }
+        // led_pos = pgm_read_byte_near(&led_LUT[led_frame][led_num]);
+        // if (led_pos == 0xFF) // if not a valid led
+        //     SPDR = 0;
+        // else
+        //     // SPDR = led_buffer.whole[led_pos];
+        SPDR = led_color;
+        led_state = END;
         break;
-
     }
     case END:
-        SPDR = 0;
-        HIGH(PORTB,SS_PIN);
+        // SPDR = 0;
+        HIGH(PORTB, SS_PIN);
         led_state = BANK;
         break;
-        
+
     default:
-    led_state = BANK;
+        led_state = BANK;
     }
 }
+
+// ISR(SPI_STC_vect) {
+//     switch(led_state) {
+//     case BANK:
+//         LOW(PORTB,SS_PIN);
+//         asm("nop");
+//         SPDR = 0x20 + led_frame;  // select the correct frame
+//         led_state = REG;
+//         break;
+//     case REG:
+//         // pwm reg
+//         SPDR = 0x20;  // pwm data starts at 0x20
+//         led_state = DATA;
+//         break;
+//     case DATA:
+//     {
+//         led_pos = pgm_read_byte_near(&led_LUT[led_frame][led_num]);
+//         if(led_pos == 0xFF) // if not a valid led
+//             SPDR = 0;
+//         else
+//             SPDR = led_buffer.whole[led_pos];
+//         led_num ++;
+//         if( led_num == FRAME_SIZE )
+//         {
+//             led_state = END;
+//             led_num = 0;
+
+//             led_frame ++;
+//             if(led_frame == NUM_FRAMES)
+//                 led_frame = 0;
+//         }
+//         break;
+
+//     }
+//     case END:
+//         SPDR = 0;
+//         HIGH(PORTB,SS_PIN);
+//         led_state = BANK;
+//         break;
+
+//     default:
+//     led_state = BANK;
+//     }
+// }
