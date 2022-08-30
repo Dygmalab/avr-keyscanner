@@ -53,6 +53,8 @@ typedef union {
     uint8_t bank[NUM_LED_BANKS][LED_BANK_SIZE];
 } led_buffer_t ;
 
+led_bank_t led_bank;
+
 // state machine variables for SPI update of sled1735 LED buffer
 uint8_t volatile led_num = 0;
 uint8_t volatile led_frame = 0;
@@ -158,20 +160,20 @@ uint8_t SPI_R_3BYTE(uint8_t page, uint8_t reg)
 void led_update_bank(uint8_t *buf, const uint8_t bank) 
 {
 
-    memcpy(&led_buffer.bank[bank], buf, LED_BANK_SIZE);
+    memcpy(&led_bank.bank[bank], buf, LED_BANK_SIZE);
 }
 
 void led_set_one_to(uint8_t led, uint8_t *buf) 
 {
     //overflow possible here
-    memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
+    // memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
 }
 
 void led_set_all_to( uint8_t *buf) 
 {
     for(uint8_t led=0; led <NUM_LEDS; led++) 
     {
-        memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
+        // memcpy(&led_buffer.weach[led], buf, LED_DATA_SIZE);
     }
 }
 
@@ -184,9 +186,9 @@ void setup_spi()
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
 
     // get the chip's ID - this is fetchable over I2C interface - should return decimal 114
-    sled1735_status = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CHIP_ID_REG);
+    // sled1735_status = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CHIP_ID_REG);
     // thermal detect flag, couldn't get this to return correct values after LED update has started
-    sled1735_sys_temp = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, SYS_TEMP);
+    // sled1735_sys_temp = SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, SYS_TEMP);
 
     // enable picture mode, disable ADC
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CONFIGURATION_REG, 0x00);           
@@ -246,37 +248,37 @@ void setup_spi()
 
     #ifdef SPI_INTS
     // turn on spi interrupts to start automatic update of sled1735's led ram.
-    SPCR |= (1<<SPIE);
-    sei();
+    // SPCR |= (1<<SPIE);
+    // sei();
     #endif
 }
 
 
 void set_current(uint8_t current)
 {
-    // disable spi interrupts
-    SPCR &= ~(1<<SPIE);
+    // // disable spi interrupts
+    // SPCR &= ~(1<<SPIE);
 
-    // turn off
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
+    // // turn off
+    // SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_SHUT_DOWN_MODE);           
 
-    // set new current
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG, (mskCURRENT_CTL_EN|(mskCURRENT_STEP_CONST & current)));
+    // // set new current
+    // SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG, (mskCURRENT_CTL_EN|(mskCURRENT_STEP_CONST & current)));
 
-    // update global
-    sled1735_const_current = mskCURRENT_STEP_CONST & SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG);
+    // // update global
+    // sled1735_const_current = mskCURRENT_STEP_CONST & SPI_R_3BYTE(SPI_FRAME_FUNCTION_PAGE, CURRENT_CTL_REG);
 
-    // turn on the chip
-    SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_NORMAL_MODE);           
+    // // turn on the chip
+    // SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, SW_SHUT_DOWN_REG, mskSW_NORMAL_MODE);           
 
-    // reenable spi interrupts
-    SPCR |= (1<<SPIE);
+    // // reenable spi interrupts
+    // SPCR |= (1<<SPIE);
 }
 
 void self_test(uint8_t OSDD)
 {
     // disable spi interrupts
-    SPCR &= ~(1<<SPIE);
+    // SPCR &= ~(1<<SPIE);
     // make sure test results are off to start with: 2B, 11, 00
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
 
@@ -289,15 +291,15 @@ void self_test(uint8_t OSDD)
         _delay_ms(1);
 
     // read all open registers
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xA0 + SPI_FRAME_DETECTION_PAGE);
-    SPI_MasterTransmit(0x00);  // start at first address
-    for(int i=0x0; i<0x20; i++)
-    {
-        SPI_MasterTransmit(0x00);  // dummy byte
-        led_open_status[i] = SPDR;
-    }
-    HIGH(PORTB,SS_PIN);
+    // LOW(PORTB,SS_PIN);
+    // SPI_MasterTransmit(0xA0 + SPI_FRAME_DETECTION_PAGE);
+    // SPI_MasterTransmit(0x00);  // start at first address
+    // for(int i=0x0; i<0x20; i++)
+    // {
+    //     SPI_MasterTransmit(0x00);  // dummy byte
+    //     led_open_status[i] = SPDR;
+    // }
+    // HIGH(PORTB,SS_PIN);
 
     // start short circuit test, set results to 0 again
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
@@ -308,65 +310,65 @@ void self_test(uint8_t OSDD)
         _delay_ms(1);
 
     // read the short registers
-    LOW(PORTB,SS_PIN);
-    SPI_MasterTransmit(0xA0 + SPI_FRAME_DETECTION_PAGE);
-    SPI_MasterTransmit(0x20);  // start at first address
-    for(int i=0x0; i<0x20; i++)
-    {
-        SPI_MasterTransmit(0x00);  // dummy byte
-        led_short_status[i] = SPDR;
-    }
-    HIGH(PORTB,SS_PIN);
+    // LOW(PORTB,SS_PIN);
+    // SPI_MasterTransmit(0xA0 + SPI_FRAME_DETECTION_PAGE);
+    // SPI_MasterTransmit(0x20);  // start at first address
+    // for(int i=0x0; i<0x20; i++)
+    // {
+    //     SPI_MasterTransmit(0x00);  // dummy byte
+    //     led_short_status[i] = SPDR;
+    // }
+    // HIGH(PORTB,SS_PIN);
 
     // this shouldn't be necessary, but otherwise chip never responds again
     SPI_W_3BYTE(SPI_FRAME_FUNCTION_PAGE, OPEN_SHORT_REG2, 0x00);           
 
     // reenable spi interrupts
-    SPCR |= (1<<SPIE);
+    // SPCR |= (1<<SPIE);
 }
 
 
-// continuously transmit the contents of the led_buffer
-ISR(SPI_STC_vect) {
-    switch(led_state) {
-    case BANK:
-        LOW(PORTB,SS_PIN);
-        asm("nop");
-        SPDR = 0x20 + led_frame;  // select the correct frame
-        led_state = REG;
-        break;
-    case REG:
-        // pwm reg
-        SPDR = 0x20;  // pwm data starts at 0x20
-        led_state = DATA;
-        break;
-    case DATA:
-    {
-        led_pos = pgm_read_byte_near(&led_LUT[led_frame][led_num]);
-        if(led_pos == 0xFF) // if not a valid led
-            SPDR = 0;
-        else
-            SPDR = led_buffer.whole[led_pos];
-        led_num ++;
-        if( led_num == FRAME_SIZE )
-        {
-            led_state = END;
-            led_num = 0;
+// // continuously transmit the contents of the led_buffer
+// ISR(SPI_STC_vect) {
+//     switch(led_state) {
+//     case BANK:
+//         LOW(PORTB,SS_PIN);
+//         asm("nop");
+//         SPDR = 0x20 + led_frame;  // select the correct frame
+//         led_state = REG;
+//         break;
+//     case REG:
+//         // pwm reg
+//         SPDR = 0x20;  // pwm data starts at 0x20
+//         led_state = DATA;
+//         break;
+//     case DATA:
+//     {
+//         led_pos = pgm_read_byte_near(&led_LUT[led_frame][led_num]);
+//         if(led_pos == 0xFF) // if not a valid led
+//             SPDR = 0;
+//         else
+//             SPDR = led_buffer.whole[led_pos];
+//         led_num ++;
+//         if( led_num == FRAME_SIZE )
+//         {
+//             led_state = END;
+//             led_num = 0;
             
-            led_frame ++;
-            if(led_frame == NUM_FRAMES)
-                led_frame = 0;
-        }
-        break;
+//             led_frame ++;
+//             if(led_frame == NUM_FRAMES)
+//                 led_frame = 0;
+//         }
+//         break;
 
-    }
-    case END:
-        SPDR = 0;
-        HIGH(PORTB,SS_PIN);
-        led_state = BANK;
-        break;
+//     }
+//     case END:
+//         SPDR = 0;
+//         HIGH(PORTB,SS_PIN);
+//         led_state = BANK;
+//         break;
         
-    default:
-    led_state = BANK;
-    }
-}
+//     default:
+//     led_state = BANK;
+//     }
+// }
