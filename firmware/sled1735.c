@@ -213,9 +213,15 @@ void led_set_all_to(uint8_t *buf)
         uint8_t pos3 = pgm_read_byte_near(&led_RES[led * 3 + 2]);
         uint8_t frame3 = pos3 / 128;
         pos3 = pos3 % 128;
-        SPI_W_3BYTE(frame, 0x20 + pos, buf[0]);
-        SPI_W_3BYTE(frame2, 0x20 + pos2, buf[1]);
-        SPI_W_3BYTE(frame3, 0x20 + pos3, buf[2]);
+        DISABLE_INTERRUPTS({
+            SPI_W_3BYTE(frame, 0x20 + pos, buf[0]);
+        });
+        DISABLE_INTERRUPTS({
+            SPI_W_3BYTE(frame2, 0x20 + pos2, buf[1]);
+        });
+        DISABLE_INTERRUPTS({
+            SPI_W_3BYTE(frame3, 0x20 + pos3, buf[2]);
+        });
     }
 }
 
