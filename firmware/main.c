@@ -79,7 +79,10 @@ int main(void)
 
     while (1)
     {
-        keyscanner_main();
+        // every time the keyscan is run, check the ADC
+        if (keyscanner_main())
+            read_joint();
+
         if (led_bank.update == 1)
             led_send_bank();
         // if(keyscanner_main())
